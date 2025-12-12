@@ -1,0 +1,76 @@
+{% extends 'guest/base.html' %}
+
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div id="applicationsContainer">
+        <div class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto"></div>
+            <p class="text-slate-400 mt-4">Loading...</p>
+        </div>
+    </div>
+</div>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+</style>
+<script>
+
+async function loadApplications() {
+    const response = await fetchAPI('/api/applications/my-applications/');
+    const data = await response.json();
+    
+    const container = document.getElementById('applicationsContainer');
+    if (data.length === 0) {
+        container.innerHTML = '<div class="bg-slate-800 rounded-lg p-12 text-center"><h3 class="text-xl text-white mb-4">No Applications</h3><a href="/apply/member/" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 inline-block">Apply Now</a></div>';
+        return;
+    }
+    
+    container.innerHTML = data.map(app => `
+        <div class="bg-slate-800 rounded-lg p-6 mb-6">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-xl font-bold text-white">${app.application_type.toUpperCase()} Application</h3>
+                    <p class="text-slate-400 text-sm">Applied: ${new Date(app.applied_at).toLocaleDateString()}</p>
+                </div>
+                <span class="px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(app.status)}">${app.status.replace('_', ' ').toUpperCase()}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-slate-700/50 p-3 rounded"><p class="text-slate-400 text-xs">Name</p><p class="text-white">${app.full_name}</p></div>
+                <div class="bg-slate-700/50 p-3 rounded"><p class="text-slate-400 text-xs">Phone</p><p class="text-white">${app.phone}</p></div>
+                <div class="bg-slate-700/50 p-3 rounded"><p class="text-slate-400 text-xs">Location</p><p class="text-white">${app.country || 'Nepal'}${app.district ? ' - ' + app.district : ''}</p></div>
+                <div class="bg-slate-700/50 p-3 rounded"><p class="text-slate-400 text-xs">Status</p><p class="text-white">${getStatusText(app.status)}</p></div>
+            </div>
+            ${app.status === 'interview_scheduled' ? `
+                <div class="bg-indigo-900/30 border border-indigo-700 rounded-lg p-4">
+                    <h4 class="text-white font-semibold mb-2 flex items-center gap-2"><span class="material-symbols-outlined">event</span> Interview Scheduled</h4>
+                    <p class="text-sm mb-1"><span class="text-slate-400">Date:</span> <span class="text-white font-medium">${new Date(app.interview_datetime).toLocaleString()}</span></p>
+                    ${app.interview_link ? `<p class="text-sm mb-1"><span class="text-slate-400">Link:</span> <a href="${app.interview_link}" target="_blank" class="text-indigo-400 hover:underline">${app.interview_link}</a></p>` : ''}
+                    ${app.interview_description ? `<p class="text-sm mb-2"><span class="text-slate-400">Notes:</span> ${app.interview_description}</p>` : ''}
+                    ${app.interview_attended !== null ? `<p class="text-sm"><span class="text-slate-400">Attended:</span> <span class="${app.interview_attended ? 'text-green-400' : 'text-red-400'}">${app.interview_attended ? '✓ Yes' : '✗ No'}</span></p>` : ''}
+                </div>
+            ` : ''}
+            ${app.status === 'rejected' && app.rejection_reason ? `
+                <div class="bg-red-900/30 border border-red-700 rounded-lg p-4">
+                    <h4 class="text-white font-semibold mb-2">Reason</h4>
+                    <p class="text-slate-300 text-sm">${app.rejection_reason}</p>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function getStatusColor(status) {
+    return {pending: 'bg-yellow-600', interview_scheduled: 'bg-blue-600', rejected: 'bg-red-600', approved: 'bg-green-600'}[status] || 'bg-gray-600';
+}
+
+function getStatusText(status) {
+    return {pending: 'Under Review', interview_scheduled: 'Interview Scheduled', rejected: 'Not Accepted', approved: 'Approved'}[status] || status;
+}
+
+loadApplications();
+</script>
+{% endblock %}

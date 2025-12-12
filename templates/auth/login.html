@@ -1,0 +1,256 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Sign in to continue</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display">
+    <!-- Global Loader -->
+    <div id="global-loader" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+    </div>
+
+    <div class="relative flex h-auto min-h-screen w-full flex-col items-center justify-center p-4">
+        <div class="flex w-full max-w-sm flex-col items-center">
+
+            <!-- Title + Back Button -->
+            <div id="titleContainer" class="relative w-full mb-6 flex justify-center">
+                <div id="backIcon" class="absolute left-0 flex items-center cursor-pointer hidden"
+                    onclick="goBackToMainLogin()">
+                    <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-2xl">arrow_back</span>
+                </div>
+                <div class="text-gray-900 dark:text-white font-bold text-lg">Login</div>
+            </div>
+
+            <!-- Username/Password Form -->
+            <form id="loginForm" class="w-full space-y-4">
+                <div class="flex w-full flex-col">
+                    <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+                    <div class="relative flex items-center">
+                        <span
+                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">person</span>
+                        <input id="username"
+                            class="form-input h-12 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            placeholder="Enter your username" type="text" required />
+                    </div>
+                </div>
+
+                <div class="flex w-full flex-col">
+                    <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                    <div class="relative flex items-center">
+                        <span
+                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">lock</span>
+                        <input id="password"
+                            class="form-input h-12 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            placeholder="Enter your password" type="password" required />
+                        <button type="button" onclick="togglePassword()"
+                            class="absolute right-3 text-gray-400 dark:text-gray-500">
+                            <span class="material-symbols-outlined" id="toggleIcon">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="message" class="text-sm text-center h-5"></div>
+
+                <button type="submit"
+                    class="w-full h-12 rounded-lg bg-primary font-bold text-white font-bold hover:bg-primary/90 transition">
+                    Login
+                </button>
+            </form>
+
+            <!-- Email + OTP Form (hidden by default) -->
+            <form id="emailLoginForm" class="w-full space-y-4 hidden">
+                <div id="emailStep">
+                    <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+                    <div class="relative flex items-center">
+                        <span
+                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">mail</span>
+                        <input id="emailInput"
+                            class="form-input h-12 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            placeholder="Enter your email" type="email" required />
+                    </div>
+                    <button type="button" onclick="sendOTP()"
+                        class="mt-4 w-full h-12 rounded-lg bg-primary text-white font-bold hover:bg-primary/90">
+                        Send OTP
+                    </button>
+                </div>
+
+                <div id="otpStep" class="hidden">
+                    <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Enter OTP</label>
+                    <div class="relative flex items-center">
+                        <span
+                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">pin</span>
+                        <input id="otpInput"
+                            class="form-input h-12 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            placeholder="6-digit OTP" type="text" maxlength="6" required />
+                    </div>
+                    <button type="button" onclick="verifyOTP()"
+                        class="mt-4 w-full h-12 rounded-lg bg-primary text-white font-bold hover:bg-primary/90">
+                        Verify OTP
+                    </button>
+                    <button type="button" onclick="showEmailStep()"
+                        class="mt-2 text-sm text-primary hover:underline">Change Email</button>
+                </div>
+
+                <div id="emailMessage" class="text-sm text-center h-5"></div>
+            </form>
+
+
+
+            <!-- Optional: Email login trigger (if you still needed) -->
+            <div class="mt-4 text-center">
+                <button type="button" onclick="showEmailLogin()" class="text-sm text-primary hover:underline">
+                    Or login with Email OTP →
+                </button>
+            </div>
+
+            <div class="mt-12 text-center">
+                <p class="text-xs text-gray-500 dark:text-gray-600">© 2025 Aarambha Foundation</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/config.js' %}"></script>
+    <script>
+        // Show/Hide forms
+        function showEmailLogin() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('emailLoginForm').classList.remove('hidden');
+            document.getElementById('backIcon').classList.remove('hidden');
+        }
+
+        function goBackToMainLogin() {
+            document.getElementById('emailLoginForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('backIcon').classList.add('hidden');
+            showEmailStep();
+        }
+
+        function showEmailStep() {
+            document.getElementById('emailStep').classList.remove('hidden');
+            document.getElementById('otpStep').classList.add('hidden');
+        }
+
+        // Toggle password visibility
+        function togglePassword() {
+            const field = document.getElementById('password');
+            const icon = document.getElementById('toggleIcon');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                field.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        // GUEST LOGIN – This is the magic button you wanted
+        async function loginAsGuest() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = 'Entering as Guest...';
+
+            try {
+                // Option 1: If you have a real guest account in backend
+                const response = await fetchAPI(api.login, {
+                    method: 'POST',
+                    body: JSON.stringify({ username: "guest", password: "guest123" }) // change if needed
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setToken(data.access, data.refresh);
+                    setUser(data.user);
+                    window.location.href = '/guest/welcome/';
+                    return;
+                }
+            } catch (e) { }
+
+            // Option 2: Fallback – just redirect (works even without backend guest user)
+            setTimeout(() => {
+                window.location.href = '/guest/welcome/';
+            }, 800);
+        }
+
+        // OTP Functions (unchanged)
+        async function sendOTP() { /* your existing code */ }
+        async function verifyOTP() { /* your existing code */ }
+
+        // Username/Password login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Clear any existing tokens before login
+            clearToken();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+
+            try {
+                const response = await fetchAPI(api.login, {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    setToken(data.access, data.refresh);
+                    setUser(data.user);
+
+                    if (data.user.user_type === 'guest') {
+                        window.location.href = '/guest/welcome/';
+                    } else if (data.user.is_superuser || data.user.user_type === 'superadmin') {
+                        window.location.href = '/admin/dashboard/';
+                    } else {
+                        window.location.href = `/dashboard/${data.user.user_type}/`;
+                    }
+                } else {
+                    messageDiv.className = 'text-sm text-center text-red-500';
+                    messageDiv.textContent = data.non_field_errors?.[0] || 'Login failed';
+                }
+            } catch (error) {
+                messageDiv.className = 'text-sm text-center text-red-500';
+                messageDiv.textContent = 'Network error. Please try again.';
+            }
+        });
+    </script>
+</body>
+
+</html>

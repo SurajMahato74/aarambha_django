@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Welcome - Aarambha Foundation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+    <div class="relative flex h-auto min-h-screen w-full flex-col items-center justify-center p-4">
+        <div class="flex w-full max-w-2xl flex-col items-center text-center">
+            <div class="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-primary/20 text-primary">
+                <span class="material-symbols-outlined !text-6xl">celebration</span>
+            </div>
+            <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">Welcome to Aarambha Foundation!</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Thank you for joining us. You're now logged in as a guest user.</p>
+            
+            <div class="w-full bg-white dark:bg-slate-800 rounded-lg p-8 shadow-lg mb-8">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">What would you like to do?</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="/apply/member/" class="flex flex-col items-center p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all">
+                        <span class="material-symbols-outlined text-white !text-5xl mb-3">person_add</span>
+                        <h3 class="text-xl font-semibold text-white mb-2">Become a Member</h3>
+                        <p class="text-sm text-blue-100">Join as a paid member with full benefits</p>
+                    </a>
+                    
+                    <a href="/apply/volunteer/" class="flex flex-col items-center p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg hover:from-green-600 hover:to-green-700 transition-all">
+                        <span class="material-symbols-outlined text-white !text-5xl mb-3">volunteer_activism</span>
+                        <h3 class="text-xl font-semibold text-white mb-2">Become a Volunteer</h3>
+                        <p class="text-sm text-green-100">Join as a volunteer and make a difference</p>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <p class="text-sm text-gray-500 dark:text-gray-600 mb-4">Your email: <strong id="userEmail" class="text-gray-700 dark:text-gray-300"></strong></p>
+                <div class="flex gap-3 justify-center">
+                    <a href="/guest/dashboard/" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Go to Dashboard
+                    </a>
+                    <button onclick="logout()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/config.js' %}"></script>
+    <script>
+        const user = getUser();
+        if (!user || user.user_type !== 'guest') {
+            window.location.href = '/';
+        }
+        document.getElementById('userEmail').textContent = user.email;
+        
+        function logout() {
+            clearToken();
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

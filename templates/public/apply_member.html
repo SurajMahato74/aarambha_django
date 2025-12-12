@@ -1,0 +1,299 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Become a Member - Aarambha Foundation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #cbd5e1; }
+        .form-section { background: #1e293b; padding: 2rem; border-radius: 0.5rem; margin-bottom: 1.5rem; }
+        .form-section h3 { color: #fff; font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Become a Member</h1>
+            <p class="text-slate-400">We ensure your personal information won't be shared in any public sites or agencies.</p>
+        </div>
+
+        <form id="memberForm" enctype="multipart/form-data">
+            <!-- Personal Information -->
+            <div class="form-section">
+                <h3>Personal Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm mb-1">Full Name *</label>
+                        <input type="text" name="full_name" required placeholder="First and last name" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Date of Birth *</label>
+                        <input type="date" name="date_of_birth" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Temporary Address *</label>
+                        <input type="text" name="temporary_address" required placeholder="e.g., Kathmandu, Nepal" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Permanent Address *</label>
+                        <input type="text" name="permanent_address" required placeholder="e.g., Bhaktapur, Nepal" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Contact Number *</label>
+                        <input type="tel" name="phone" required placeholder="+977 9800000000" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Country *</label>
+                        <select id="countrySelect" name="country" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                            <option value="">Loading countries...</option>
+                        </select>
+                    </div>
+                    <div id="districtField">
+                        <label class="block text-sm mb-1">District *</label>
+                        <select id="districtSelect" name="district" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                            <option value="">Select District</option>
+                            {% for district in districts %}
+                            <option value="{{ district }}">{{ district }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm mb-1">Profession and Academic Qualification, Affiliated Institution *</label>
+                        <textarea name="profession" required rows="2" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm mb-1">Link to any one of your facebook or linkedin or twitter account *</label>
+                        <input type="url" name="social_link" required placeholder="https://" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Questions -->
+            <div class="form-section">
+                <h3>Application Proper</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm mb-1">Why do you want to join Aarambha Foundation? *</label>
+                        <textarea name="why_join" required rows="3" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">How do you define yourself and your goal in life? *</label>
+                        <textarea name="self_definition" required rows="3" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Your hobbies, interests, key features and extra curricular activities, awards and certificates *</label>
+                        <textarea name="hobbies_interests" required rows="3" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">What ideas can you bring if you are given a platform with a full support?</label>
+                        <textarea name="ideas" rows="3" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-2">What skills do you possess? * (Select all that apply)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center"><input type="checkbox" name="skills" value="Leadership" class="mr-2"> Leadership</label>
+                            <label class="flex items-center"><input type="checkbox" name="skills" value="Graphics Designing" class="mr-2"> Graphics Designing</label>
+                            <label class="flex items-center"><input type="checkbox" name="skills" value="Photoshop" class="mr-2"> Photoshop / Photo Editing</label>
+                            <label class="flex items-center"><input type="checkbox" name="skills" value="Web Development" class="mr-2"> Web Designing / Development</label>
+                            <label class="flex items-center"><input type="checkbox" name="skills" value="Team Building" class="mr-2"> Team Building</label>
+                            <label class="flex items-center"><input type="checkbox" name="skills" value="Management" class="mr-2"> Management / Coordination</label>
+                            <label class="flex items-center"><input type="checkbox" name="skills" value="Social Media Marketing" class="mr-2"> Social Media Marketing</label>
+                            <label class="flex items-center"><input type="checkbox" name="skills" value="Other" class="mr-2"> Other</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">How much time can you give to Aarambha Foundation in a week? *</label>
+                        <select name="time_commitment" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                            <option value="">Select</option>
+                            <option value="Less than 5 hours">Less than 5 hours a week</option>
+                            <option value="5-10 hours">5–10 hours a week</option>
+                            <option value="10-15 hours">10–15 hours a week</option>
+                            <option value="15-20 hours">15–20 hours a week</option>
+                            <option value="More than 20 hours">More than 20 hours a week</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Are you involved in any other organizations? What are your expectations from us?</label>
+                        <textarea name="other_organizations" rows="3" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="form-section">
+                <h3>Upload Documents</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm mb-1">Upload Citizenship Front * (Max 10 MB)</label>
+                        <input type="file" name="citizenship_front" required accept="image/*,.pdf" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Upload Citizenship Back * (Max 10 MB)</label>
+                        <input type="file" name="citizenship_back" required accept="image/*,.pdf" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Upload Photo * (Passport-size preferred, Max 10 MB)</label>
+                        <input type="file" name="photo" required accept="image/*" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agreement -->
+            <div class="form-section">
+                <label class="flex items-start">
+                    <input type="checkbox" name="agree" required class="mt-1 mr-2">
+                    <span class="text-sm">I agree to the terms and wish to join Aarambha Foundation as a member.</span>
+                </label>
+            </div>
+
+            <div id="message" class="text-center mb-4"></div>
+
+            <div class="flex gap-4">
+                <button type="submit" class="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">Submit Application</button>
+                <a href="/guest/welcome/" class="px-6 py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 text-center">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-lg max-w-md w-full p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Complete Payment</h2>
+            <div class="bg-slate-700 p-4 rounded mb-4">
+                <p class="text-slate-300 text-sm mb-2">Membership Fee</p>
+                <p class="text-3xl font-bold text-white">Rs. 1,000</p>
+            </div>
+            <p class="text-slate-400 text-sm mb-4">You will be redirected to Khalti payment gateway to complete your membership payment.</p>
+            <div class="flex gap-2">
+                <button onclick="proceedToPayment()" class="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold">Pay with Khalti</button>
+                <button onclick="closePaymentModal()" class="px-4 py-3 bg-slate-600 text-white rounded-lg hover:bg-slate-700">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/config.js' %}"></script>
+    <script>
+        const user = getUser();
+        if (!user || user.user_type !== 'guest') {
+            window.location.href = '/';
+        }
+
+        // Load countries from REST Countries API
+        fetch('https://restcountries.com/v3.1/all?fields=name')
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById('countrySelect');
+                const sorted = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+                select.innerHTML = sorted.map(c => 
+                    `<option value="${c.name.common}" ${c.name.common === 'Nepal' ? 'selected' : ''}>${c.name.common}</option>`
+                ).join('');
+                toggleDistrictField();
+            })
+            .catch(err => {
+                console.error('Failed to load countries:', err);
+                document.getElementById('countrySelect').innerHTML = '<option value="Nepal" selected>Nepal</option>';
+                toggleDistrictField();
+            });
+
+        // Toggle district field based on country
+        document.getElementById('countrySelect').addEventListener('change', toggleDistrictField);
+
+        function toggleDistrictField() {
+            const country = document.getElementById('countrySelect').value;
+            const districtField = document.getElementById('districtField');
+            const districtSelect = document.getElementById('districtSelect');
+            
+            if (country === 'Nepal') {
+                districtField.style.display = 'block';
+                districtSelect.required = true;
+            } else {
+                districtField.style.display = 'none';
+                districtSelect.required = false;
+                districtSelect.value = '';
+            }
+        }
+
+        document.getElementById('memberForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageDiv = document.getElementById('message');
+            
+            const formData = new FormData(e.target);
+            
+            // Add country to formData
+            const country = document.getElementById('countrySelect').value;
+            formData.set('country', country);
+            
+            // Collect skills
+            const skills = [];
+            document.querySelectorAll('input[name="skills"]:checked').forEach(cb => {
+                skills.push(cb.value);
+            });
+            formData.delete('skills');
+            formData.append('skills', JSON.stringify(skills));
+            formData.append('application_type', 'member');
+            
+            try {
+                const token = getToken();
+                if (!token) {
+                    messageDiv.className = 'text-red-500';
+                    messageDiv.textContent = 'Please login first';
+                    setTimeout(() => window.location.href = '/', 2000);
+                    return;
+                }
+                
+                const response = await fetch('/api/applications/submit/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.payment_required) {
+                        window.applicationId = data.application.id;
+                        document.getElementById('paymentModal').classList.remove('hidden');
+                    } else {
+                        messageDiv.className = 'text-green-500 text-lg font-semibold';
+                        messageDiv.textContent = 'Application submitted successfully!';
+                        setTimeout(() => window.location.href = '/guest/welcome/', 2000);
+                    }
+                } else {
+                    messageDiv.className = 'text-red-500';
+                    messageDiv.textContent = Object.values(data).flat().join(', ');
+                }
+            } catch (error) {
+                messageDiv.className = 'text-red-500';
+                messageDiv.textContent = 'Error submitting application. Please try again.';
+            }
+        });
+        
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+        
+        async function proceedToPayment() {
+            try {
+                const response = await fetchAPI(`/api/applications/${window.applicationId}/initiate-payment/`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.payment_url) {
+                    window.location.href = data.payment_url;
+                } else {
+                    alert('Failed to initiate payment. Please try again.');
+                }
+            } catch (error) {
+                alert('Error initiating payment. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>

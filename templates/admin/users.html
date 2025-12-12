@@ -1,0 +1,520 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Users{% endblock %}
+{% block page_title %}Users Management{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+</style>
+
+<!-- Add User Modal -->
+<div id="addUserModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Add New User</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <form id="addUserForm" class="space-y-4">
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Username *</label>
+                <input type="text" name="username" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+            </div>
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Email *</label>
+                <input type="email" name="email" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+            </div>
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Password *</label>
+                <input type="password" name="password" required minlength="8" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+            </div>
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">User Type *</label>
+                <select id="userType" name="user_type" required onchange="toggleFields()" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    <option value="volunteer">Volunteer</option>
+                    <option value="member">Member</option>
+                    <option value="branchadmin">Branch Admin</option>
+                    <option value="superadmin">Super Admin</option>
+                </select>
+            </div>
+            <div id="regularFields">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">First Name *</label>
+                        <input type="text" name="first_name" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Last Name *</label>
+                        <input type="text" name="last_name" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm text-slate-300 mb-1">Branch *</label>
+                    <select name="branch" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                        <option value="">Select Branch</option>
+                    </select>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm text-slate-300 mb-1">Phone *</label>
+                    <input type="text" name="phone" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm text-slate-300 mb-1">Address *</label>
+                    <textarea name="address" rows="2" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                </div>
+            </div>
+            <div id="formMessage" class="text-sm"></div>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Create User</button>
+                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Edit User</h3>
+            <button onclick="closeEditModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <form id="editUserForm" class="space-y-4">
+            <input type="hidden" id="editUserId">
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">User Type *</label>
+                <select id="editUserType" name="user_type" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    <option value="volunteer">Volunteer</option>
+                    <option value="member">Member</option>
+                    <option value="branchadmin">Branch Admin</option>
+                    <option value="superadmin">Super Admin</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Branch</label>
+                <select id="editBranch" name="branch" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    <option value="">Select Branch</option>
+                </select>
+            </div>
+            <div id="editFormMessage" class="text-sm"></div>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Update User</button>
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card rounded-lg overflow-hidden bg-transparent">
+    <div class="p-5 border-b border-slate-700">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-medium text-white">All Users</h3>
+            <div class="flex gap-2">
+                <button onclick="exportUsers()" class="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                    <span class="material-symbols-outlined text-sm">download</span> Export
+                </button>
+                <button onclick="window.print()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                    <span class="material-symbols-outlined text-sm">print</span> Print
+                </button>
+                <button onclick="openModal()" class="px-3 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">+ Add User</button>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <input type="text" id="searchInput" placeholder="Search users..." class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white text-sm" onkeyup="debounceSearch()">
+            <select id="filterType" onchange="loadUsers()" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white text-sm">
+                <option value="">All Types</option>
+                <option value="volunteer">Volunteer</option>
+                <option value="member">Member</option>
+                <option value="branchadmin">Branch Admin</option>
+                <option value="superadmin">Super Admin</option>
+            </select>
+            <select id="filterBranch" onchange="loadUsers()" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white text-sm">
+                <option value="">All Branches</option>
+            </select>
+            <select id="filterStatus" onchange="loadUsers()" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white text-sm">
+                <option value="">All Status</option>
+                <option value="true">Active</option>
+                <option value="false">Suspended</option>
+            </select>
+            <select id="pageSize" onchange="loadUsers()" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white text-sm">
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+                <option value="100">100 per page</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-800/50 text-xs text-slate-400">
+                <tr>
+                    <th class="text-left p-4">ID</th>
+                    <th class="text-left p-4">Username</th>
+                    <th class="text-left p-4">Name</th>
+                    <th class="text-left p-4">Email</th>
+                    <th class="text-left p-4">Role</th>
+                    <th class="text-left p-4">Branch</th>
+                    <th class="text-left p-4">Status</th>
+                    <th class="text-left p-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody" class="divide-y divide-slate-700">
+                <tr><td colspan="8" class="p-4 text-center text-slate-400">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="p-4 border-t border-slate-700 flex justify-between items-center">
+        <div class="text-sm text-slate-400">
+            Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalUsers">0</span> users
+        </div>
+        <div id="pagination" class="flex gap-2"></div>
+    </div>
+</div>
+
+<script src="{% static 'js/config.js' %}"></script>
+<script>
+let branches = [];
+let currentPage = 1;
+let searchTimeout;
+
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentPage = 1;
+        loadUsers();
+    }, 500);
+}
+
+function toggleFields() {
+    const userType = document.getElementById('userType').value;
+    const regularFields = document.getElementById('regularFields');
+    const inputs = regularFields.querySelectorAll('input, textarea, select');
+    
+    if (userType === 'superadmin') {
+        regularFields.style.display = 'none';
+        inputs.forEach(input => input.removeAttribute('required'));
+    } else {
+        regularFields.style.display = 'block';
+        inputs.forEach(input => {
+            if (input.name !== 'branch') input.setAttribute('required', 'required');
+        });
+        document.querySelector('select[name="branch"]').setAttribute('required', 'required');
+    }
+}
+
+function openModal() {
+    document.getElementById('addUserModal').classList.remove('hidden');
+    loadBranches();
+    toggleFields();
+}
+
+function closeModal() {
+    document.getElementById('addUserModal').classList.add('hidden');
+    document.getElementById('addUserForm').reset();
+    document.getElementById('formMessage').textContent = '';
+}
+
+function closeEditModal() {
+    document.getElementById('editUserModal').classList.add('hidden');
+    document.getElementById('editUserForm').reset();
+    document.getElementById('editFormMessage').textContent = '';
+}
+
+function openEditModal(userId, userType, branchId) {
+    document.getElementById('editUserId').value = userId;
+    document.getElementById('editUserType').value = userType;
+    document.getElementById('editBranch').value = branchId || '';
+    document.getElementById('editUserModal').classList.remove('hidden');
+    loadBranchesForEdit();
+}
+
+async function loadBranches() {
+    try {
+        const response = await fetchAPI('/api/branches/list/');
+        branches = await response.json();
+        const branchSelect = document.querySelector('select[name="branch"]');
+        const filterBranch = document.getElementById('filterBranch');
+        
+        const options = '<option value="">Select Branch</option>' + 
+            branches.map(b => `<option value="${b.id}">${b.code} - ${b.name}</option>`).join('');
+        branchSelect.innerHTML = options;
+        filterBranch.innerHTML = '<option value="">All Branches</option>' + 
+            branches.map(b => `<option value="${b.id}">${b.code} - ${b.name}</option>`).join('');
+    } catch (error) {
+        console.error('Error loading branches:', error);
+    }
+}
+
+async function loadBranchesForEdit() {
+    try {
+        const response = await fetchAPI('/api/branches/list/');
+        branches = await response.json();
+        const branchSelect = document.getElementById('editBranch');
+        branchSelect.innerHTML = '<option value="">Select Branch</option>' + 
+            branches.map(b => `<option value="${b.id}">${b.code} - ${b.name}</option>`).join('');
+    } catch (error) {
+        console.error('Error loading branches:', error);
+    }
+}
+
+async function loadUsers() {
+    try {
+        const search = document.getElementById('searchInput').value;
+        const userType = document.getElementById('filterType').value;
+        const branch = document.getElementById('filterBranch').value;
+        const isActive = document.getElementById('filterStatus').value;
+        const pageSize = document.getElementById('pageSize').value;
+        
+        const params = new URLSearchParams({
+            page: currentPage,
+            page_size: pageSize,
+            ...(search && { search }),
+            ...(userType && { user_type: userType }),
+            ...(branch && { branch }),
+            ...(isActive && { is_active: isActive })
+        });
+        
+        const response = await fetchAPI(`/api/users/list/?${params}`);
+        const data = await response.json();
+        
+        const tbody = document.getElementById('usersTableBody');
+        if (data.results.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-400">No users found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.results.map(user => {
+            const branch = branches.find(b => b.id === user.branch);
+            const branchName = branch ? `${branch.code} - ${branch.name}` : '-';
+            return `
+            <tr class="hover:bg-slate-800/30 transition">
+                <td class="p-4">${user.id}</td>
+                <td class="p-4">${user.username}</td>
+                <td class="p-4">${user.first_name} ${user.last_name}</td>
+                <td class="p-4">${user.email}</td>
+                <td class="p-4"><span class="badge bg-indigo-900/30 text-indigo-300">${user.user_type}</span></td>
+                <td class="p-4">${branchName}</td>
+                <td class="p-4">
+                    <span class="badge ${user.is_active ? 'bg-emerald-900/30 text-emerald-300' : 'bg-red-900/30 text-red-300'}">
+                        ${user.is_active ? 'Active' : 'Suspended'}
+                    </span>
+                </td>
+                <td class="p-4 flex gap-1">
+                    <button onclick="viewUserDetail(${user.id})" class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700" title="View Details">
+                        <span class="material-symbols-outlined text-sm">visibility</span>
+                    </button>
+                    <button onclick="openEditModal(${user.id}, '${user.user_type}', ${user.branch})" class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700" title="Edit">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                    </button>
+                    <button onclick="toggleUserStatus(${user.id}, ${user.is_active})" class="px-2 py-1 ${user.is_active ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white rounded text-xs" title="${user.is_active ? 'Deactivate' : 'Activate'}">
+                        <span class="material-symbols-outlined text-sm">${user.is_active ? 'block' : 'check_circle'}</span>
+                    </button>
+                </td>
+            </tr>
+        `}).join('');
+        
+        // Update pagination
+        document.getElementById('showingStart').textContent = (currentPage - 1) * pageSize + 1;
+        document.getElementById('showingEnd').textContent = Math.min(currentPage * pageSize, data.total);
+        document.getElementById('totalUsers').textContent = data.total;
+        
+        renderPagination(data.total_pages);
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+}
+
+function renderPagination(totalPages) {
+    const pagination = document.getElementById('pagination');
+    let html = '';
+    
+    if (currentPage > 1) {
+        html += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-1 bg-slate-700 text-white rounded hover:bg-slate-600">Previous</button>`;
+    }
+    
+    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        html += `<button onclick="changePage(${i})" class="px-3 py-1 ${i === currentPage ? 'bg-indigo-600' : 'bg-slate-700'} text-white rounded hover:bg-indigo-500">${i}</button>`;
+    }
+    
+    if (currentPage < totalPages) {
+        html += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-1 bg-slate-700 text-white rounded hover:bg-slate-600">Next</button>`;
+    }
+    
+    pagination.innerHTML = html;
+}
+
+function changePage(page) {
+    currentPage = page;
+    loadUsers();
+}
+
+async function toggleUserStatus(userId, currentStatus) {
+    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this user?`)) return;
+    
+    try {
+        const response = await fetchAPI(`/api/users/update/${userId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_active: !currentStatus })
+        });
+        
+        if (response.ok) {
+            loadUsers();
+        }
+    } catch (error) {
+        alert('Error updating user status');
+    }
+}
+
+async function viewUserDetail(userId) {
+    try {
+        const response = await fetchAPI(`/api/users/detail/${userId}/`);
+        const user = await response.json();
+        
+        const branch = branches.find(b => b.id === user.branch);
+        const branchName = branch ? `${branch.code} - ${branch.name}` : 'Not assigned';
+        
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-white">User Details</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-slate-400">ID:</span><span class="text-white">${user.id}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Username:</span><span class="text-white">${user.username}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Email:</span><span class="text-white">${user.email}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Name:</span><span class="text-white">${user.first_name} ${user.last_name}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">User Type:</span><span class="badge bg-indigo-900/30 text-indigo-300">${user.user_type}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Branch:</span><span class="text-white">${branchName}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Phone:</span><span class="text-white">${user.phone || '-'}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Address:</span><span class="text-white">${user.address || '-'}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Status:</span><span class="badge ${user.is_active ? 'bg-emerald-900/30 text-emerald-300' : 'bg-red-900/30 text-red-300'}">${ user.is_active ? 'Active' : 'Suspended'}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Approved:</span><span class="badge ${user.is_approved ? 'bg-emerald-900/30 text-emerald-300' : 'bg-amber-900/30 text-amber-300'}">${user.is_approved ? 'Yes' : 'No'}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Membership Paid:</span><span class="badge ${user.membership_paid ? 'bg-emerald-900/30 text-emerald-300' : 'bg-amber-900/30 text-amber-300'}">${user.membership_paid ? 'Yes' : 'No'}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Joined:</span><span class="text-white">${new Date(user.date_joined).toLocaleDateString()}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Last Login:</span><span class="text-white">${user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}</span></div>
+                </div>
+                <button onclick="this.closest('.fixed').remove()" class="mt-4 w-full px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700">Close</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } catch (error) {
+        alert('Error loading user details');
+    }
+}
+
+function exportUsers() {
+    const table = document.querySelector('table');
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    
+    for (let row of rows) {
+        const cols = row.querySelectorAll('td, th');
+        const csvRow = [];
+        for (let col of cols) {
+            if (col.cellIndex < 7) { // Exclude actions column
+                csvRow.push('"' + col.textContent.trim().replace(/"/g, '""') + '"');
+            }
+        }
+        csv.push(csvRow.join(','));
+    }
+    
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+}
+
+document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    const messageDiv = document.getElementById('formMessage');
+    
+    if (data.user_type === 'superadmin') {
+        delete data.first_name;
+        delete data.last_name;
+        delete data.phone;
+        delete data.address;
+        delete data.branch;
+    } else if (!data.branch) {
+        messageDiv.className = 'text-sm text-rose-400';
+        messageDiv.textContent = 'Branch is required for non-superadmin users';
+        return;
+    }
+    
+    try {
+        const response = await fetchAPI('/api/users/register/', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            messageDiv.className = 'text-sm text-emerald-400';
+            messageDiv.textContent = 'User created successfully!';
+            setTimeout(() => {
+                closeModal();
+                loadUsers();
+            }, 1000);
+        } else {
+            messageDiv.className = 'text-sm text-rose-400';
+            messageDiv.textContent = Object.values(result).flat().join(', ');
+        }
+    } catch (error) {
+        messageDiv.className = 'text-sm text-rose-400';
+        messageDiv.textContent = 'Error creating user';
+    }
+});
+
+document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userId = document.getElementById('editUserId').value;
+    const userType = document.getElementById('editUserType').value;
+    const branch = document.getElementById('editBranch').value;
+    const messageDiv = document.getElementById('editFormMessage');
+    
+    const data = { user_type: userType };
+    if (userType !== 'superadmin' && branch) {
+        data.branch = branch;
+    }
+    
+    try {
+        const response = await fetchAPI(`/api/users/update/${userId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            messageDiv.className = 'text-sm text-emerald-400';
+            messageDiv.textContent = 'User updated successfully!';
+            setTimeout(() => {
+                closeEditModal();
+                loadUsers();
+            }, 1000);
+        } else {
+            messageDiv.className = 'text-sm text-rose-400';
+            messageDiv.textContent = Object.values(result).flat().join(', ');
+        }
+    } catch (error) {
+        messageDiv.className = 'text-sm text-rose-400';
+        messageDiv.textContent = 'Error updating user';
+    }
+});
+
+loadBranches().then(() => loadUsers());
+</script>
+{% endblock %}

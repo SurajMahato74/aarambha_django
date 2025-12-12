@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} • Aarambha Foundation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{% static 'js/config.js' %}"></script>
+    <style>
+        body { background: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #1e293b; }
+        .active { background: #312e81; border-left: 3px solid #818cf8; }
+        .hover-bg:hover { background: #293548; }
+    </style>
+</head>
+<body class="text-sm">
+<div class="flex h-screen">
+    <aside class="w-56 sidebar flex flex-col fixed h-screen">
+        <div class="p-5 border-b border-slate-700">
+            <h2 class="font-semibold text-white flex items-center gap-2">
+                <span class="text-xl">Aarambha</span>
+            </h2>
+            <p class="text-xs text-indigo-400">Guest Dashboard</p>
+        </div>
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <a href="/guest/dashboard/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'guest_dashboard' %}active text-indigo-300 font-medium{% endif %}">
+                <i class="fas fa-home w-4"></i> Dashboard
+            </a>
+            <a href="/guest/profile/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'guest_profile' %}active text-indigo-300 font-medium{% endif %}">
+                <i class="fas fa-user w-4"></i> My Profile
+            </a>
+            <a href="/guest/applications/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'guest_applications' %}active text-indigo-300 font-medium{% endif %}">
+                <i class="fas fa-file-lines w-4"></i> Applications
+            </a>
+        </nav>
+        <div class="p-3 border-t border-slate-700">
+            <a href="/" onclick="clearToken()" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-rose-400 hover:bg-rose-900/20">
+                <i class="fas fa-arrow-right-from-bracket w-4"></i> Logout
+            </a>
+        </div>
+    </aside>
+    <main class="flex-1 overflow-y-auto ml-56">
+        <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-900/95 backdrop-blur-sm py-4 px-6 z-10">
+            <h1 class="text-2xl font-semibold text-white">{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="flex items-center gap-3">
+                <span id="userName" class="text-sm font-medium text-slate-300"></span>
+                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white" id="userInitial">G</div>
+            </div>
+        </div>
+        {% block content %}{% endblock %}
+    </main>
+</div>
+<script>
+    const user = getUser();
+    if (!user || user.user_type !== 'guest') window.location.href = '/';
+    document.getElementById('userName').textContent = user.email;
+    document.getElementById('userInitial').textContent = user.email[0].toUpperCase();
+</script>
+</body>
+</html>

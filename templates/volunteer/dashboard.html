@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Dashboard • Aarambha Foundation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{% static 'js/config.js' %}"></script>
+    <style>
+        body { background: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #1e293b; }
+        .active { background: #065f46; border-left: 3px solid #10b981; }
+        .hover-bg:hover { background: #293548; }
+    </style>
+</head>
+<body class="text-sm">
+<div class="flex h-screen">
+    <aside class="w-56 sidebar flex flex-col fixed h-screen">
+        <div class="p-5 border-b border-slate-700">
+            <h2 class="font-semibold text-white flex items-center gap-2">
+                <span class="text-xl">Aarambha</span>
+            </h2>
+            <p class="text-xs text-green-400">Volunteer Dashboard</p>
+        </div>
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <a href="/dashboard/volunteer/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 active text-green-300 font-medium">
+                <i class="fas fa-home w-4"></i> Dashboard
+            </a>
+            <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-user w-4"></i> My Profile
+            </a>
+            <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-calendar w-4"></i> Events
+            </a>
+            <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-tasks w-4"></i> Tasks
+            </a>
+        </nav>
+        <div class="p-3 border-t border-slate-700">
+            <a href="/" onclick="clearToken()" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-rose-400 hover:bg-rose-900/20">
+                <i class="fas fa-arrow-right-from-bracket w-4"></i> Logout
+            </a>
+        </div>
+    </aside>
+    <main class="flex-1 overflow-y-auto ml-56">
+        <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-900/95 backdrop-blur-sm py-4 px-6 z-10">
+            <h1 class="text-2xl font-semibold text-white">Volunteer Dashboard</h1>
+            <div class="flex items-center gap-3">
+                <span id="userName" class="text-sm font-medium text-slate-300"></span>
+                <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-xs font-bold text-white" id="userInitial">V</div>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg p-8 mb-6 text-white">
+                <h2 class="text-3xl font-bold mb-2">Welcome, <span id="welcomeName">Volunteer</span>!</h2>
+                <p class="text-green-100">Thank you for volunteering with Aarambha Foundation. Together we can create positive change!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm">My Events</p>
+                            <p class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <i class="fas fa-calendar text-4xl text-blue-500"></i>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm">My Tasks</p>
+                            <p class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <i class="fas fa-tasks text-4xl text-green-500"></i>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm">Hours Volunteered</p>
+                            <p class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <i class="fas fa-clock text-4xl text-yellow-500"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 rounded-lg p-6">
+                <h3 class="text-xl font-bold text-white mb-4">Getting Started</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded">
+                        <i class="fas fa-check-circle text-green-500"></i>
+                        <span class="text-slate-300">Your account has been approved</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded">
+                        <i class="fas fa-user-edit text-blue-500"></i>
+                        <span class="text-slate-300">Complete your profile</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded">
+                        <i class="fas fa-hands-helping text-purple-500"></i>
+                        <span class="text-slate-300">Browse available volunteer opportunities</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+    const user = getUser();
+    if (!user || user.user_type !== 'volunteer') window.location.href = '/';
+    document.getElementById('userName').textContent = user.username || user.email;
+    document.getElementById('userInitial').textContent = (user.username || user.email)[0].toUpperCase();
+    document.getElementById('welcomeName').textContent = user.first_name || user.username || 'Volunteer';
+</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Contact Information{% endblock %}
+{% block page_title %}Contact Information{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <p class="text-slate-400">Manage contact information for the website</p>
+    <button onclick="openCreateModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+        <i class="fas fa-plus"></i> Add Contact Info
+    </button>
+</div>
+
+<!-- Contact Info Table -->
+<div class="card rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-800/50 text-xs text-slate-400">
+                <tr>
+                    <th class="text-left p-4">Email</th>
+                    <th class="text-left p-4">Phone</th>
+                    <th class="text-left p-4">Address</th>
+                    <th class="text-left p-4">Status</th>
+                    <th class="text-left p-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="contactTableBody" class="divide-y divide-slate-700">
+                <!-- Contact info will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="contactModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="modalTitle" class="text-lg font-semibold text-white">Add Contact Info</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="contactForm">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Address *</label>
+                    <textarea id="address" name="address" rows="3" required
+                              class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Phone *</label>
+                        <input type="text" id="phone" name="phone" required 
+                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Email *</label>
+                        <input type="email" id="email" name="email" required
+                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Facebook URL</label>
+                        <input type="url" id="facebook_url" name="facebook_url"
+                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Instagram URL</label>
+                        <input type="url" id="instagram_url" name="instagram_url"
+                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">LinkedIn URL</label>
+                        <input type="url" id="linkedin_url" name="linkedin_url"
+                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">YouTube URL</label>
+                        <input type="url" id="youtube_url" name="youtube_url"
+                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">WhatsApp URL</label>
+                    <input type="url" id="whatsapp_url" name="whatsapp_url"
+                           class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="is_active" name="is_active" checked
+                           class="w-4 h-4 text-indigo-600 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500">
+                    <label for="is_active" class="ml-2 text-sm text-slate-300">Active</label>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal()" 
+                        class="px-4 py-2 text-slate-400 hover:text-white">Cancel</button>
+                <button type="submit" 
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                    <span id="submitText">Create Contact Info</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let contactInfos = {{ contact_infos|safe }};
+let editingContactId = null;
+
+// Load contact info on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadContactInfos();
+});
+
+function loadContactInfos() {
+    const tbody = document.getElementById('contactTableBody');
+    tbody.innerHTML = '';
+    
+    contactInfos.forEach(contact => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-800/30 transition';
+        
+        row.innerHTML = `
+            <td class="p-4 font-medium text-white">${contact.email}</td>
+            <td class="p-4 text-slate-300">${contact.phone}</td>
+            <td class="p-4 text-slate-300">${contact.address.substring(0, 50)}${contact.address.length > 50 ? '...' : ''}</td>
+            <td class="p-4">
+                <span class="badge ${contact.is_active ? 'bg-emerald-900/30 text-emerald-300' : 'bg-slate-700 text-slate-400'}">
+                    ${contact.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td class="p-4">
+                <div class="flex gap-2">
+                    <button onclick="editContact(${contact.id})" class="text-indigo-400 hover:text-indigo-300">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="toggleContactStatus(${contact.id})" class="text-amber-400 hover:text-amber-300">
+                        <i class="fas fa-toggle-${contact.is_active ? 'on' : 'off'}"></i>
+                    </button>
+                    <button onclick="deleteContact(${contact.id})" class="text-red-400 hover:text-red-300">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function openCreateModal() {
+    editingContactId = null;
+    document.getElementById('modalTitle').textContent = 'Add Contact Info';
+    document.getElementById('submitText').textContent = 'Create Contact Info';
+    document.getElementById('contactForm').reset();
+    document.getElementById('is_active').checked = true;
+    document.getElementById('contactModal').classList.remove('hidden');
+}
+
+function editContact(id) {
+    const contact = contactInfos.find(c => c.id === id);
+    if (!contact) return;
+    
+    editingContactId = id;
+    document.getElementById('modalTitle').textContent = 'Edit Contact Info';
+    document.getElementById('submitText').textContent = 'Update Contact Info';
+    
+    document.getElementById('address').value = contact.address;
+    document.getElementById('phone').value = contact.phone;
+    document.getElementById('email').value = contact.email;
+    document.getElementById('facebook_url').value = contact.facebook_url || '';
+    document.getElementById('instagram_url').value = contact.instagram_url || '';
+    document.getElementById('linkedin_url').value = contact.linkedin_url || '';
+    document.getElementById('youtube_url').value = contact.youtube_url || '';
+    document.getElementById('whatsapp_url').value = contact.whatsapp_url || '';
+    document.getElementById('is_active').checked = contact.is_active;
+    
+    document.getElementById('contactModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('contactModal').classList.add('hidden');
+}
+
+// Form submission
+document.getElementById('contactForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    showLoader();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    data.is_active = document.getElementById('is_active').checked;
+    
+    try {
+        const url = editingContactId ? 
+            `/api/hero/contact/update/${editingContactId}/` : 
+            '/api/hero/contact/create/';
+        
+        const response = await fetchAPI(url, {
+            method: editingContactId ? 'PATCH' : 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            const contactData = await response.json();
+            
+            if (editingContactId) {
+                const index = contactInfos.findIndex(c => c.id === editingContactId);
+                contactInfos[index] = contactData;
+            } else {
+                contactInfos.unshift(contactData);
+            }
+            
+            loadContactInfos();
+            closeModal();
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.detail || 'Failed to save contact info'));
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    } finally {
+        hideLoader();
+    }
+});
+
+async function toggleContactStatus(id) {
+    showLoader();
+    
+    try {
+        const response = await fetchAPI(`/api/hero/contact/toggle-active/${id}/`, {
+            method: 'PATCH'
+        });
+        
+        if (response.ok) {
+            const contactData = await response.json();
+            const index = contactInfos.findIndex(c => c.id === id);
+            contactInfos[index] = contactData;
+            loadContactInfos();
+        }
+    } catch (error) {
+        alert('Error toggling status: ' + error.message);
+    } finally {
+        hideLoader();
+    }
+}
+
+async function deleteContact(id) {
+    if (!confirm('Are you sure you want to delete this contact info?')) return;
+    
+    showLoader();
+    
+    try {
+        const response = await fetchAPI(`/api/hero/contact/delete/${id}/`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            contactInfos = contactInfos.filter(c => c.id !== id);
+            loadContactInfos();
+        }
+    } catch (error) {
+        alert('Error deleting contact info: ' + error.message);
+    } finally {
+        hideLoader();
+    }
+}
+</script>
+{% endblock %}
