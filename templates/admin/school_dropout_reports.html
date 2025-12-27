@@ -1,0 +1,291 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}School Dropout Reports{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}School Dropout Reports{% endblock %}
+
+{% block content %}
+<div class="p-6">
+
+    <!-- Filters -->
+    <div class="bg-transparent p-4 rounded-lg mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <input type="text" id="searchInput" placeholder="Search by name, school..."
+                class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+            <select id="statusFilter" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="investigated">Investigated</option>
+                <option value="resolved">Resolved</option>
+            </select>
+            <select id="genderFilter" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                <option value="">All Genders</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select>
+            <select id="districtFilter" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                <option value="">All Districts</option>
+                {% for district in districts %}
+                <option value="{{ district }}">{{ district }}</option>
+                {% endfor %}
+            </select>
+            <button onclick="loadReports()"
+                class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Filter</button>
+        </div>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="bg-transparent rounded-lg overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-slate-700">
+                <tr>
+                    <th class="px-4 py-3 text-left text-white">Child's Name</th>
+                    <th class="px-4 py-3 text-left text-white">School</th>
+                    <th class="px-4 py-3 text-left text-white">District</th>
+                    <th class="px-4 py-3 text-left text-white">Reporter</th>
+                    <th class="px-4 py-3 text-left text-white">Status</th>
+                    <th class="px-4 py-3 text-left text-white">Submitted</th>
+                    <th class="px-4 py-3 text-left text-white">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reportsTable" class="text-slate-300">
+                <tr>
+                    <td colspan="7" class="text-center py-8">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-4">
+        <div class="text-slate-400" id="pageInfo"></div>
+        <div class="flex gap-2" id="pagination"></div>
+    </div>
+</div>
+
+<!-- View Report Modal -->
+<div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white">School Dropout Report Details</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="statusModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 rounded-lg max-w-md w-full p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Update Report Status</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">New Status</label>
+                <select id="newStatus" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    <option value="pending">Pending</option>
+                    <option value="investigated">Investigated</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="updateStatus()"
+                    class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Update</button>
+                <button onclick="closeStatusModal()"
+                    class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    let currentReportId = null;
+
+    async function loadReports() {
+        const search = document.getElementById('searchInput').value;
+        const status = document.getElementById('statusFilter').value;
+        const gender = document.getElementById('genderFilter').value;
+        const district = document.getElementById('districtFilter').value;
+
+        const params = new URLSearchParams({
+            page: currentPage,
+            search, status, gender, district
+        });
+
+        const response = await fetchAPI(`/api/core/reports/school-dropout/admin/?${params}`);
+        const data = await response.json();
+
+        const tbody = document.getElementById('reportsTable');
+        tbody.innerHTML = data.results.map(report => `
+            <tr class="border-t border-slate-700">
+                <td class="px-4 py-3">${report.dropout_name}</td>
+                <td class="px-4 py-3">${report.school_name}</td>
+                <td class="px-4 py-3">${report.district}</td>
+                <td class="px-4 py-3">${report.is_anonymous ? 'Anonymous' : report.reporter_name}</td>
+                <td class="px-4 py-3">
+                    <span class="px-2 py-1 rounded text-xs ${getStatusColor(report.status)}">${report.status}</span>
+                </td>
+                <td class="px-4 py-3">${new Date(report.created_at).toLocaleDateString()}</td>
+                <td class="px-4 py-3">
+                    <div class="flex gap-2">
+                        <button onclick="viewReport(${report.id})" class="text-blue-400 hover:text-blue-300" title="View Details">
+                            <span class="material-symbols-outlined" style="font-size:20px">visibility</span>
+                        </button>
+                        <button onclick="openStatusModal(${report.id})" class="text-yellow-400 hover:text-yellow-300" title="Update Status">
+                            <span class="material-symbols-outlined" style="font-size:20px">edit</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        document.getElementById('pageInfo').textContent = `Showing ${data.results.length} of ${data.total}`;
+    }
+
+    function getStatusColor(status) {
+        const colors = {
+            pending: 'bg-yellow-600',
+            investigated: 'bg-blue-600',
+            resolved: 'bg-green-600'
+        };
+        return colors[status] || 'bg-gray-600';
+    }
+
+    async function viewReport(id) {
+        const response = await fetchAPI(`/api/core/reports/school-dropout/admin/${id}/`);
+        const report = await response.json();
+
+        const statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(report.status)}">${report.status.replace('_', ' ').toUpperCase()}</span>`;
+
+        document.getElementById('modalContent').innerHTML = `
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 p-6 rounded-lg mb-6">
+            <div class="flex items-start gap-6">
+                <div class="flex-1">
+                    <h3 class="text-2xl font-bold text-white mb-2">${report.dropout_name}</h3>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-slate-300">Age: ${report.dropout_age}, Gender: ${report.dropout_gender}</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-slate-300">
+                        <div><span class="text-slate-400">School:</span> ${report.school_name}</div>
+                        <div><span class="text-slate-400">Location:</span> ${report.school_location}, ${report.district}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-5">
+            <!-- Reporter Information -->
+            <div class="bg-slate-700/50 p-4 rounded-lg">
+                <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-indigo-400" style="font-size:20px">person</span>
+                    Reporter Information ${report.is_anonymous ? '(Anonymous)' : ''}
+                </h4>
+                ${report.is_anonymous ? `
+                    <p class="text-slate-200 text-sm">This report was submitted anonymously.</p>
+                ` : `
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <p class="text-slate-400 text-xs mb-1">Name</p>
+                            <p class="text-slate-200">${report.reporter_name}</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs mb-1">Email</p>
+                            <p class="text-slate-200">${report.reporter_email}</p>
+                        </div>
+                        ${report.reporter_phone ? `
+                            <div class="col-span-2">
+                                <p class="text-slate-400 text-xs mb-1">Phone</p>
+                                <p class="text-slate-200">${report.reporter_phone}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `}
+            </div>
+
+            <!-- Dropout Details -->
+            <div class="bg-slate-700/50 p-4 rounded-lg">
+                <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-indigo-400" style="font-size:20px">school</span>
+                    Dropout Information
+                </h4>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-slate-400 text-xs mb-1">Reason for Dropping Out</p>
+                        <p class="text-slate-200 text-sm leading-relaxed">${report.reason_for_dropout}</p>
+                    </div>
+                    ${report.additional_notes ? `
+                        <div>
+                            <p class="text-slate-400 text-xs mb-1">Additional Notes</p>
+                            <p class="text-slate-200 text-sm leading-relaxed">${report.additional_notes}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- Report Meta -->
+            <div class="text-center text-slate-400 text-xs pt-4 border-t border-slate-700">
+                Reported on ${new Date(report.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+        </div>
+    `;
+        document.getElementById('viewModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('viewModal').classList.add('hidden');
+    }
+
+
+    function openStatusModal(id) {
+        currentReportId = id;
+        document.getElementById('statusModal').classList.remove('hidden');
+    }
+
+    function closeStatusModal() {
+        document.getElementById('statusModal').classList.add('hidden');
+        currentReportId = null;
+    }
+
+    async function updateStatus() {
+        const newStatus = document.getElementById('newStatus').value;
+
+        const response = await fetchAPI(`/api/core/reports/school-dropout/admin/${currentReportId}/update-status/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (response.ok) {
+            alert('Status updated successfully!');
+            closeStatusModal();
+            loadReports();
+        } else {
+            alert('Failed to update status');
+        }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; loadReports(); });
+    document.getElementById('statusFilter').addEventListener('change', () => { currentPage = 1; loadReports(); });
+    document.getElementById('genderFilter').addEventListener('change', () => { currentPage = 1; loadReports(); });
+    document.getElementById('districtFilter').addEventListener('change', () => { currentPage = 1; loadReports(); });
+
+    loadReports();
+</script>
+{% endblock %}

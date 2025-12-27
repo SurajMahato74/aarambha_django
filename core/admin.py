@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import HeroSection, WhoWeAre, GrowingOurImpact, Statistics, OurWork
+from .models import HeroSection, WhoWeAre, GrowingOurImpact, Statistics, OurWork, SchoolDropoutReport, Donation
 from ckeditor.widgets import CKEditorWidget
 from ckeditor.fields import RichTextField
 
@@ -152,3 +152,58 @@ class OurWorkAdmin(admin.ModelAdmin):
         return bool(obj.main_image)
     has_image.boolean = True
     has_image.short_description = 'Image'
+
+
+@admin.register(SchoolDropoutReport)
+class SchoolDropoutReportAdmin(admin.ModelAdmin):
+    list_display = ['dropout_name', 'school_name', 'district', 'reporter_name', 'status', 'is_anonymous', 'created_at']
+    list_filter = ['status', 'district', 'dropout_gender', 'is_anonymous', 'created_at']
+    search_fields = ['dropout_name', 'school_name', 'reporter_name', 'reporter_email']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering = ['-created_at']
+
+    fieldsets = (
+        ('Reporter Information', {
+            'fields': ('reporter_name', 'reporter_email', 'reporter_phone', 'is_anonymous')
+        }),
+        ('Dropout Information', {
+            'fields': ('dropout_name', 'dropout_age', 'dropout_gender', 'school_name', 'school_location', 'district')
+        }),
+        ('Report Details', {
+            'fields': ('reason_for_dropout', 'additional_notes', 'status')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(Donation)
+class DonationAdmin(admin.ModelAdmin):
+    list_display = ['purchase_order_id', 'full_name', 'amount', 'payment_status', 'created_at', 'completed_at']
+    list_filter = ['payment_status', 'refunded', 'created_at', 'completed_at']
+    search_fields = ['full_name', 'email', 'purchase_order_id', 'transaction_id', 'pidx']
+    readonly_fields = ['purchase_order_id', 'pidx', 'transaction_id', 'payment_url', 'created_at', 'updated_at', 'completed_at']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Donor Information', {
+            'fields': ('title', 'full_name', 'email', 'phone')
+        }),
+        ('Donation Details', {
+            'fields': ('amount', 'payment_status', 'refunded')
+        }),
+        ('Khalti Payment Information', {
+            'fields': ('purchase_order_id', 'pidx', 'transaction_id', 'payment_url', 'fee'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'completed_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        # Disable manual creation of donations (should be created via API)
+        return False

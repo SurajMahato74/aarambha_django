@@ -77,6 +77,10 @@
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_applications' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-file-lines w-4"></i> Applications
                 </a>
+                <a href="{% url 'admin_school_dropout_reports' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_school_dropout_reports' %}active text-indigo-300 font-medium{% endif %}">
+                    <i class="fas fa-graduation-cap w-4"></i> School Dropout Reports
+                </a>
 
                 <!-- Content Management Section -->
                 <div class="pt-2 mt-2 border-t border-slate-700">
@@ -140,11 +144,15 @@
             </nav>
 
             <div class="p-3 border-t border-slate-700">
-                <a href="{% url 'login' %}" onclick="clearToken(); return true;"
-                    class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-rose-400 hover:bg-rose-900/20">
-                    <i class="fas fa-arrow-right-from-bracket w-4"></i> Logout
-                </a>
+                <form method="POST" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" onclick="clearToken()"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-rose-400 hover:bg-rose-900/20">
+                        <i class="fas fa-arrow-right-from-bracket w-4"></i> Logout
+                    </button>
+                </form>
             </div>
+
         </aside>
 
         <!-- Main Content -->

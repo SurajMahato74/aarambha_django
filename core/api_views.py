@@ -3,8 +3,9 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Event, Partner, ContactInfo, Award, OurWork
-from .serializers import HeroSectionSerializer, SupportCardSerializer, WhoWeAreSerializer, GrowingOurImpactSerializer, StatisticsSerializer, EventSerializer, PartnerSerializer, ContactInfoSerializer, AwardSerializer, OurWorkSerializer
+from django.db.models import Q
+from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Event, Partner, ContactInfo, Award, OurWork, SchoolDropoutReport
+from .serializers import HeroSectionSerializer, SupportCardSerializer, WhoWeAreSerializer, GrowingOurImpactSerializer, StatisticsSerializer, EventSerializer, PartnerSerializer, ContactInfoSerializer, AwardSerializer, OurWorkSerializer, SchoolDropoutReportSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -852,3 +853,454 @@ def award_toggle_active(request, pk):
         return Response(AwardSerializer(award, context={'request': request}).data)
     except Award.DoesNotExist:
         return Response({'error': 'Award not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# School Dropout Report API Views
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def school_dropout_report_create(request):
+    """Create a new school dropout report (public endpoint)"""
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    serializer = SchoolDropoutReportSerializer(data=request.data)
+    if serializer.is_valid():
+        report = serializer.save()
+
+        # Send confirmation email to the reporter
+        try:
+            subject = '📋 School Dropout Report Submitted - Aarambha Foundation'
+            message = f'''Dear {report.reporter_name},
+
+Thank you for submitting a school dropout report to Aarambha Foundation.
+
+Your report details:
+- Child's Name: {report.dropout_name}
+- School: {report.school_name}
+- Location: {report.school_location}, {report.district}
+
+We appreciate your contribution to helping children return to education. Our team will review this report and take appropriate action.
+
+If you have any additional information or questions, please don't hesitate to contact us.
+
+Warm regards,
+Aarambha Foundation Team
+Email: we.aarambha@gmail.com
+Phone: +977 (984)346-7402'''
+
+            send_mail(
+                subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [report.reporter_email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            # Log the error but don't fail the request
+            print(f"Failed to send confirmation email: {e}")
+
+        return Response(
+            SchoolDropoutReportSerializer(report).data,
+            status=status.HTTP_201_CREATED
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def school_dropout_report_list_admin(request):
+    """List all school dropout reports for admin"""
+    reports = SchoolDropoutReport.objects.all().order_by('-created_at')
+
+    # Filters
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    district = request.GET.get('district', '')
+    gender = request.GET.get('gender', '')
+
+    if search:
+        reports = reports.filter(
+            Q(dropout_name__icontains=search) |
+            Q(school_name__icontains=search) |
+            Q(reporter_name__icontains=search) |
+            Q(reporter_email__icontains=search)
+        )
+    if status_filter:
+        reports = reports.filter(status=status_filter)
+    if district:
+        reports = reports.filter(district=district)
+    if gender:
+        reports = reports.filter(dropout_gender=gender)
+
+    # Pagination
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 10))
+    start = (page - 1) * page_size
+    end = start + page_size
+
+    total = reports.count()
+    reports_page = reports[start:end]
+
+    serializer = SchoolDropoutReportSerializer(reports_page, many=True)
+    return Response({
+        'results': serializer.data,
+        'total': total,
+        'page': page,
+        'page_size': page_size,
+        'total_pages': (total + page_size - 1) // page_size
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def school_dropout_report_detail_admin(request, pk):
+    """Get a specific school dropout report for admin"""
+    try:
+        report = SchoolDropoutReport.objects.get(pk=pk)
+        serializer = SchoolDropoutReportSerializer(report)
+        return Response(serializer.data)
+    except SchoolDropoutReport.DoesNotExist:
+        return Response({'error': 'Report not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def school_dropout_report_update_status(request, pk):
+    """Update status of a school dropout report"""
+    try:
+        report = SchoolDropoutReport.objects.get(pk=pk)
+        new_status = request.data.get('status')
+        if new_status in ['pending', 'investigated', 'resolved']:
+            report.status = new_status
+            report.save()
+            return Response(SchoolDropoutReportSerializer(report).data)
+        return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+    except SchoolDropoutReport.DoesNotExist:
+        return Response({'error': 'Report not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Khalti Payment Integration for Donations
+import requests
+import uuid
+import logging
+from decimal import Decimal
+from django.utils import timezone
+from .models import Donation
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def donation_initiate_payment(request):
+    """
+    Initiate a donation payment with Khalti.
+    Creates a donation record and initiates Khalti payment.
+    """
+    try:
+        logger.info("Starting donation_initiate_payment")
+        # Extract donation data
+        title = request.data.get('title', 'Mr.')
+        full_name = request.data.get('full_name')
+        email = request.data.get('email')
+        phone = request.data.get('phone', '')
+        amount = request.data.get('amount')
+        logger.info(f"Received data: title={title}, full_name={full_name}, email={email}, phone={phone}, amount={amount}")
+        
+        # Validate required fields
+        if not full_name or not email or not amount:
+            return Response(
+                {'error': 'full_name, email, and amount are required fields'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validate amount
+        try:
+            amount = Decimal(str(amount))
+            logger.info(f"Amount converted to Decimal: {amount}")
+            if amount < 10:
+                return Response(
+                    {'error': 'Amount should be greater than Rs. 10'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if amount > 200:
+                return Response(
+                    {'error': 'Amount should not exceed Rs. 200. For larger donations, please contact us directly.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            logger.error(f"Amount validation error: {e}")
+            return Response(
+                {'error': 'Invalid amount format'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Generate unique purchase order ID
+        purchase_order_id = f"DON-{uuid.uuid4().hex[:12].upper()}"
+        logger.info(f"Generated purchase_order_id: {purchase_order_id}")
+
+        # Create donation record
+        try:
+            donation = Donation.objects.create(
+                title=title,
+                full_name=full_name,
+                email=email,
+                phone=phone,
+                amount=amount,
+                purchase_order_id=purchase_order_id,
+                payment_status='initiated'
+            )
+            logger.info(f"Donation created with ID: {donation.id}")
+        except Exception as e:
+            logger.error(f"Error creating donation: {e}")
+            raise
+        
+        # Get Khalti credentials from settings
+        khalti_secret_key = getattr(settings, 'KHALTI_SECRET_KEY', 'live_secret_key_9fa11bce45e44676bb9040b5354a3918')
+        logger.info(f"Using Khalti secret key: {khalti_secret_key[:10]}...")
+
+        # Get return URL from request or use default
+        base_url = request.build_absolute_uri('/').rstrip('/')
+        return_url = f"{base_url}/donation/callback/"
+        website_url = base_url
+        logger.info(f"Return URL: {return_url}, Website URL: {website_url}")
+
+        # Prepare Khalti payment initiate payload
+        khalti_payload = {
+            "return_url": return_url,
+            "website_url": website_url,
+            "amount": donation.amount_in_paisa,
+            "purchase_order_id": purchase_order_id,
+            "purchase_order_name": f"Donation by {full_name}",
+            "customer_info": {
+                "name": full_name,
+                "email": email,
+                "phone": phone if phone else "9800000000"
+            }
+        }
+        logger.info(f"Khalti payload: {khalti_payload}")
+
+        # Make request to Khalti API
+        khalti_url = "https://pay.khalti.com/api/v2/epayment/initiate/"
+        headers = {
+            'Authorization': f'key {khalti_secret_key}',
+            'Content-Type': 'application/json',
+        }
+        logger.info(f"Making request to Khalti API: {khalti_url}")
+
+        try:
+            response = requests.post(khalti_url, json=khalti_payload, headers=headers, timeout=30)
+            logger.info(f"Khalti API response status: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Request to Khalti API failed: {e}")
+            raise
+        
+        if response.status_code == 200:
+            try:
+                khalti_response = response.json()
+                logger.info(f"Khalti response: {khalti_response}")
+            except Exception as e:
+                logger.error(f"Failed to parse Khalti response JSON: {e}, content: {response.text}")
+                raise
+
+            # Update donation with Khalti response
+            try:
+                donation.pidx = khalti_response.get('pidx')
+                donation.payment_url = khalti_response.get('payment_url')
+                donation.save()
+                logger.info(f"Donation updated with pidx: {donation.pidx}")
+            except Exception as e:
+                logger.error(f"Failed to update donation: {e}")
+                raise
+
+            return Response({
+                'success': True,
+                'donation_id': donation.id,
+                'purchase_order_id': purchase_order_id,
+                'pidx': khalti_response.get('pidx'),
+                'payment_url': khalti_response.get('payment_url'),
+                'expires_at': khalti_response.get('expires_at'),
+                'expires_in': khalti_response.get('expires_in'),
+                'full_response': khalti_response  # For debugging
+            }, status=status.HTTP_200_OK)
+        else:
+            # Khalti API error
+            logger.error(f"Khalti API error status: {response.status_code}, content: {response.text}")
+            donation.payment_status = 'failed'
+            donation.save()
+
+            try:
+                error_data = response.json() if response.content else {'error': 'Unknown error'}
+            except:
+                error_data = {'error': 'Failed to parse error response', 'content': response.text}
+            return Response({
+                'error': 'Failed to initiate payment with Khalti',
+                'details': error_data
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        logger.error(f"Unexpected error in donation_initiate_payment: {e}", exc_info=True)
+        return Response(
+            {'error': f'An error occurred: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def donation_verify_payment(request):
+    """
+    Verify a donation payment with Khalti.
+    This endpoint is called to confirm the payment status.
+    """
+    try:
+        pidx = request.data.get('pidx')
+        token = request.data.get('token')  # transaction_id from callback
+        amount = request.data.get('amount')
+
+        if not pidx:
+            return Response(
+                {'error': 'pidx is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Find donation by pidx
+        try:
+            donation = Donation.objects.get(pidx=pidx)
+        except Donation.DoesNotExist:
+            return Response(
+                {'error': 'Donation not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Idempotency: If already verified, return success
+        if donation.payment_status == 'completed':
+            return Response({
+                'success': True,
+                'donation_id': donation.id,
+                'purchase_order_id': donation.purchase_order_id,
+                'status': donation.payment_status,
+                'transaction_id': donation.transaction_id,
+                'amount': str(donation.amount),
+                'fee': str(donation.fee),
+                'refunded': donation.refunded,
+                'message': 'Payment already verified'
+            }, status=status.HTTP_200_OK)
+
+        # Get Khalti credentials from settings
+        khalti_secret_key = getattr(settings, 'KHALTI_SECRET_KEY', 'live_secret_key_9fa11bce45e44676bb9040b5354a3918')
+
+        # Use ePayment lookup API as per Khalti support recommendation
+        khalti_url = "https://pay.khalti.com/api/v2/epayment/lookup/"
+        headers = {
+            'Authorization': f'key {khalti_secret_key}',
+            'Content-Type': 'application/json',
+        }
+
+        lookup_payload = {"pidx": pidx}
+        response = requests.post(khalti_url, json=lookup_payload, headers=headers)
+
+        if response.status_code == 200:
+            khalti_response = response.json()
+
+            # Update donation with lookup response
+            payment_status = khalti_response.get('status', '').lower()
+
+            # Map Khalti status to our status
+            status_mapping = {
+                'completed': 'completed',
+                'pending': 'pending',
+                'initiated': 'initiated',
+                'refunded': 'refunded',
+                'expired': 'expired',
+                'user canceled': 'canceled'
+            }
+
+            donation.payment_status = status_mapping.get(payment_status, 'failed')
+            donation.transaction_id = khalti_response.get('transaction_id')
+            donation.fee = Decimal(str(khalti_response.get('fee', 0))) / 100  # Convert paisa to rupees
+            donation.refunded = khalti_response.get('refunded', False)
+
+            if donation.payment_status == 'completed' and not donation.completed_at:
+                donation.completed_at = timezone.now()
+
+            donation.save()
+
+            return Response({
+                'success': True,
+                'donation_id': donation.id,
+                'purchase_order_id': donation.purchase_order_id,
+                'status': donation.payment_status,
+                'transaction_id': donation.transaction_id,
+                'amount': str(donation.amount),
+                'fee': str(donation.fee),
+                'refunded': donation.refunded,
+                'full_response': khalti_response
+            }, status=status.HTTP_200_OK)
+        else:
+            # Lookup failed
+            error_data = response.json() if response.content else {'error': 'Unknown error'}
+            return Response({
+                'error': 'Failed to verify payment with Khalti',
+                'details': error_data
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        return Response(
+            {'error': f'An error occurred: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def donation_list_admin(request):
+    """List all donations for admin"""
+    donations = Donation.objects.all().order_by('-created_at')
+    
+    # Filters
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    
+    if search:
+        donations = donations.filter(
+            Q(full_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(purchase_order_id__icontains=search) |
+            Q(transaction_id__icontains=search)
+        )
+    if status_filter:
+        donations = donations.filter(payment_status=status_filter)
+    
+    # Pagination
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 20))
+    start = (page - 1) * page_size
+    end = start + page_size
+    
+    total = donations.count()
+    donations_page = donations[start:end]
+    
+    # Serialize data
+    data = [{
+        'id': d.id,
+        'title': d.title,
+        'full_name': d.full_name,
+        'email': d.email,
+        'phone': d.phone,
+        'amount': str(d.amount),
+        'purchase_order_id': d.purchase_order_id,
+        'transaction_id': d.transaction_id,
+        'payment_status': d.payment_status,
+        'refunded': d.refunded,
+        'created_at': d.created_at.isoformat(),
+        'completed_at': d.completed_at.isoformat() if d.completed_at else None
+    } for d in donations_page]
+    
+    return Response({
+        'results': data,
+        'total': total,
+        'page': page,
+        'page_size': page_size,
+        'total_pages': (total + page_size - 1) // page_size
+    })

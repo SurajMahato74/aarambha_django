@@ -1,0 +1,403 @@
+<style>
+    .donation-container {
+        display: flex;
+        max-width: 800px;
+        margin: 10px auto;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        border: 1px solid #eee;
+        min-height: 420px;
+    }
+
+    /* Left Side - Static */
+    .info-panel {
+        flex: 1;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .image-header img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+    }
+
+    .info-content {
+        padding: 20px;
+    }
+
+    .logo {
+        height: 25px;
+        margin-bottom: 10px;
+    }
+
+    .info-content h2 {
+        font-size: 18px;
+        color: #222;
+        margin-bottom: 8px;
+    }
+
+    .info-content p {
+        color: #666;
+        line-height: 1.4;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+
+    .footer-links {
+        font-size: 11px;
+        color: #999;
+    }
+
+    .footer-links a {
+        color: #999;
+        text-decoration: none;
+        margin-right: 5px;
+    }
+
+    /* Right Side - Dynamic Card */
+    .donation-card {
+        flex: 0.9;
+        padding: 25px;
+        background: #fff;
+        border-left: 1px solid #f0f0f0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Common Form Styles */
+    .step-content {
+        display: none;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .step-content.active {
+        display: flex;
+    }
+
+    .secure-header {
+        font-size: 14px;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .amount-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .amt-btn {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .amt-btn:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+    .custom-amount {
+        display: flex;
+        align-items: center;
+        border: 1.5px solid #3b82f6;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 20px;
+    }
+
+    .custom-amount input {
+        border: none;
+        font-size: 20px;
+        width: 100%;
+        outline: none;
+        font-weight: bold;
+        padding: 0;
+    }
+
+    .donate-submit {
+        width: 100%;
+        background: #3b82f6;
+        color: white;
+        padding: 14px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: auto;
+    }
+
+    /* Payment Option Style */
+    .payment-option {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .payment-option:hover {
+        border-color: #5c2d91;
+        background: #f9f5ff;
+    }
+
+    .payment-option img {
+        height: 20px;
+        margin-right: 10px;
+    }
+
+    .success-msg {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .success-icon {
+        font-size: 50px;
+        color: #4bb543;
+        margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+        .donation-container {
+            flex-direction: column;
+        }
+
+        .donation-card {
+            border-left: none;
+            border-top: 1px solid #eee;
+        }
+    }
+</style>
+
+<div class="donation-container">
+    <div class="info-panel">
+        <div class="image-header">
+            <img src="https://via.placeholder.com/400x200" alt="Support">
+        </div>
+        <div class="info-content">
+            <img src="https://via.placeholder.com/80x30" alt="Logo" class="logo">
+            <h2>Help Defeat Poverty</h2>
+            <p>Your support provides life-saving aid to women and girls in crisis. Join us in making a lasting impact
+                today.</p>
+            <div class="footer-links">
+                <a href="#">Privacy</a> • <a href="#">Usage</a> • <a href="#">Contact</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="donation-card">
+
+        <div id="step1" class="step-content active">
+            <div class="secure-header">🔒 Secure Donation</div>
+            <div class="amount-grid">
+                <button class="amt-btn" onclick="setAmount('1,000')">1,000</button>
+                <button class="amt-btn" onclick="setAmount('2,000')">2,000</button>
+                <button class="amt-btn" onclick="setAmount('5,000')">5,000</button>
+                <button class="amt-btn" onclick="setAmount('10,000')">10,000</button>
+                <button class="amt-btn" onclick="setAmount('20,000')">20,000</button>
+                <button class="amt-btn" onclick="setAmount('')">Other</button>
+            </div>
+            <div class="custom-amount">
+                <span style="font-size:18px; margin-right:5px;">Rs</span>
+                <input type="text" id="donationInput" value="1,000">
+                <span style="color:#888; font-size:12px;">NPR ⌵</span>
+            </div>
+            <button class="donate-submit" onclick="nextStep(2)">Next</button>
+        </div>
+
+        <div id="step2" class="step-content">
+            <div class="secure-header">Personal Details</div>
+            <div class="form-group">
+                <label>Title</label>
+                <select id="title">
+                    <option>Mr.</option>
+                    <option>Mrs.</option>
+                    <option>Ms.</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="fullname" placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="john@example.com">
+            </div>
+            <div class="form-group">
+                <label>Phone Number (Optional)</label>
+                <input type="text" id="phone" placeholder="98XXXXXXXX">
+            </div>
+            <button class="donate-submit" onclick="nextStep(3)">Continue to Payment</button>
+        </div>
+
+        <div id="step3" class="step-content">
+            <div class="secure-header">Payment Method</div>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Choosing to pay: <strong id="summaryAmt">Rs
+                    1,000</strong></p>
+            <div class="payment-option" onclick="finish()">
+                <img src="https://web.khalti.com/static/img/logo1.png" alt="Khalti">
+                <span>Pay with Khalti</span>
+            </div>
+            <p style="font-size: 11px; color: #999; margin-top: 10px; text-align: center;">You will be redirected to
+                Khalti's secure portal.</p>
+        </div>
+
+        <div id="step4" class="step-content">
+            <div class="success-msg">
+                <div class="success-icon">✓</div>
+                <h3>Thank You!</h3>
+                <p style="font-size: 14px; color: #666;">Your donation has been received successfully.</p>
+                <button class="donate-submit" style="margin-top:20px" onclick="location.reload()">Done</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function setAmount(val) {
+        document.getElementById('donationInput').value = val;
+        if (val === '') document.getElementById('donationInput').focus();
+    }
+
+    function nextStep(step) {
+        // Validation for step 1
+        if (step === 2) {
+            const amountStr = document.getElementById('donationInput').value.replace(/,/g, '');
+            const amount = parseFloat(amountStr);
+            if (!amount || amount < 10) {
+                alert("Please enter a valid amount (minimum Rs. 10)");
+                return;
+            }
+        }
+
+        // Validation for step 2
+        if (step === 3) {
+            const name = document.getElementById('fullname').value;
+            const email = document.getElementById('email').value;
+            if (!name || !email) {
+                alert("Please fill in Name and Email");
+                return;
+            }
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert("Please enter a valid email address");
+                return;
+            }
+            document.getElementById('summaryAmt').innerText = "Rs " + document.getElementById('donationInput').value;
+        }
+
+        // Hide all steps
+        for (let i = 1; i <= 4; i++) {
+            const stepEl = document.getElementById('step' + i);
+            if (stepEl) {
+                stepEl.style.display = 'none';
+                stepEl.classList.remove('active');
+            }
+        }
+        // Show target step
+        const targetStep = document.getElementById('step' + step);
+        if (targetStep) {
+            targetStep.style.display = 'flex';
+            targetStep.classList.add('active');
+        }
+    }
+
+    async function finish() {
+        // Collect donation data
+        const title = document.getElementById('title').value;
+        const fullName = document.getElementById('fullname').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const amountStr = document.getElementById('donationInput').value.replace(/,/g, '');
+        const amount = parseFloat(amountStr);
+
+        // Validate
+        if (!fullName || !email || !amount || amount < 10) {
+            alert("Please fill in all required fields");
+            return;
+        }
+        if (amount > 200) {
+            alert("Maximum donation amount is Rs. 200. For larger donations, please contact us directly.");
+            return;
+        }
+
+        // Show loading state
+        const paymentOption = document.querySelector('.payment-option');
+        const originalText = paymentOption.innerHTML;
+        paymentOption.innerHTML = '<span>Processing...</span>';
+        paymentOption.style.pointerEvents = 'none';
+
+        try {
+            // Call API to initiate payment
+            const response = await fetch('/api/core/donations/initiate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: title,
+                    full_name: fullName,
+                    email: email,
+                    phone: phone,
+                    amount: amount
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.payment_url) {
+                // Redirect to Khalti payment page
+                window.location.href = data.payment_url;
+            } else {
+                // Show error
+                alert(data.error || 'Failed to initiate payment. Please try again.');
+                paymentOption.innerHTML = originalText;
+                paymentOption.style.pointerEvents = 'auto';
+            }
+        } catch (error) {
+            console.error('Payment initiation error:', error);
+            alert('An error occurred. Please try again.');
+            paymentOption.innerHTML = originalText;
+            paymentOption.style.pointerEvents = 'auto';
+        }
+    }
+</script>

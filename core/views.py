@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .districts import NEPAL_DISTRICTS
 from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Event, Partner, ContactInfo, Award, OurWork
+from decimal import Decimal
 
 def website_home(request):
     hero_section = HeroSection.get_active()
@@ -27,11 +28,34 @@ def website_home(request):
     }
     return render(request, 'website/index.html', context)
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from django.urls import reverse
+from .models import OurWork
+
+class OurWorkAPI(APIView):
+    permission_classes = [AllowAny]  # Make this endpoint public
+
+    def get(self, request):
+        works = OurWork.get_active_works()  # Reuse your manager method
+        data = [
+            {
+                'title': work.title,
+                'url': request.build_absolute_uri(reverse('our_work_detail', args=[work.navlink])),
+            }
+            for work in works
+        ]
+        return Response(data)
+        
 def website_member_form(request):
-    return render(request, 'website/member_form.html')
+    return render(request, 'website/member_form.html', {'districts': NEPAL_DISTRICTS})
 
 def website_volunteer_form(request):
-    return render(request, 'website/volunteer_form.html')
+    return render(request, 'website/volunteer_form.html', {'districts': NEPAL_DISTRICTS})
+
+def website_sponsor_child_form(request):
+    return render(request, 'website/sponsor_child_form.html', {'districts': NEPAL_DISTRICTS})
 
 def login_view(request):
     return render(request, 'auth/login.html')
@@ -78,17 +102,26 @@ def apply_member(request):
 def apply_volunteer(request):
     return render(request, 'public/apply_volunteer.html', {'districts': NEPAL_DISTRICTS})
 
-def guest_welcome(request):
-    return render(request, 'auth/guest_welcome.html')
+from django.shortcuts import render, redirect
 
+def guest_welcome(request):
+    contact_info = ContactInfo.get_active()
+    awards = Award.get_active_awards()
+    context = {
+        'contact_info': contact_info,
+        'awards': awards,
+    }
+    return render(request, 'guest/profile.html', context)  # Use the new combined template
+
+# Redirect other URLs to the combined page
 def guest_dashboard(request):
-    return render(request, 'guest/dashboard.html')
+    return redirect('guest_welcome')
 
 def guest_profile(request):
-    return render(request, 'guest/profile.html')
+    return redirect('guest_welcome')
 
 def guest_applications(request):
-    return render(request, 'guest/applications.html')
+    return redirect('guest_welcome')
 
 def member_dashboard(request):
     return render(request, 'member/dashboard.html')
@@ -190,7 +223,18 @@ def admin_statistics(request):
     return render(request, 'admin/statistics.html', context)
 
 def payment_success(request, pk):
-    return render(request, 'payment/success.html')
+    """
+    Handle Khalti payment callback for applications.
+    This view is called when user returns from Khalti payment gateway.
+    Callback should only acknowledge, not verify.
+    """
+    from django.http import HttpResponse
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.info("KHALTI CALLBACK HIT - Application Payment")
+
+    return HttpResponse("OK", status=200)
 def admin_events(request):
     from django.core.serializers import serialize
     import json
@@ -341,3 +385,36 @@ def our_work_detail(request, navlink):
     except OurWork.DoesNotExist:
         from django.http import Http404
         raise Http404("Our work item not found")
+
+
+def report_school_dropout(request):
+    """Display the school dropout report form"""
+    from .districts import NEPAL_DISTRICTS
+    context = {
+        'districts': NEPAL_DISTRICTS,
+    }
+    return render(request, 'website/report_school_dropout.html', context)
+
+
+def admin_school_dropout_reports(request):
+    """Display admin page for school dropout reports"""
+    from .districts import NEPAL_DISTRICTS
+    context = {
+        'districts': NEPAL_DISTRICTS,
+    }
+    return render(request, 'admin/school_dropout_reports.html', context)
+
+
+def donation_callback(request):
+    """
+    Handle Khalti payment callback after donation.
+    This view is called when user returns from Khalti payment gateway.
+    Callback should only acknowledge, not verify.
+    """
+    from django.http import HttpResponse
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.info("KHALTI CALLBACK HIT - Donation Payment")
+
+    return HttpResponse("OK", status=200)

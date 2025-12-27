@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Payment - Aarambha Foundation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .success-icon {
+            display: none;
+            font-size: 80px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .error-icon {
+            display: none;
+            font-size: 80px;
+            color: #f44336;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .details p {
+            margin: 10px 0;
+            text-align: left;
+        }
+
+        .details strong {
+            color: #333;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .loading-text {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="spinner" id="spinner"></div>
+        <div class="success-icon" id="successIcon">✓</div>
+        <div class="error-icon" id="errorIcon">✗</div>
+
+        <h1 id="title">Processing Your Donation</h1>
+        <p id="message" class="loading-text">Please wait while we verify your payment...</p>
+
+        <div class="details" id="details"></div>
+
+        <a href="/" class="btn" id="homeBtn" style="display:none;">Return to Home</a>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const pidx = urlParams.get('pidx');
+        const status = urlParams.get('status');
+        const transactionId = urlParams.get('transaction_id');
+        const amount = urlParams.get('amount');
+        const purchaseOrderId = urlParams.get('purchase_order_id');
+
+        async function verifyPayment() {
+            if (!pidx) {
+                showError('Invalid payment reference. Please contact support.');
+                return;
+            }
+
+            try {
+                // Call verification API
+                const response = await fetch('/api/core/donations/verify/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pidx: pidx,
+                        token: transactionId,  // transaction_id from callback
+                        amount: amount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.status === 'completed') {
+                    showSuccess(data);
+                } else if (data.status === 'pending') {
+                    showPending(data);
+                } else if (data.status === 'user canceled' || data.status === 'expired') {
+                    showError('Payment was canceled or expired. Please try again.');
+                } else {
+                    showError('Payment verification failed. Status: ' + (data.status || 'unknown') + '. Please contact support with reference: ' + pidx);
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('An error occurred while verifying your payment. Please contact support with reference: ' + pidx);
+            }
+        }
+
+        function showSuccess(data) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('successIcon').style.display = 'block';
+            document.getElementById('title').textContent = 'Thank You for Your Donation!';
+            document.getElementById('message').textContent = 'Your payment has been successfully processed.';
+            document.getElementById('message').style.color = '#4CAF50';
+
+            const detailsDiv = document.getElementById('details');
+            detailsDiv.innerHTML = `
+                <p><strong>Transaction ID:</strong> ${data.transaction_id || 'N/A'}</p>
+                <p><strong>Amount:</strong> Rs. ${parseFloat(data.amount).toFixed(2)}</p>
+                <p><strong>Order ID:</strong> ${data.purchase_order_id}</p>
+                <p><strong>Status:</strong> <span style="color: #4CAF50;">Completed</span></p>
+            `;
+            detailsDiv.style.display = 'block';
+            document.getElementById('homeBtn').style.display = 'inline-block';
+        }
+
+        function showPending(data) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('errorIcon').style.display = 'block';
+            document.getElementById('title').textContent = 'Payment Pending';
+            document.getElementById('message').textContent = 'Your payment is still being processed. Please check back later or contact support.';
+            document.getElementById('message').style.color = '#ff9800';
+
+            const detailsDiv = document.getElementById('details');
+            detailsDiv.innerHTML = `
+                <p><strong>Order ID:</strong> ${data.purchase_order_id}</p>
+                <p><strong>Status:</strong> <span style="color: #ff9800;">Pending</span></p>
+            `;
+            detailsDiv.style.display = 'block';
+            document.getElementById('homeBtn').style.display = 'inline-block';
+        }
+
+        function showError(message) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('errorIcon').style.display = 'block';
+            document.getElementById('title').textContent = 'Payment Failed';
+            document.getElementById('message').textContent = message;
+            document.getElementById('message').style.color = '#f44336';
+            document.getElementById('homeBtn').style.display = 'inline-block';
+        }
+
+        // Start verification when page loads
+        if (status === 'User canceled') {
+            showError('You have canceled the payment.');
+        } else {
+            verifyPayment();
+        }
+    </script>
+</body>
+
+</html>

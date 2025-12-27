@@ -1,0 +1,431 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <link href="{% static 'website/css/bootstrap.min.css' %}" rel="stylesheet" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{% static 'website/css/slick.min.css' %}" crossorigin="anonymous"
+        referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{% static 'website/css/owl.carousel.min.css' %}" />
+    <!-- Link Swiper's CSS -->
+    <link rel="stylesheet" href="{% static 'website/css/swiper-bundle.min.css' %}" />
+    <!-- Link Swiper's CSS end-->
+    <link rel="stylesheet" href="{% static 'website/css/animate.min.css' %}" />
+    <!-- custom-css  -->
+    <link rel="stylesheet" href="{% static 'website/css/index.css' %}" />
+    <link rel="stylesheet" href="{% static 'website/css/style.css' %}" />
+    <!-- custom-css end -->
+    <link rel="icon" type="image/png" href="{% static 'website/images/favicon.png' %}" />
+    <title>Report School Dropout | Aarambha Foundation</title>
+    <style>
+        .header-top img {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .header-bottom {
+            color: #2d3b5b;
+            background-color: #fff;
+            border-top: 10px solid #8f5556;
+            border-left: 1px solid #8f5556;
+            border-right: 1px solid #8f5556;
+            border-bottom: 1px solid #8f5556;
+            padding: 5px 20px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .header-bottom h1 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        .header-bottom .header-content p {
+            color: #0b0b0b;
+            text-align: justify;
+        }
+
+        .content {
+            line-height: 1.6;
+        }
+
+        .btn-success {
+            background: #8f5556 !important;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .btn-success:hover {
+            background: #2d3b5b !important;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            text-align: left !important;
+            color: #000;
+            text-transform: capitalize;
+            font-weight: 400;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="email"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .required {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    {% include 'website/includes/navbar.html'%}
+    <div class="container member-section">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 wow fadeInUp">
+                <div class="header-top " style="margin-top: 100px; margin-bottom: 10px">
+                    <img src="{% static 'website/images/help.jpg' %}" alt="Report School Dropout" />
+                </div>
+                <div class="header-bottom mb-3">
+                    <h1>Report School Dropout | Aarambha Foundation</h1>
+                    <div class="header-content">
+                        <p>
+                            Aarambha Foundation is committed to ensuring every child has access to quality education. If
+                            you know of a child who has dropped out of school, please report it here. Your information
+                            will help us reach out and provide support to bring the child back to education.
+                        </p>
+                        <p>
+                            All reports are treated confidentially. You can choose to remain anonymous if you wish.
+                        </p>
+                    </div>
+                    <hr style="border: 1px solid #000" />
+                    <div class="content">
+                        <form id="dropoutReportForm" class="pb-4">
+                            <!-- Reporter Information -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h3>Reporter Information</h3>
+                                    <p>Your information will be kept confidential.</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="reporter_name">Your Name <span class="required">*</span></label>
+                                        <input type="text" id="reporter_name" name="reporter_name"
+                                            placeholder="Enter your full name" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="reporter_email">Email Address <span
+                                                class="required">*</span></label>
+                                        <input type="email" id="reporter_email" name="reporter_email"
+                                            placeholder="your@email.com" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="reporter_phone">Phone Number</label>
+                                        <input type="tel" id="reporter_phone" name="reporter_phone"
+                                            placeholder="+977 9800000000" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="is_anonymous">Report Anonymously</label>
+                                        <input type="checkbox" id="is_anonymous" name="is_anonymous" />
+                                        <small style="color: #666;">Check this if you don't want your name
+                                            shared</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dropout Information -->
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <h3>Dropout Information</h3>
+                                    <p>Please provide as much information as possible about the child.</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dropout_name">Child's Name <span class="required">*</span></label>
+                                        <input type="text" id="dropout_name" name="dropout_name"
+                                            placeholder="Child's full name" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="dropout_age">Age <span class="required">*</span></label>
+                                        <input type="number" id="dropout_age" name="dropout_age" min="5" max="25"
+                                            required />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="dropout_gender">Gender <span class="required">*</span></label>
+                                        <select id="dropout_gender" name="dropout_gender" required>
+                                            <option value="">Select Gender</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="school_name">School Name <span class="required">*</span></label>
+                                        <input type="text" id="school_name" name="school_name"
+                                            placeholder="Name of the school" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="district">District <span class="required">*</span></label>
+                                        <select id="district" name="district" required>
+                                            <option value="">Select District</option>
+                                            {% for district in districts %}
+                                            <option value="{{ district }}">{{ district }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="school_location">School Location/Address <span
+                                                class="required">*</span></label>
+                                        <input type="text" id="school_location" name="school_location"
+                                            placeholder="Village, Municipality, etc." required />
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="reason_for_dropout">Reason for Dropping Out <span
+                                                class="required">*</span></label>
+                                        <textarea id="reason_for_dropout" name="reason_for_dropout" rows="3"
+                                            placeholder="Please describe why the child dropped out" required></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="additional_notes">Additional Notes</label>
+                                        <textarea id="additional_notes" name="additional_notes" rows="3"
+                                            placeholder="Any other relevant information"></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <button type="submit" class="btn-success">
+                                        Submit Report
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="" class="floating-icon"><span><i class="bi bi-heart-fill"></i></span> DONATE</a>
+
+    <footer class="footer__section">
+        <div class="footer_overlay pt-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+                        <div class="footer__logo">
+                            <img src="{% static 'website/images/logo.png' %}" width="100%" height="100%" alt="" />
+                        </div>
+                        <div class="footer__description">
+                            <p>
+                                A youth-driven foundation empowering education, equality, and
+                                opportunities across Nepal.
+                            </p>
+                        </div>
+                        <div class="social__media">
+                            <ul class="d-flex">
+                                <a href="https://www.facebook.com/aarambhafoundation">
+                                    <li><i class="fa-brands fa-facebook-f"></i></li>
+                                </a>
+                                <a href="https://www.instagram.com/aarambhafoundation/">
+                                    <li><i class="fa-brands fa-instagram"></i></li>
+                                </a>
+                                <a href="">
+                                    <li><i class="fa-brands fa-whatsapp"></i></li>
+                                </a>
+                                <a href="https://www.linkedin.com/company/aarambhafoundation/">
+                                    <li><i class="fa-brands fa-linkedin"></i></li>
+                                </a>
+                                <a href="https://www.youtube.com/channel/UCthVlyi3N4EfnGj9-pS-bMA">
+                                    <li><i class="fa-brands fa-youtube"></i></li>
+                                </a>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-6 mb-3">
+                        <h2><span>Q</span>uick Links</h2>
+                        <ul class="quick-links">
+                            <li><a href="/">Home</a></li>
+                            <li><a href="{% url 'website_member_form' %}">Be a Member</a></li>
+                            <li><a href="{% url 'website_volunteer_form' %}">Be a volunteer</a></li>
+                            <li><a href="">Our Work</a></li>
+                            <li><a href="">Privacy & Policy</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-6 mb-3">
+                        <h2><span>C</span>ontact Us</h2>
+                        <div class="contact__details">
+                            <ul class="fa-ul">
+                                <li>
+                                    <h6><i class="fa-solid fa-house"></i> Address</h6>
+                                    <span>Basundhara, Kathmandu, Nepal</span>
+                                </li>
+                                <li>
+                                    <h6><i class="fa-solid fa-phone"></i> Phone No</h6>
+                                    <span>+977 (984)346-7402</span>
+                                </li>
+                                <li>
+                                    <h6><i class="fa-solid fa-envelope"></i> Email</h6>
+                                    <span><a href="">we.aarambha@gmail.com </a></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+                        <h2><span>O</span>ur Awards</h2>
+                        <div class="gallery_wrapper">
+                            <div class="row flex-wrap">
+                                <div class="col-4">
+                                    <img src="{% static 'website/images/Award-1.jpg' %}" width="100%" height="100%"
+                                        alt="" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <div class="container">
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="right__wrapper" style="text-align: center">
+                        <span style="color: white; text-align: center">
+                            &copy;
+                            <script>
+                                document.write(new Date().getFullYear());
+                            </script>
+                            Aarambha Foundation. All Rights Reserved.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- scripts start -->
+    <!-- jquery  start-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <!-- jquery end -->
+    <!-- bootstrap  start -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    <!-- bootstrap end -->
+    <script src="{% static 'website/js/slick.min.js' %}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Swiper JS -->
+    <script src="{% static 'website/js/swiper-bundle.min.js' %}" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="{% static 'website/js/modernizr.min.js' %}" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+    <script src="{% static 'website/js/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'website/js/api.js' %}"></script>
+    <script src="{% static 'website/js/main.js' %}"></script>
+    <script src="{% static 'website/js/animation.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static 'website/js/general.js' %}"></script>
+    <script src="{% static 'website/js/nav.js' %}"></script>
+    <script src="{% static 'website/js/script.js' %}"></script>
+    <script src="{% static 'website/js/min.js' %}"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- jquery  start-->
+    <!-- Hidden Config for JS -->
+    <script src="{% static 'js/config.js' %}"></script>
+    <script>
+        document.getElementById("dropoutReportForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            const submitBtn = e.submitter || document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = 'Submitting...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/core/reports/school-dropout/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: "Report submitted successfully! Thank you for helping us. Warm regards.",
+                        icon: "success",
+                        timer: 1000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = '/';
+                    });
+                } else {
+                    console.error(data);
+                    let errorMsg = 'Submission failed.';
+                    if (typeof data === 'object') {
+                        errorMsg = Object.entries(data).map(([k, v]) => `${k}: ${v}`).join('\n');
+                    }
+                    Swal.fire({
+                        title: "Error!",
+                        text: errorMsg,
+                        icon: "error"
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({
+                    title: "Error!",
+                    text: "Network error. Please try again.",
+                    icon: "error"
+                });
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+
+</html>

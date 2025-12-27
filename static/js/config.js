@@ -47,9 +47,13 @@ function hideLoader() {
 async function fetchAPI(url, options = {}) {
     let token = getToken();
     const headers = {
-        'Content-Type': 'application/json',
         ...options.headers
     };
+
+    // Don't set Content-Type for FormData - let browser set it automatically
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
 
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;

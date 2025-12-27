@@ -6,6 +6,7 @@ urlpatterns = [
     path('list/', views.list_applications, name='list_applications'),
     path('my-applications/', views.my_applications, name='my_applications'),
     path('<int:pk>/', views.get_application, name='get_application'),
+    path('<int:pk>/update/', views.UpdateApplicationView.as_view(), name='update_application'),
     path('<int:pk>/update-status/', views.update_application_status, name='update_application_status'),
     path('<int:pk>/acknowledge/', views.acknowledge_interview, name='acknowledge_interview'),
     path('<int:pk>/initiate-payment/', khalti_views.initiate_khalti_payment, name='initiate_payment'),

@@ -43,6 +43,12 @@ INSTALLED_APPS = [
     'corsheaders',  
     'drf_yasg',
 
+    # Allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+
     # Local apps
     'users',
     'branches',
@@ -62,8 +68,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Allauth middleware
     'core.middleware.CorsMiddleware',  # Custom CORS middleware
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
 
@@ -82,19 +88,52 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_PARSER_CLASSES': [
+        'applications.parsers.CustomJSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+    ],
 }
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
 
+# Allauth Configuration
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SITE_ID = 1
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # For simplicity, can change to 'mandatory'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_DISPLAY = lambda user: user.get_full_name() or user.email
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
+
 # Email Configuration
 import ssl
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
 EMAIL_HOST_USER = 'm.suraj1123@gmail.com'
-EMAIL_HOST_PASSWORD = 'eimg hdsw rjvr nzba'
+EMAIL_HOST_PASSWORD = 'ispqmmupueqqsrwz'
 DEFAULT_FROM_EMAIL = 'Aarambha Foundation <m.suraj1123@gmail.com>'
 EMAIL_TIMEOUT = 30
 
@@ -110,6 +149,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.our_work_items',
             ],
         },
     },
@@ -192,3 +232,10 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+# Khalti Payment Gateway Settings
+KHALTI_SECRET_KEY = 'live_secret_key_9fa11bce45e44676bb9040b5354a3918'
+KHALTI_PUBLIC_KEY = 'live_public_key_651ec32aefc04badabade54462316da4'

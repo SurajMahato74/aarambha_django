@@ -90,4 +90,15 @@ urlpatterns = [
     path('our-work/update/<int:pk>/', api_views.our_work_update, name='our_work_update'),
     path('our-work/delete/<int:pk>/', api_views.our_work_delete, name='our_work_delete'),
     path('our-work/toggle-active/<int:pk>/', api_views.our_work_toggle_active, name='our_work_toggle_active'),
+
+    # School Dropout Report endpoints
+    path('reports/school-dropout/', api_views.school_dropout_report_create, name='school_dropout_report_create'),
+    path('reports/school-dropout/admin/', api_views.school_dropout_report_list_admin, name='school_dropout_report_list_admin'),
+    path('reports/school-dropout/admin/<int:pk>/', api_views.school_dropout_report_detail_admin, name='school_dropout_report_detail_admin'),
+    path('reports/school-dropout/admin/<int:pk>/update-status/', api_views.school_dropout_report_update_status, name='school_dropout_report_update_status'),
+
+    # Donation / Khalti Payment endpoints
+    path('donations/initiate/', api_views.donation_initiate_payment, name='donation_initiate_payment'),
+    path('donations/verify/', api_views.donation_verify_payment, name='donation_verify_payment'),
+    path('donations/admin/', api_views.donation_list_admin, name='donation_list_admin'),
 ]

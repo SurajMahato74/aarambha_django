@@ -10,7 +10,12 @@ class Application(models.Model):
         ('approved', 'Approved'),
     )
     TYPE_CHOICES = (('member', 'Member'), ('volunteer', 'Volunteer'))
-    
+    REJECTION_TYPE_CHOICES = (
+        ('correction', 'Correction Required'),
+        ('final', 'Final Rejection'),
+    )
+
+
     # Personal Information
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='applications')
     full_name = models.CharField(max_length=200)
@@ -58,6 +63,14 @@ class Application(models.Model):
     khalti_transaction_id = models.CharField(max_length=100, blank=True)
     khalti_payment_token = models.CharField(max_length=100, blank=True)
     payment_date = models.DateTimeField(null=True, blank=True)
+
+    
+    rejection_type = models.CharField(
+        max_length=20,
+        choices=REJECTION_TYPE_CHOICES,
+        blank=True,
+        null=True
+    )
     
     def __str__(self):
         return f"{self.full_name} - {self.application_type}"

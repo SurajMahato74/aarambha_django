@@ -1,0 +1,241 @@
+{% load static %}
+<nav class="navigation">
+    <a href="{% url 'home' %}" aria-label="Home" class="navigation__home-link">
+        <img src="{% static 'website/images/logo.png' %}" class="d-md-block d-none" style="width: 14rem"
+            alt="Aarambha Foundation Logo" />
+        <img src="{% static 'website/images/favicon.png' %}" class="d-block d-md-none" style="width: 6rem"
+            alt="Aarambha Foundation" />
+    </a>
+    <div class="navigation__links">
+        <ul class="navigation__level-one" id="navigation__level-one">
+            <li class="navigation__level-one-item" tabindex="0">
+                <a href="" class="navigation__level-one-link desktop-only--navigation">
+                    Our Work
+                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
+                        class="arrow--down">
+                        <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                    </svg>
+                </a>
+                <button class="navigation__submenu-open-button mobile-only--navigation" aria-controls="#What_we_do"
+                    aria-label="Open What we do menu">
+                    Our Work
+                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
+                        class="arrow--down">
+                        <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                    </svg>
+                </button>
+                <div class="navigation__level-two navigation__submenu" id="What_we_do">
+                    <div class="navigation__level-two-content contained-width">
+                        <header class="navigation__level-two-header">
+                            <button class="navigation__submenu-close-button mobile-only--navigation"
+                                aria-controls="#What_we_do" aria-label="Close What we do menu">
+                                <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}"
+                                    aria-hidden="true" class="arrow--down">
+                                    <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                                </svg>
+                                Back
+                            </button>
+                            <h2 class="navigation__level-two-title">
+                                <a href="" class="reverse-underline">Our Work</a>
+                            </h2>
+                        </header>
+
+                        <ul id="our-work-list">
+                            <!-- Items will be loaded via JS -->
+                        </ul>
+                    </div>
+                </div>
+            </li>
+
+            <li class="navigation__level-one-item" tabindex="0">
+                <a href="/get-involved/" class="navigation__level-one-link desktop-only--navigation">
+                    Get involved
+                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
+                        class="arrow--down">
+                        <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                    </svg>
+                </a>
+                <button class="navigation__submenu-open-button mobile-only--navigation" aria-controls="#Get_involved"
+                    aria-label="Open Get involved menu">
+                    Get involved
+                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
+                        class="arrow--down">
+                        <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                    </svg>
+                </button>
+                <div class="navigation__level-two navigation__submenu" id="Get_involved">
+                    <div class="navigation__level-two-content contained-width">
+                        <header class="navigation__level-two-header">
+                            <button class="navigation__submenu-close-button mobile-only--navigation"
+                                aria-controls="#Get_involved" aria-label="Close Get involved menu">
+                                <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}"
+                                    aria-hidden="true" class="arrow--down">
+                                    <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                                </svg>
+                                Back
+                            </button>
+                            <h2 class="navigation__level-two-title">
+                                <a href="/get-involved/" class="reverse-underline">Get involved</a>
+                            </h2>
+                        </header>
+
+                        <ul>
+                            <li class="navigation__level-two-item">
+                                <a href="{% url 'website_member_form' %}" class="navigation__level-two-link">Become a
+                                    Member</a>
+                            </li>
+
+                            <li class="navigation__level-two-item">
+                                <a href="{% url 'website_volunteer_form' %}" class="navigation__level-two-link">Be a
+                                    Volunteer</a>
+                            </li>
+
+                            <li class="navigation__level-two-item">
+                                <a href="{% url 'website_sponsor_child_form' %}"
+                                    class="navigation__level-two-link">Sponsor a
+                                    Child</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+
+            <li class="navigation__level-one-item" tabindex="0">
+                <a href="" class="navigation__level-one-link desktop-only--navigation">
+                    Stories
+                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
+                        class="arrow--down">
+                        <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                    </svg>
+                </a>
+                <button class="navigation__submenu-open-button mobile-only--navigation" aria-controls="#News_+_Stories"
+                    aria-label="Open News + Stories menu">
+                    Stories
+                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
+                        class="arrow--down">
+                        <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                    </svg>
+                </button>
+                <div class="navigation__level-two navigation__submenu" id="News_+_Stories">
+                    <div
+                        class="contained-width navigation__level-two-content navigation__level-two-content--with-highlight">
+                        <ul>
+                            <li>
+                                <a href="" class="navigation__level-two-link reverse-underline">Latest news +
+                                    stories</a>
+                            </li>
+
+                            <li>
+                                <a href="" class="navigation__level-two-link reverse-underline">Press office</a>
+                            </li>
+                            <li>
+                                <a href="" class="navigation__level-two-link reverse-underline">Latest press
+                                    releases</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+
+            <li class="navigation__level-one-item navigation__search" tabindex="0" id="navAuthItem">
+                <a href="javascript:void(0)" id="navLoginLink" class="navigation__level-one-link"
+                    onclick="handleNavLoginClick()">Login</a>
+                <div id="navProfileDropdown" style="display: none;">
+                    <a href="/guest/welcome/" class="navigation__level-one-link">Profile</a>
+                    <a href="/" onclick="clearToken()" class="navigation__level-one-link">Logout</a>
+                </div>
+            </li>
+
+        </ul>
+
+        <button class="btn navigation__donate" onclick="openDonationModal()">Donate</button>
+        <button id="navLogoutBtn" class="navigation__logout-btn" onclick="clearToken()"
+            style="display: none; background: none; border: none; cursor: pointer; padding: 10px; margin-left: 10px;"
+            title="Logout">
+            <i class="fas fa-arrow-right-from-bracket" style="color: #E36F1E; font-size: 18px;"></i>
+        </button>
+        <button class="navigation__toggle mobile-only--navigation" aria-expanded="false"
+            aria-label="Open navigation menu" aria-controls="#navigation__level-one">
+            <svg width="22" height="20" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true">
+                <path d="M0 1h22M0 9.556h22M0 18.111h22" stroke="#000" stroke-width="2"></path>
+            </svg>
+        </button>
+    </div>
+</nav>
+
+<!-- Donation Modal -->
+<div id="donationModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center;">
+    <div
+        style="background: white; padding: 2rem; border-radius: 10px; max-width: 800px; width: 90%; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;">
+        <button onclick="closeDonationModal()"
+            style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        {% include 'website/includes/donation_model.html' %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Update navbar based on login status
+        updateNavbarAuth();
+
+        fetch('/api/our-work/')  // Your API URL
+            .then(response => response.json())
+            .then(data => {
+                const list = document.getElementById('our-work-list');
+                if (data.length === 0) {
+                    list.innerHTML = '<li class="navigation__level-two-item"><a href="" class="navigation__level-two-link">No work items available</a></li>';
+                } else {
+                    data.forEach(work => {
+                        const li = document.createElement('li');
+                        li.className = 'navigation__level-two-item';
+                        li.innerHTML = `<a href="${work.url}" class="navigation__level-two-link">${work.title}</a>`;
+                        list.appendChild(li);
+                    });
+                }
+            })
+            .catch(error => console.error('Error fetching Our Work:', error));
+    });
+
+    function updateNavbarAuth() {
+        const user = getUser();
+        const loginLink = document.getElementById('navLoginLink');
+        const profileDropdown = document.getElementById('navProfileDropdown');
+        const logoutBtn = document.getElementById('navLogoutBtn');
+
+        if (user) {
+            // User is logged in, show profile and logout
+            loginLink.style.display = 'none';
+            profileDropdown.style.display = 'block';
+            logoutBtn.style.display = 'inline-block';
+        } else {
+            // User not logged in, show login
+            loginLink.style.display = 'block';
+            profileDropdown.style.display = 'none';
+            logoutBtn.style.display = 'none';
+        }
+    }
+
+    function openDonationModal() {
+        const user = getUser();
+        if (user) {
+            document.getElementById('donationModal').style.display = 'flex';
+            // Auto-fill email if user is logged in
+            const emailField = document.getElementById('email');
+            if (emailField && user.email) {
+                emailField.value = user.email;
+            }
+        } else {
+            // Set flag to open donation modal after login
+            localStorage.setItem('openDonationAfterLogin', 'true');
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+    }
+
+    function closeDonationModal() {
+        document.getElementById('donationModal').style.display = 'none';
+    }
+</script>
+
+<a href="javascript:void(0)" onclick="openDonationModal()" class="floating-icon"><span><i
+            class="bi bi-heart-fill"></i></span> DONATE</a>

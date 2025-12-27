@@ -27,186 +27,7 @@
 </head>
 
 <body>
-  <nav class="navigation">
-    <a href="{% url 'home' %}" aria-label="Home" class="navigation__home-link">
-      <img src="{% static 'website/images/logo.png' %}" class="d-md-block d-none" style="width: 14rem"
-        alt="Aarambha Foundation Logo" />
-      <img src="{% static 'website/images/favicon.png' %}" class="d-block d-md-none" style="width: 6rem"
-        alt="Aarambha Foundation" />
-    </a>
-    <div class="navigation__links">
-      <ul class="navigation__level-one" id="navigation__level-one">
-        <li class="navigation__level-one-item" tabindex="0">
-          <a href="" class="navigation__level-one-link desktop-only--navigation">
-            Our Work
-            <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-              class="arrow--down">
-              <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-            </svg>
-          </a>
-          <button class="navigation__submenu-open-button mobile-only--navigation" aria-controls="#What_we_do"
-            aria-label="Open What we do menu">
-            Our Work
-            <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-              class="arrow--down">
-              <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-            </svg>
-          </button>
-          <div class="navigation__level-two navigation__submenu" id="What_we_do">
-            <div class="navigation__level-two-content contained-width">
-              <header class="navigation__level-two-header">
-                <button class="navigation__submenu-close-button mobile-only--navigation" aria-controls="#What_we_do"
-                  aria-label="Close What we do menu">
-                  <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-                    class="arrow--down">
-                    <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-                  </svg>
-                  Back
-                </button>
-                <h2 class="navigation__level-two-title">
-                  <a href="" class="reverse-underline">Our Work</a>
-                </h2>
-              </header>
-
-              <ul>
-                {% for work in our_work_items %}
-                <li class="navigation__level-two-item">
-                  <a href="{% url 'our_work_detail' work.navlink %}" class="navigation__level-two-link">{{ work.title }}</a>
-                </li>
-                {% empty %}
-                <li class="navigation__level-two-item">
-                  <a href="" class="navigation__level-two-link">No work items available</a>
-                </li>
-                {% endfor %}
-              </ul>
-            </div>
-          </div>
-        </li>
-
-        <li class="navigation__level-one-item" tabindex="0">
-          <a href="/get-involved/" class="navigation__level-one-link desktop-only--navigation">
-            Get involved
-            <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-              class="arrow--down">
-              <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-            </svg>
-          </a>
-          <button class="navigation__submenu-open-button mobile-only--navigation" aria-controls="#Get_involved"
-            aria-label="Open Get involved menu">
-            Get involved
-            <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-              class="arrow--down">
-              <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-            </svg>
-          </button>
-          <div class="navigation__level-two navigation__submenu" id="Get_involved">
-            <div class="navigation__level-two-content contained-width">
-              <header class="navigation__level-two-header">
-                <button class="navigation__submenu-close-button mobile-only--navigation" aria-controls="#Get_involved"
-                  aria-label="Close Get involved menu">
-                  <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-                    class="arrow--down">
-                    <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-                  </svg>
-                  Back
-                </button>
-                <h2 class="navigation__level-two-title">
-                  <a href="/get-involved/" class="reverse-underline">Get involved</a>
-                </h2>
-              </header>
-
-              <ul style="display: flex; flex-direction: row; gap: 20px;">
-                <li class="navigation__level-two-item">
-                  <a href="{% url 'website_member_form' %}" class="navigation__level-two-link">Become a Member</a>
-                </li>
-
-                <li class="navigation__level-two-item">
-                  <a href="{% url 'website_volunteer_form' %}" class="navigation__level-two-link">Be a Volunteer</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </li>
-
-        <li class="navigation__level-one-item" tabindex="0">
-          <a href="" class="navigation__level-one-link desktop-only--navigation">
-            Stories
-            <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-              class="arrow--down">
-              <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-            </svg>
-          </a>
-          <button class="navigation__submenu-open-button mobile-only--navigation" aria-controls="#News_+_Stories"
-            aria-label="Open News + Stories menu">
-            Stories
-            <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-              class="arrow--down">
-              <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-            </svg>
-          </button>
-          <div class="navigation__level-two navigation__submenu" id="News_+_Stories">
-            <div class="contained-width navigation__level-two-content navigation__level-two-content--with-highlight">
-              <header class="navigation__level-two-header">
-                <button class="navigation__submenu-close-button mobile-only--navigation" aria-controls="#News_+_Stories"
-                  aria-label="Close News + Stories menu">
-                  <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
-                    class="arrow--down">
-                    <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
-                  </svg>
-                  Back
-                </button>
-                <h2 class="navigation__level-two-title">
-                  <a href="" class="reverse-underline">Stories</a>
-                </h2>
-              </header>
-
-              <ul>
-                <li>
-                  <a href="" class="navigation__level-two-link reverse-underline">Latest news + stories</a>
-                </li>
-
-                <li>
-                  <a href="" class="navigation__level-two-link reverse-underline">Press office</a>
-                </li>
-
-                <li>
-                  <a href="" class="navigation__level-two-link reverse-underline">Latest press releases</a>
-                </li>
-              </ul>
-
-              <div class="navigation__panel">
-                <!-- This is the highlight panel -->
-                <img class="navigation-panel__image" src="{% static 'website/images/favicon.png' %}"
-                  alt="Health clinic, Deir Al-Balah, Gaza" />
-                <div>
-                  <h3 class="navigation__panel-title">
-                    Gaza Humanitarian Crisis
-                  </h3>
-                  <p class="navigation__panel-description">
-                    Find out how we are providing life-saving support in Gaza
-                    to families in crisis, with your support.
-                  </p>
-                  <a href="" class="navigation__panel-link">Find out more</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </li>
-
-        <li class="navigation__level-one-item navigation__search" tabindex="0">
-          <a href="{% url 'login' %}" class="navigation__level-one-link"> Login </a>
-        </li>
-      </ul>
-
-      <a href="https://careinternational.donorsupport.co/-/XXNEZUWP" class="btn navigation__donate">Donate</a>
-      <button class="navigation__toggle mobile-only--navigation" aria-expanded="false" aria-label="Open navigation menu"
-        aria-controls="#navigation__level-one">
-        <svg width="22" height="20" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true">
-          <path d="M0 1h22M0 9.556h22M0 18.111h22" stroke="#000" stroke-width="2"></path>
-        </svg>
-      </button>
-    </div>
-  </nav>
+  {% include 'website/includes/navbar.html'%}
   <!-- START FIXED HERO SECTION -->
   <section class="hero-fixed-wrapper wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
     <div class="img-box">
@@ -244,12 +65,13 @@
     <div class="hero-fixed">
       <div class="btn-box">
         <div class="text-center">
-          <a href="" class="btn1 navigation__donate py-3 px-4 py-md-4 px-md-5">
+          <a href="{% url 'report_school_dropout' %}" class="btn1 navigation__donate py-3 px-4 py-md-4 px-md-5">
             Flag a School Dropout
           </a>
         </div>
         <div class="text-center d-none d-md-block">
-          <a href="" class="btn navigation__donate py-4" style="padding: 10px 90px">
+          <a href="javascript:void(0)" onclick="openDonationModal()" class="btn navigation__donate py-4"
+            style="padding: 10px 90px">
             Donate
           </a>
         </div>
@@ -319,7 +141,8 @@
                   <p>Through libraries, digital classrooms, fellowships, and community support, we work to strengthen
                     public schools and empower students with opportunities that inspire confidence, curiosity, and
                     lifelong learning.</p>
-                  <div><a href="" class="btn btn--orange-white">Donate</a></div>
+                  <div><a href="javascript:void(0)" onclick="openDonationModal()"
+                      class="btn btn--orange-white">Donate</a></div>
                 </div>
               </div>
             </div>
@@ -336,7 +159,8 @@
                   <p>Committed to transforming education by understanding student challenges, engaging communities, and
                     creating sustainable solutions that help every child access quality learning and explore their
                     fullest potential.</p>
-                  <div><a href="" class="btn btn--orange-white">Donate</a></div>
+                  <div><a href="javascript:void(0)" onclick="openDonationModal()"
+                      class="btn btn--orange-white">Donate</a></div>
                 </div>
               </div>
             </div>
@@ -568,8 +392,8 @@
             data-wow-delay="{{ forloop.counter0|add:4|floatformat:1|stringformat:'0.%ss' }}">
             <div>
               {% if event.image %}
-              <img src="{{ event.image.url }}" alt="{{ event.title }}" loading="lazy" fetchpriority="auto" decoding="async"
-                onerror="this.src='{% static 'website/images/Computer-Lab-1024x683.jpg' %}'" />
+              <img src="{{ event.image.url }}" alt="{{ event.title }}" loading="lazy" fetchpriority="auto"
+                decoding="async" onerror="this.src='{% static 'website/images/Computer-Lab-1024x683.jpg' %}'" />
               {% else %}
               <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="{{ event.title }}" loading="lazy"
                 fetchpriority="auto" decoding="async" />
@@ -601,7 +425,8 @@
                     <span>Aarambha: A New Beginning</span>
                   </h3>
                   <div class="card__blurb">
-                    <p>A movement dedicated to helping motivated children return to school by providing the resources, support, and educational spaces they deserve.</p>
+                    <p>A movement dedicated to helping motivated children return to school by providing the resources,
+                      support, and educational spaces they deserve.</p>
                   </div>
                 </div>
               </div>
@@ -617,7 +442,8 @@
                     <span>Bridging Gaps, Building Futures</span>
                   </h3>
                   <div class="card__blurb">
-                    <p>Through libraries, digital classrooms, fellowships, and community support, we work to strengthen public schools.</p>
+                    <p>Through libraries, digital classrooms, fellowships, and community support, we work to strengthen
+                      public schools.</p>
                   </div>
                 </div>
               </div>
@@ -633,7 +459,8 @@
                     <span>One Step at a Time</span>
                   </h3>
                   <div class="card__blurb">
-                    <p>Committed to transforming education by understanding student challenges and creating sustainable solutions.</p>
+                    <p>Committed to transforming education by understanding student challenges and creating sustainable
+                      solutions.</p>
                   </div>
                 </div>
               </div>
@@ -697,7 +524,7 @@
   </section>
   <!-- END PARTNER SECTION -->
 
-  <a href="" class="floating-icon"><span><i class="bi bi-heart-fill"></i></span> DONATE</a>
+  {% include "website/includes/login_modal.html" %}
 
   <footer class="footer__section wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
     <div class="footer_overlay pt-5">
@@ -715,10 +542,12 @@
             </div>
             <div class="social__media">
               <ul class="d-flex">
-                <a href="{% if contact_info.facebook_url %}{{ contact_info.facebook_url }}{% else %}https://www.facebook.com/aarambhafoundation{% endif %}">
+                <a
+                  href="{% if contact_info.facebook_url %}{{ contact_info.facebook_url }}{% else %}https://www.facebook.com/aarambhafoundation{% endif %}">
                   <li><i class="fa-brands fa-facebook-f"></i></li>
                 </a>
-                <a href="{% if contact_info.instagram_url %}{{ contact_info.instagram_url }}{% else %}https://www.instagram.com/aarambhafoundation/{% endif %}">
+                <a
+                  href="{% if contact_info.instagram_url %}{{ contact_info.instagram_url }}{% else %}https://www.instagram.com/aarambhafoundation/{% endif %}">
                   <li><i class="fa-brands fa-instagram"></i></li>
                 </a>
                 {% if contact_info.whatsapp_url %}
@@ -730,10 +559,12 @@
                   <li><i class="fa-brands fa-whatsapp"></i></li>
                 </a>
                 {% endif %}
-                <a href="{% if contact_info.linkedin_url %}{{ contact_info.linkedin_url }}{% else %}https://www.linkedin.com/company/aarambhafoundation/{% endif %}">
+                <a
+                  href="{% if contact_info.linkedin_url %}{{ contact_info.linkedin_url }}{% else %}https://www.linkedin.com/company/aarambhafoundation/{% endif %}">
                   <li><i class="fa-brands fa-linkedin"></i></li>
                 </a>
-                <a href="{% if contact_info.youtube_url %}{{ contact_info.youtube_url }}{% else %}https://www.youtube.com/channel/UCthVlyi3N4EfnGj9-pS-bMA{% endif %}">
+                <a
+                  href="{% if contact_info.youtube_url %}{{ contact_info.youtube_url }}{% else %}https://www.youtube.com/channel/UCthVlyi3N4EfnGj9-pS-bMA{% endif %}">
                   <li><i class="fa-brands fa-youtube"></i></li>
                 </a>
               </ul>
@@ -774,7 +605,8 @@
               <div class="row flex-wrap">
                 {% for award in awards %}
                 <div class="col-4">
-                  <img src="{{ award.image.url }}" width="100%" height="100%" alt="{{ award.title }}" title="{{ award.title }}" />
+                  <img src="{{ award.image.url }}" width="100%" height="100%" alt="{{ award.title }}"
+                    title="{{ award.title }}" />
                 </div>
                 {% empty %}
                 <!-- Fallback award if no awards in database -->
@@ -829,6 +661,8 @@
   <script src="{% static 'website/js/script.js' %}"></script>
   <script src="{% static 'website/js/min.js' %}"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="{% static 'js/navbar.js' %}"></script>
+  <script src="{% static 'js/config.js' %}"></script>
 </body>
 
 </html>

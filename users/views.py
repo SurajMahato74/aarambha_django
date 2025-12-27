@@ -25,14 +25,14 @@ def send_otp(request):
     from django.core.mail import send_mail
     from django.conf import settings
     from .otp_models import EmailOTP
-    
+
     email = request.data.get('email')
     if not email:
         return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     otp = EmailOTP.generate_otp()
     EmailOTP.objects.create(email=email, otp=otp)
-    
+
     try:
         subject = '🔐 Your OTP Code - Aarambha Foundation'
         message = f'''Dear User,
@@ -49,7 +49,7 @@ If you did not request this OTP, please ignore this email.
 
 Best regards,
 Aarambha Foundation Team'''
-        
+
         send_mail(
             subject,
             message,

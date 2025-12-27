@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Event, Partner, ContactInfo, Award, OurWork
+from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Event, Partner, ContactInfo, Award, OurWork, SchoolDropoutReport
 
 class HeroSectionSerializer(serializers.ModelSerializer):
     background_image = serializers.ImageField(required=False, allow_null=True)
@@ -163,19 +163,31 @@ class ContactInfoSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 class AwardSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=True)
-    
+
     class Meta:
         model = Award
         fields = ['id', 'title', 'image', 'year', 'description', 'order', 'is_active', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
-    
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         request = self.context.get('request')
-        
+
         if instance.image and request:
             representation['image'] = request.build_absolute_uri(instance.image.url)
         else:
             representation['image'] = None
 
         return representation
+
+
+class SchoolDropoutReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SchoolDropoutReport
+        fields = [
+            'id', 'reporter_name', 'reporter_email', 'reporter_phone',
+            'dropout_name', 'dropout_age', 'dropout_gender', 'school_name',
+            'school_location', 'district', 'reason_for_dropout', 'additional_notes',
+            'is_anonymous', 'status', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']

@@ -1,0 +1,339 @@
+<!-- Login Modal -->
+<div id="loginModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center;">
+    <div
+        style="background: white; padding: 2rem; border-radius: 10px; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h3 class="text-center mb-4" style="color: #2d3b5b; font-weight: bold; font-size: 1.5rem;">Login Required</h3>
+        <p class="text-center text-muted mb-4" style="font-size: 0.9rem;">Please sign in to continue.</p>
+
+        <button onclick="document.getElementById('loginModal').style.display = 'none'"
+            style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+
+        <!-- Username/Password Login -->
+        <form id="modalLoginForm" onsubmit="handleModalLogin(event)">
+            <div class="mb-3">
+                <label style="font-weight: 500; margin-bottom: 5px; display: block;">Username</label>
+                <input type="text" id="modalUsername" class="form-control" required placeholder="Enter username"
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="mb-3">
+                <label style="font-weight: 500; margin-bottom: 5px; display: block;">Password</label>
+                <input type="password" id="modalPassword" class="form-control" required placeholder="Enter password"
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div id="modalLoginError" class="text-danger text-center mb-3"
+                style="color: #dc3545; font-size: 0.9rem; min-height: 20px;"></div>
+            <button type="submit" class="btn btn-primary w-100"
+                style="background: #2d3b5b; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; font-weight: 600;">Login</button>
+        </form>
+
+        <div id="modalSeparator" style="display: flex; align-items: center; margin: 20px 0;">
+            <div style="flex-grow: 1; height: 1px; background: #e0e0e0;"></div>
+            <span style="padding: 0 10px; color: #666; font-size: 0.8rem;">OR</span>
+            <div style="flex-grow: 1; height: 1px; background: #e0e0e0;"></div>
+        </div>
+
+        <!-- Google Login -->
+        <a href="/accounts/google/login/?process=login" class="btn btn-outline-danger w-100 mb-2"
+            style="text-decoration: none; border: 1px solid #dc3545; color: #dc3545; padding: 8px; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" style="margin-right: 8px;">
+                <path fill="#dc3545"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#dc3545"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#dc3545"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#dc3545"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            Login with Google
+        </a>
+
+        <!-- OTP Trigger -->
+        <button onclick="toggleModalOtpLogin()" id="otpToggleBtn"
+            style="background: transparent; border: 1px solid #2d3b5b; color: #2d3b5b; padding: 8px; border-radius: 5px; width: 100%; font-weight: 500; transition: all 0.3s;">Login
+            with Email OTP</button>
+
+        <!-- OTP Form (Hidden) -->
+        <div id="modalOtpForm" style="display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+            <!-- Email Step -->
+            <div id="modalEmailStep">
+                <div class="mb-3">
+                    <label style="font-weight: 500; margin-bottom: 5px; display: block;">Email Address</label>
+                    <input type="email" id="modalEmail" class="form-control" placeholder="Enter your email"
+                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <button type="button" onclick="sendModalOTP(this)"
+                    style="background: #2d3b5b; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%;">Send
+                    OTP</button>
+                <button type="button" onclick="showUsernameLogin()" class="mt-2"
+                    style="background: none; border: none; color: #666; width: 100%; font-size: 0.9rem; text-decoration: underline;">Back
+                    to Username Login</button>
+            </div>
+
+            <!-- OTP Step -->
+            <div id="modalOtpStep" style="display: none;">
+                <div class="mb-3">
+                    <label style="font-weight: 500; margin-bottom: 5px; display: block;">Enter OTP</label>
+                    <input type="text" id="modalotpInput" class="form-control" placeholder="6-digit OTP" maxlength="6"
+                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <button type="button" onclick="verifyModalOTP(this)"
+                    style="background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%;">Verify
+                    & Login</button>
+                <button onclick="resetModalOtp()"
+                    style="background: none; border: none; color: #666; font-size: 0.8rem; margin-top: 10px; text-decoration: underline; width: 100%;">Change
+                    Email</button>
+            </div>
+            <div id="modalOtpError" class="text-center mt-2" style="color: #dc3545; font-size: 0.9rem;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Navbar Auth Update Function
+    function updateNavbarAuth() {
+        const user = getUser();
+        const navLink = document.getElementById('navLoginLink');
+        if (!navLink) return;
+
+        if (user) {
+            navLink.textContent = 'My Profile';
+            let dashUrl = '/guest/welcome/';
+
+            if (user.is_superuser || user.user_type === 'superadmin') {
+                dashUrl = '/admin/dashboard/';
+            } else if (user.user_type === 'member') {
+                dashUrl = '/member/dashboard/';
+            } else if (user.user_type === 'volunteer') {
+                dashUrl = '/volunteer/dashboard/';
+            } else if (user.user_type === 'guest') {
+                dashUrl = '/guest/welcome/';
+            } else if (user.user_type) {
+                dashUrl = `/dashboard/${user.user_type}/`;
+            }
+
+            navLink.href = dashUrl;
+            navLink.onclick = null;
+        } else {
+            navLink.textContent = 'Login';
+            navLink.href = 'javascript:void(0)';
+            navLink.onclick = function () {
+                document.getElementById('loginModal').style.display = 'flex';
+            };
+        }
+    }
+
+    function handleNavLoginClick() {
+        document.getElementById('loginModal').style.display = 'flex';
+    }
+
+    // Initial check could be done here if needed but typically handled by parent page or DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', updateNavbarAuth);
+
+    async function handleModalLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('modalUsername').value;
+        const password = document.getElementById('modalPassword').value;
+        const errorDiv = document.getElementById('modalLoginError');
+        const btn = e.submitter || e.target.querySelector('button[type="submit"]');
+
+        btn.disabled = true;
+        btn.innerHTML = 'Logging in...';
+        errorDiv.textContent = '';
+
+        try {
+            // FIX: Use the correct API URL (match your config.js or urls.py)
+            const response = await fetch('/api/users/login/', {  // <-- Change 'login/' to this
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                setToken(data.access, data.refresh);
+                setUser(data.user);
+                document.getElementById('loginModal').style.display = 'none';
+
+                // Update navbar immediately
+                updateNavbarAuth();
+
+                // Check if donation modal should be opened after login
+                if (localStorage.getItem('openDonationAfterLogin') === 'true') {
+                    localStorage.removeItem('openDonationAfterLogin');
+                    // Open donation modal and auto-fill email
+                    setTimeout(() => {
+                        document.getElementById('donationModal').style.display = 'flex';
+                        const emailField = document.getElementById('email');
+                        if (emailField && data.user.email) {
+                            emailField.value = data.user.email;
+                        }
+                    }, 100); // Small delay to ensure modal is ready
+                } else {
+                    // Set flag for success message on dashboard
+                    localStorage.setItem('justLoggedIn', 'true');
+
+                    // Redirect immediately based on user type, prioritizing is_superuser
+                    let redirectUrl = '/guest/welcome/';
+                    if (data.user.is_superuser) {
+                        redirectUrl = '/admin/dashboard/';
+                    } else if (data.user.user_type === 'superadmin') {
+                        redirectUrl = '/admin/dashboard/';
+                    } else if (data.user.user_type === 'member') {
+                        redirectUrl = '/member/dashboard/';
+                    } else if (data.user.user_type === 'volunteer') {
+                        redirectUrl = '/volunteer/dashboard/';
+                    } else if (data.user.user_type === 'guest') {
+                        redirectUrl = '/guest/welcome/';
+                    } else if (data.user.user_type) {
+                        redirectUrl = `/dashboard/${data.user.user_type}/`;
+                    }
+                    window.location.href = redirectUrl;
+                }
+            } else {
+                errorDiv.textContent = data.non_field_errors?.[0] || 'Login failed. Please check credentials.';
+            }
+        } catch (error) {
+            console.error(error);  // Add this for debugging
+            errorDiv.textContent = 'Network error. Please try again.';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Login';
+        }
+    }
+
+    function toggleModalOtpLogin() {
+        document.getElementById('modalLoginForm').style.display = 'none';
+        document.getElementById('modalSeparator').style.display = 'none';
+        document.getElementById('otpToggleBtn').style.display = 'none';
+        document.getElementById('modalOtpForm').style.display = 'block';
+    }
+
+    function showUsernameLogin() {
+        document.getElementById('modalLoginForm').style.display = 'block';
+        document.getElementById('modalSeparator').style.display = 'flex';
+        document.getElementById('otpToggleBtn').style.display = 'block';
+        document.getElementById('modalOtpForm').style.display = 'none';
+    }
+
+    async function sendModalOTP(btn) {
+        const email = document.getElementById('modalEmail').value;
+        const errorDiv = document.getElementById('modalOtpError');
+
+        if (!email) {
+            errorDiv.textContent = 'Please enter email';
+            return;
+        }
+
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Sending...';
+        errorDiv.textContent = '';
+
+        try {
+            const response = await fetch('/api/users/send-otp/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('modalEmailStep').style.display = 'none';
+                document.getElementById('modalOtpStep').style.display = 'block';
+                errorDiv.style.color = 'green';
+                errorDiv.textContent = 'OTP Sent!';
+            } else {
+                errorDiv.style.color = '#dc3545';
+                errorDiv.textContent = data.error || 'Failed to send OTP';
+            }
+        } catch (e) {
+            errorDiv.style.color = '#dc3545';
+            errorDiv.textContent = 'Network error';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    async function verifyModalOTP(btn) {
+        const email = document.getElementById('modalEmail').value;
+        const otp = document.getElementById('modalotpInput').value;
+        const errorDiv = document.getElementById('modalOtpError');
+
+        if (!otp || otp.length < 6) {
+            errorDiv.textContent = 'Invalid OTP';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = 'Verifying...';
+
+        try {
+            const response = await fetch('/api/users/verify-otp/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                setToken(data.access, data.refresh);
+                setUser(data.user);
+                document.getElementById('loginModal').style.display = 'none';
+
+                // Update navbar immediately
+                updateNavbarAuth();
+
+                // Check if donation modal should be opened after login
+                if (localStorage.getItem('openDonationAfterLogin') === 'true') {
+                    localStorage.removeItem('openDonationAfterLogin');
+                    // Open donation modal and auto-fill email
+                    setTimeout(() => {
+                        document.getElementById('donationModal').style.display = 'flex';
+                        const emailField = document.getElementById('email');
+                        if (emailField && data.user.email) {
+                            emailField.value = data.user.email;
+                        }
+                    }, 100); // Small delay to ensure modal is ready
+                } else {
+                    // Set flag for success message on dashboard
+                    localStorage.setItem('justLoggedIn', 'true');
+
+                    // Redirect immediately based on user type, prioritizing is_superuser
+                    let redirectUrl = '/guest/welcome/';
+                    if (data.user.is_superuser) {
+                        redirectUrl = '/admin/dashboard/';
+                    } else if (data.user.user_type === 'superadmin') {
+                        redirectUrl = '/admin/dashboard/';
+                    } else if (data.user.user_type === 'member') {
+                        redirectUrl = '/member/dashboard/';
+                    } else if (data.user.user_type === 'volunteer') {
+                        redirectUrl = '/volunteer/dashboard/';
+                    } else if (data.user.user_type === 'guest') {
+                        redirectUrl = '/guest/welcome/';
+                    } else if (data.user.user_type) {
+                        redirectUrl = `/dashboard/${data.user.user_type}/`;
+                    }
+                    window.location.href = redirectUrl;
+                }
+            } else {
+                errorDiv.style.color = '#dc3545';
+                errorDiv.textContent = data.error || 'Invalid OTP';
+            }
+        } catch (e) {
+            errorDiv.style.color = '#dc3545';
+            errorDiv.textContent = 'Error verifying OTP';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Verify & Login';
+        }
+    }
+
+    function resetModalOtp() {
+        document.getElementById('modalEmailStep').style.display = 'block';
+        document.getElementById('modalOtpStep').style.display = 'none';
+        document.getElementById('modalOtpError').textContent = '';
+    }
+</script>

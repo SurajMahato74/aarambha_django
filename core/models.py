@@ -373,3 +373,93 @@ class OurWork(models.Model):
     def get_active_works(cls):
         """Get all active work items ordered by order field"""
         return cls.objects.filter(is_active=True).order_by('order')
+
+
+class SchoolDropoutReport(models.Model):
+    """
+    Model to store school dropout reports submitted by users.
+    """
+    # Reporter Information
+    reporter_name = models.CharField(max_length=200, help_text="Name of the person reporting")
+    reporter_email = models.EmailField(help_text="Email of the reporter")
+    reporter_phone = models.CharField(max_length=15, blank=True, help_text="Phone number of the reporter")
+
+    # Dropout Information
+    dropout_name = models.CharField(max_length=200, help_text="Name of the school dropout")
+    dropout_age = models.PositiveIntegerField(help_text="Age of the dropout")
+    dropout_gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], help_text="Gender of the dropout")
+    school_name = models.CharField(max_length=200, help_text="Name of the school")
+    school_location = models.TextField(help_text="Location/address of the school")
+    district = models.CharField(max_length=100, help_text="District where the school is located")
+
+    # Report Details
+    reason_for_dropout = models.TextField(help_text="Reason for dropping out")
+    additional_notes = models.TextField(blank=True, help_text="Any additional information")
+
+    # Meta
+    is_anonymous = models.BooleanField(default=False, help_text="Whether the report is anonymous")
+    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('investigated', 'Investigated'), ('resolved', 'Resolved')], default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "School Dropout Report"
+        verbose_name_plural = "School Dropout Reports"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Report for {self.dropout_name} from {self.school_name}"
+
+
+class Donation(models.Model):
+    """
+    Model to store donation transactions with Khalti payment integration.
+    """
+    # Donor Information
+    title = models.CharField(max_length=10, choices=[('Mr.', 'Mr.'), ('Mrs.', 'Mrs.'), ('Ms.', 'Ms.')], default='Mr.')
+    full_name = models.CharField(max_length=200, help_text="Full name of the donor")
+    email = models.EmailField(help_text="Email address of the donor")
+    phone = models.CharField(max_length=15, blank=True, help_text="Phone number of the donor (optional)")
+    
+    # Donation Details
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Donation amount in NPR")
+    
+    # Khalti Payment Details
+    purchase_order_id = models.CharField(max_length=100, unique=True, help_text="Unique purchase order ID")
+    pidx = models.CharField(max_length=100, blank=True, null=True, help_text="Khalti payment identifier")
+    transaction_id = models.CharField(max_length=100, blank=True, null=True, help_text="Khalti transaction ID")
+    
+    # Payment Status
+    STATUS_CHOICES = [
+        ('initiated', 'Initiated'),
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('expired', 'Expired'),
+        ('canceled', 'User Canceled'),
+        ('refunded', 'Refunded'),
+    ]
+    payment_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='initiated')
+    
+    # Metadata
+    payment_url = models.URLField(blank=True, null=True, help_text="Khalti payment URL")
+    fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Transaction fee")
+    refunded = models.BooleanField(default=False, help_text="Whether the transaction has been refunded")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(blank=True, null=True, help_text="When the payment was completed")
+
+    class Meta:
+        verbose_name = "Donation"
+        verbose_name_plural = "Donations"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Donation by {self.full_name} - Rs.{self.amount} ({self.payment_status})"
+
+    @property
+    def amount_in_paisa(self):
+        """Convert amount to paisa (required by Khalti API)"""
+        return int(self.amount * 100)

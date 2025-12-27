@@ -367,8 +367,7 @@ video {
 
 
 html {
-	font-size: 16px;
-	scroll-behavior: smooth
+	font-size: 16px
 }
 
 img.forcewidth {
@@ -411,7 +410,7 @@ img {
 
 .theme--blue-dark {
 	--tw-bg-opacity: 1;
-	background-color:  #2d3b5b ;
+	background-color: #2d3b5b;
 	--tw-text-opacity: 1;
 	color: #fff;
 	color: rgba(255, 255, 255, var(--tw-text-opacity, 1))
@@ -455,10 +454,11 @@ html {
 
 body {
 	display: flex;
-    font-family: "Manrope", sans-serif !important;
+	font-family: "Manrope", sans-serif !important;
 	flex-direction: column;
 	overflow-x: hidden;
-	padding-top: 5.625rem
+	padding-top: 5.625rem;
+	padding-bottom: 2rem
 }
 
 
@@ -1553,7 +1553,7 @@ a:hover {
 .block-rich_text p:not(:first-child),
 .rich-text p:not(:first-child) {
 	margin-bottom: 1rem;
-    font-family: "Manrope", sans-serif !important;
+	font-family: "Manrope", sans-serif !important;
 	margin-top: 1rem
 }
 
@@ -1831,7 +1831,7 @@ b {
 	background-position: 0 100%;
 	background-size: 201% 100%;
 	border-color: #2d3b5b;
-    color: #fff;
+	color: #fff;
 	border-color: rgba(36, 30, 78, var(--tw-border-opacity, 1));
 	text-decoration-line: none !important
 }
@@ -1854,13 +1854,13 @@ b {
 	background-position: 0 100%;
 	background-size: 201% 100%;
 	border-color: #2d3b5b;
-    color: #fff;
+	color: #fff;
 	border-color: rgba(36, 30, 78, var(--tw-border-opacity, 1));
 	text-decoration-line: none !important
 }
 
 .btn--orange-white {
-    font-family: "Manrope", sans-serif !important;
+	font-family: "Manrope", sans-serif !important;
 	background-image: linear-gradient(90deg, #fff 50%, #d6692a 0)
 }
 
@@ -2005,9 +2005,9 @@ b {
 
 .card--standard .card__title {
 	margin-top: .25rem;
-    font-size: 20px;
-    letter-spacing: 1px;
-    
+	font-size: 20px;
+	letter-spacing: 1px;
+
 }
 
 .card--standard .card__blurb {
@@ -2035,7 +2035,7 @@ b {
 .card--full-link a:active img,
 .card--full-link a:focus img,
 .card--full-link a:hover img {
-    height: 200px;
+	height: 200px;
 	--tw-scale-x: 1.1;
 	--tw-scale-y: 1.1;
 	transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(1.1) scaleY(1.1);
@@ -2802,9 +2802,9 @@ b {
 
 .split-banner__title {
 	margin-bottom: 1rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    
+	letter-spacing: 3px;
+	text-transform: uppercase;
+
 }
 
 .split-banner+.split-banner {
@@ -3622,7 +3622,7 @@ b {
 
 	.stats-block__title {
 		margin-bottom: 2.5rem;
-        color: #D6692A;
+		color: #D6692A;
 	}
 }
 
@@ -4270,7 +4270,7 @@ b {
 	/* background-color: rgba(36, 30, 78, var(--tw-bg-opacity, 1)); */
 	--tw-text-opacity: 1;
 	color: #fff;
-    border-radius: 5px;
+	border-radius: 5px;
 	color: rgba(255, 255, 255, var(--tw-text-opacity, 1))
 }
 

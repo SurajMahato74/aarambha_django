@@ -4163,22 +4163,23 @@ figcaption .project-creator {
           height: 1.6875rem;
         }
 
-.floating-icon {
-  background-color: var(--main-color);
-  padding: 15px 20px;
-  border-radius: 5px 5px 0 0;
-  position: fixed;
-  color: #fff;
-  top: 70%;
-  right: -45px;
-  font-size: 20px;
-  text-decoration: none;
-  font-weight: 700;
-  rotate: -90deg;
-  gap: 10px;
-  display: flex;
-  align-items: center;
-}
+      .floating-icon {
+        background-color: var(--main-color);
+        padding: 15px 20px;
+        border-radius: 5px 5px 0 0;
+        position: fixed;
+        color: #fff;
+        top: 70%;
+        right: -45px;
+        font-size: 20px;
+        text-decoration: none;
+        font-weight: 700;
+        rotate: -90deg;
+        gap: 10px;
+        display: flex;
+        align-items: center;
+        z-index: 100000;
+      }
 .floating-icon span{
   
   animation: blink 2s linear infinite;

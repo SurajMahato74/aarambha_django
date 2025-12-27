@@ -1,11 +1,16 @@
 from django.urls import path
+from django.contrib.auth.views import LogoutView
 from . import views
+
 
 urlpatterns = [
     path('', views.website_home, name='home'),
+    path('api/our-work/', views.OurWorkAPI.as_view(), name='our_work_api'),
     path('member-form/', views.website_member_form, name='website_member_form'),
     path('volunteer-form/', views.website_volunteer_form, name='website_volunteer_form'),
+    path('sponsor-child-form/', views.website_sponsor_child_form, name='website_sponsor_child_form'),
     path('login/', views.login_view, name='login'),
+    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
     path('guest/welcome/', views.guest_welcome, name='guest_welcome'),
     path('guest/dashboard/', views.guest_dashboard, name='guest_dashboard'),
     path('guest/profile/', views.guest_profile, name='guest_profile'),
@@ -28,7 +33,10 @@ urlpatterns = [
     path('admin/core/awards/', views.admin_awards, name='admin_awards'),
     path('admin/core/ourwork/', views.admin_ourwork, name='admin_ourwork'),
     path('our-work/<str:navlink>/', views.our_work_detail, name='our_work_detail'),
-    path('dashboard/member/', views.member_dashboard, name='member_dashboard'),
+    path('report-school-dropout/', views.report_school_dropout, name='report_school_dropout'),
+    path('admin/school-dropout-reports/', views.admin_school_dropout_reports, name='admin_school_dropout_reports'),
+    path('member/dashboard/', views.member_dashboard, name='member_dashboard'),
     path('dashboard/volunteer/', views.volunteer_dashboard, name='volunteer_dashboard'),
     path('payment/success/<int:pk>/', views.payment_success, name='payment_success'),
+    path('donation/callback/', views.donation_callback, name='donation_callback'),
 ]
