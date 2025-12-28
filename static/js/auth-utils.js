@@ -2,6 +2,19 @@
  * Authentication utilities for handling client-side auth state
  */
 
+function clearToken() {
+    // Clear all localStorage data
+    localStorage.removeItem('user');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    console.log('Client-side tokens cleared');
+}
+
+function getUser() {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+}
+
 function updateNavbarAuth() {
     const user = getUser();
     const navAuthItem = document.getElementById('navAuthItem');
