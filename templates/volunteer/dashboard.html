@@ -31,14 +31,17 @@
             <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
                 <i class="fas fa-user w-4"></i> My Profile
             </a>
+            <a href="/volunteer/tasks/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-tasks w-4"></i> My Tasks
+            </a>
             <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
                 <i class="fas fa-calendar w-4"></i> Events
             </a>
-            <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
-                <i class="fas fa-tasks w-4"></i> Tasks
-            </a>
         </nav>
-        <div class="p-3 border-t border-slate-700">
+        <div class="p-3 border-t border-slate-700 space-y-2">
+            <a href="/guest/profile/" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
+                <i class="fas fa-arrow-left w-4"></i> Back to Profile
+            </a>
             <a href="/" onclick="clearToken()" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-rose-400 hover:bg-rose-900/20">
                 <i class="fas fa-arrow-right-from-bracket w-4"></i> Logout
             </a>
@@ -89,31 +92,220 @@
             </div>
 
             <div class="bg-slate-800 rounded-lg p-6">
-                <h3 class="text-xl font-bold text-white mb-4">Getting Started</h3>
-                <div class="space-y-3">
-                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded">
-                        <i class="fas fa-check-circle text-green-500"></i>
-                        <span class="text-slate-300">Your account has been approved</span>
+                <h3 class="text-xl font-bold text-white mb-4">Recent Notices</h3>
+                <div id="noticesContainer">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+                        <p class="text-slate-400">Loading notices...</p>
                     </div>
-                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded">
-                        <i class="fas fa-user-edit text-blue-500"></i>
-                        <span class="text-slate-300">Complete your profile</span>
-                    </div>
-                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded">
-                        <i class="fas fa-hands-helping text-purple-500"></i>
-                        <span class="text-slate-300">Browse available volunteer opportunities</span>
+                </div>
+            </div>
+            
+            <!-- Tasks Section (Hidden by default) -->
+            <div id="tasksSection" class="bg-slate-800 rounded-lg p-6" style="display: none;">
+                <h3 class="text-xl font-bold text-white mb-4">My Tasks</h3>
+                <div id="tasksContainer">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+                        <p class="text-slate-400">Loading tasks...</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 </div>
+
+<!-- Task Submission Modal -->
+<div id="taskSubmissionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-slate-800 p-6 rounded-lg max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold text-white mb-4">Submit Task</h3>
+        <form id="taskSubmissionForm">
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Work Description</label>
+                <textarea id="submissionText" class="w-full p-2 bg-slate-700 text-white rounded" rows="4" placeholder="Describe your work..."></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Upload File (Optional)</label>
+                <input type="file" id="submissionFile" class="w-full p-2 bg-slate-700 text-white rounded">
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="submitTask()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Submit</button>
+                <button type="button" onclick="closeSubmissionModal()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{% static 'js/auth-utils.js' %}"></script>
 <script>
     const user = getUser();
     if (!user || user.user_type !== 'volunteer') window.location.href = '/';
     document.getElementById('userName').textContent = user.username || user.email;
     document.getElementById('userInitial').textContent = (user.username || user.email)[0].toUpperCase();
     document.getElementById('welcomeName').textContent = user.first_name || user.username || 'Volunteer';
+    
+    loadNotices();
+    
+    function showTasksSection() {
+        document.getElementById('noticesContainer').parentElement.style.display = 'none';
+        document.getElementById('tasksSection').style.display = 'block';
+        loadTasks();
+    }
+    
+    async function loadNotices() {
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) throw new Error('No authentication token');
+            
+            const response = await fetch('/api/notices/my-notifications/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch notices');
+            
+            const data = await response.json();
+            const notificationsList = data.notifications || data.results || data || [];
+            const container = document.getElementById('noticesContainer');
+            
+            if (notificationsList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-bell-slash fa-3x text-slate-400 mb-3"></i>
+                        <p class="text-slate-400">No notices available.</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = notificationsList.slice(0, 5).map(notification => {
+                    const createdDate = new Date(notification.created_at).toLocaleDateString();
+                    const isUnread = !notification.is_read;
+                    
+                    return `
+                        <div class="p-3 bg-slate-700/50 rounded mb-3 ${isUnread ? 'border-l-4 border-green-500' : ''}">
+                            <div class="flex justify-between items-start">
+                                <h6 class="text-white font-medium">${notification.title}${isUnread ? ' <span class="text-xs bg-green-500 text-white px-2 py-1 rounded">New</span>' : ''}</h6>
+                                <span class="text-xs text-slate-400">${createdDate}</span>
+                            </div>
+                            <p class="text-slate-300 text-sm mt-1">${notification.message}</p>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } catch (error) {
+            console.error('Error loading notices:', error);
+            document.getElementById('noticesContainer').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
+                    <p class="text-red-400">Error loading notices.</p>
+                </div>
+            `;
+        }
+    }
+    
+    async function loadTasks() {
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) throw new Error('No authentication token');
+            
+            const response = await fetch('/api/tasks/my-tasks/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch tasks');
+            
+            const tasks = await response.json();
+            const container = document.getElementById('tasksContainer');
+            
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-tasks fa-3x text-slate-400 mb-3"></i>
+                        <p class="text-slate-400">No tasks assigned yet.</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = tasks.map(task => {
+                    const deadline = new Date(task.deadline).toLocaleDateString();
+                    const statusColors = {
+                        'assigned': 'bg-blue-500',
+                        'submitted': 'bg-yellow-500',
+                        'approved': 'bg-green-500',
+                        'redo_requested': 'bg-red-500'
+                    };
+                    
+                    return `
+                        <div class="p-4 bg-slate-700/50 rounded mb-3">
+                            <div class="flex justify-between items-start mb-2">
+                                <h6 class="text-white font-medium">${task.title}</h6>
+                                <span class="text-xs text-white px-2 py-1 rounded ${statusColors[task.status]}">${task.status.replace('_', ' ').toUpperCase()}</span>
+                            </div>
+                            <p class="text-slate-300 text-sm mb-2">${task.description}</p>
+                            <p class="text-xs text-slate-400 mb-3">Deadline: ${deadline}</p>
+                            ${task.admin_feedback ? `<div class="bg-slate-600 p-2 rounded mb-2"><p class="text-xs text-slate-300"><strong>Feedback:</strong> ${task.admin_feedback}</p></div>` : ''}
+                            ${task.status === 'assigned' || task.status === 'redo_requested' ? `
+                                <button onclick="showSubmissionModal(${task.id})" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs">
+                                    ${task.status === 'redo_requested' ? 'Resubmit' : 'Submit'} Task
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+            document.getElementById('tasksContainer').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
+                    <p class="text-red-400">Error loading tasks.</p>
+                </div>
+            `;
+        }
+    }
+    
+    let currentTaskId = null;
+    
+    function showSubmissionModal(taskId) {
+        currentTaskId = taskId;
+        document.getElementById('taskSubmissionModal').style.display = 'flex';
+        document.getElementById('submissionText').value = '';
+        document.getElementById('submissionFile').value = '';
+    }
+    
+    function closeSubmissionModal() {
+        document.getElementById('taskSubmissionModal').style.display = 'none';
+        currentTaskId = null;
+    }
+    
+    async function submitTask() {
+        if (!currentTaskId) return;
+        
+        try {
+            const token = localStorage.getItem('access_token');
+            const formData = new FormData();
+            formData.append('submission_text', document.getElementById('submissionText').value);
+            
+            const fileInput = document.getElementById('submissionFile');
+            if (fileInput.files[0]) {
+                formData.append('submission_file', fileInput.files[0]);
+            }
+            
+            const response = await fetch(`/api/tasks/${currentTaskId}/submit/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            
+            if (response.ok) {
+                alert('Task submitted successfully!');
+                closeSubmissionModal();
+                loadTasks();
+            } else {
+                alert('Error submitting task.');
+            }
+        } catch (error) {
+            console.error('Error submitting task:', error);
+            alert('Error submitting task.');
+        }
+    }
 </script>
 </body>
 </html>

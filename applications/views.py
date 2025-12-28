@@ -387,10 +387,11 @@ def update_application_status(request, pk):
             username = f"{email_prefix}{random_suffix}"
             password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
             
-            # Update user account
+            # Update user account but keep existing authentication
             user = application.user
-            user.username = username
-            user.set_password(password)
+            # Don't change username or password to keep user logged in
+            # user.username = username
+            # user.set_password(password)
             user.user_type = application.application_type
             user.is_approved = True
             user.branch = application.branch

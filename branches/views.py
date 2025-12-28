@@ -7,6 +7,19 @@ from .serializers import BranchSerializer, BranchCreateSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def list_branches_simple(request):
+    branches = Branch.objects.all().order_by('name')
+    data = []
+    for branch in branches:
+        data.append({
+            'id': branch.id,
+            'name': branch.name,
+            'location': branch.location
+        })
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_branches(request):
     branches = Branch.objects.all()
     serializer = BranchSerializer(branches, many=True)

@@ -115,6 +115,21 @@ def login(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def list_users_simple(request):
+    users = CustomUser.objects.filter(user_type__in=['member', 'volunteer']).order_by('first_name', 'last_name')
+    data = []
+    for user in users:
+        data.append({
+            'id': user.id,
+            'first_name': user.first_name or '',
+            'last_name': user.last_name or '',
+            'email': user.email,
+            'user_type': user.user_type
+        })
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def profile(request):
     return Response(UserSerializer(request.user).data)
 

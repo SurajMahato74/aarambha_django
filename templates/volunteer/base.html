@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block page_title %}Volunteer{% endblock %} • Aarambha Foundation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{% static 'js/config.js' %}"></script>
+    <style>
+        body { background: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #1e293b; }
+        .active { background: #065f46; border-left: 3px solid #10b981; }
+        .hover-bg:hover { background: #293548; }
+    </style>
+</head>
+<body class="text-sm">
+<div class="flex h-screen">
+    <aside class="w-56 sidebar flex flex-col fixed h-screen">
+        <div class="p-5 border-b border-slate-700">
+            <h2 class="font-semibold text-white flex items-center gap-2">
+                <span class="text-xl">Aarambha</span>
+            </h2>
+            <p class="text-xs text-green-400">Volunteer Dashboard</p>
+        </div>
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <a href="/dashboard/volunteer/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-home w-4"></i> Dashboard
+            </a>
+            <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-user w-4"></i> My Profile
+            </a>
+            <a href="/volunteer/tasks/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-tasks w-4"></i> My Tasks
+            </a>
+            <a href="/volunteer/notices/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-bullhorn w-4"></i> Notices
+            </a>
+            <a href="/volunteer/materials/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-book w-4"></i> Reading Materials
+            </a>
+            <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-calendar w-4"></i> Events
+            </a>
+        </nav>
+        <div class="p-3 border-t border-slate-700 space-y-2">
+            <a href="/guest/profile/" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
+                <i class="fas fa-arrow-left w-4"></i> Back to Profile
+            </a>
+            <a href="/" onclick="clearToken()" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-rose-400 hover:bg-rose-900/20">
+                <i class="fas fa-arrow-right-from-bracket w-4"></i> Logout
+            </a>
+        </div>
+    </aside>
+    <main class="flex-1 overflow-y-auto ml-56">
+        <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-900/95 backdrop-blur-sm py-4 px-6 z-10">
+            <h1 class="text-2xl font-semibold text-white">{% block header_title %}Volunteer{% endblock %}</h1>
+            <div class="flex items-center gap-3">
+                <span id="userName" class="text-sm font-medium text-slate-300"></span>
+                <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-xs font-bold text-white" id="userInitial">V</div>
+            </div>
+        </div>
+        <div class="p-6">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+</div>
+
+<script src="{% static 'js/auth-utils.js' %}"></script>
+<script>
+    const user = getUser();
+    if (!user || user.user_type !== 'volunteer') window.location.href = '/';
+    document.getElementById('userName').textContent = user.username || user.email;
+    document.getElementById('userInitial').textContent = (user.username || user.email)[0].toUpperCase();
+</script>
+</body>
+</html>

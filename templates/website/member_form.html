@@ -60,6 +60,10 @@
     #membershipForm {
       display: none;
     }
+    
+    #membershipForm.show {
+      display: block;
+    }
 
     .start-section h2 {
       margin: 0;
@@ -687,24 +691,65 @@
   <!-- Hidden Config for JS -->
   <script src="{% static 'js/config.js' %}"></script>
   <script>
+    // CSRF token helper function
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    
     function startApplication() {
-      const user = getUser(); // getUser should return null if not logged in
-      if (!user) {
+      // Check both Django session and localStorage token
+      const user = getUser();
+      const isDjangoAuthenticated = window.djangoUser && window.djangoUser.isAuthenticated;
+      
+      if (!user && !isDjangoAuthenticated) {
         document.getElementById('loginModal').style.display = 'flex';
-        return; // stop execution, don't show the form yet
+        return;
       }
 
       // Only show form if logged in
       document.getElementById("startSection").style.display = "none";
-      document.getElementById("membershipForm").style.display = "block";
+      const form = document.getElementById("membershipForm");
+      form.style.display = "block";
+      form.classList.add("show");
     }
 
 
     function nextStep(step) {
-      document
-        .querySelectorAll(".form-step")
-        .forEach((s) => s.classList.remove("active"));
-      document.getElementById("step" + step).classList.add("active");
+      console.log('Moving to step:', step);
+      
+      // Show all steps instead of hiding them
+      document.querySelectorAll(".form-step").forEach((s, index) => {
+        s.style.cssText = `
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          position: static !important;
+          width: 100% !important;
+          background: white !important;
+          padding: 20px !important;
+          margin: 10px 0 !important;
+          border: ${index + 1 === step ? '2px solid blue' : '1px solid #ccc'} !important;
+        `;
+      });
+      
+      const targetStep = document.getElementById("step" + step);
+      if (targetStep) {
+        setTimeout(() => {
+          targetStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        console.log('All steps visible, highlighting step:', step);
+      }
     }
 
     // Check User Login Status and Show Modal
@@ -802,19 +847,36 @@
       submitBtn.disabled = true;
 
       try {
+        // Check authentication method
         const token = getToken();
-        if (!token) {
+        const isDjangoAuthenticated = window.djangoUser && window.djangoUser.isAuthenticated;
+        
+        if (!token && !isDjangoAuthenticated) {
           alert('Please login first to submit the application.');
-          window.location.href = '/login/'; // or wherever
+          window.location.href = '/accounts/login/';
           return;
         }
 
+        // Use appropriate authentication method
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        // Add CSRF token for session auth
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                         document.querySelector('meta[name=csrf-token]')?.content ||
+                         getCookie('csrftoken');
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
+        // For Django session auth, credentials are sent automatically
+
         const response = await fetch('/api/applications/submit/', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
+          headers: headers,
+          body: formData,
+          credentials: 'include' // Include cookies for session auth
         });
 
         const data = await response.json();

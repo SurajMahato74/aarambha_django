@@ -137,23 +137,26 @@
                 </div>
             </li>
 
-            <li class="navigation__level-one-item navigation__search" tabindex="0" id="navAuthItem">
-                <a href="javascript:void(0)" id="navLoginLink" class="navigation__level-one-link"
-                    onclick="handleNavLoginClick()">Login</a>
-                <div id="navProfileDropdown" style="display: none;">
-                    <a href="/guest/welcome/" class="navigation__level-one-link">Profile</a>
-                    <a href="/" onclick="clearToken()" class="navigation__level-one-link">Logout</a>
-                </div>
+            <li class="navigation__level-one-item navigation__search" tabindex="0">
+                {% if user.is_authenticated %}
+                    <a href="/guest/profile/" class="navigation__level-one-link">Profile</a>
+                {% else %}
+                    <a href="javascript:void(0)" id="navLoginLink" class="navigation__level-one-link" onclick="handleNavLoginClick()">Login</a>
+                {% endif %}
             </li>
 
         </ul>
 
         <button class="btn navigation__donate" onclick="openDonationModal()">Donate</button>
-        <button id="navLogoutBtn" class="navigation__logout-btn" onclick="clearToken()"
-            style="display: none; background: none; border: none; cursor: pointer; padding: 10px; margin-left: 10px;"
-            title="Logout">
-            <i class="fas fa-arrow-right-from-bracket" style="color: #E36F1E; font-size: 18px;"></i>
-        </button>
+        
+        {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'logout' %}" style="display: inline; margin-left: 1rem;">
+            {% csrf_token %}
+            <button type="submit" onclick="clearToken()" class="navigation__level-one-link" style="background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0.5rem;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </form>
+        {% endif %}
         <button class="navigation__toggle mobile-only--navigation" aria-expanded="false"
             aria-label="Open navigation menu" aria-controls="#navigation__level-one">
             <svg width="22" height="20" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true">
@@ -174,11 +177,19 @@
     </div>
 </div>
 
+<script type="application/json" id="django-user-data">
+{% if user.is_authenticated %}
+{"isAuthenticated": true, "email": "{{ user.email }}", "id": {{ user.id }}, "first_name": "{{ user.first_name }}", "last_name": "{{ user.last_name }}"}
+{% else %}
+{"isAuthenticated": false, "email": null}
+{% endif %}
+</script>
+<script src="{% static 'js/auth-utils.js' %}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Update navbar based on login status
-        updateNavbarAuth();
+    // Set user info for JavaScript
+    window.djangoUser = JSON.parse(document.getElementById('django-user-data').textContent);
 
+    document.addEventListener('DOMContentLoaded', function () {
         fetch('/api/our-work/')  // Your API URL
             .then(response => response.json())
             .then(data => {
@@ -197,33 +208,13 @@
             .catch(error => console.error('Error fetching Our Work:', error));
     });
 
-    function updateNavbarAuth() {
-        const user = getUser();
-        const loginLink = document.getElementById('navLoginLink');
-        const profileDropdown = document.getElementById('navProfileDropdown');
-        const logoutBtn = document.getElementById('navLogoutBtn');
-
-        if (user) {
-            // User is logged in, show profile and logout
-            loginLink.style.display = 'none';
-            profileDropdown.style.display = 'block';
-            logoutBtn.style.display = 'inline-block';
-        } else {
-            // User not logged in, show login
-            loginLink.style.display = 'block';
-            profileDropdown.style.display = 'none';
-            logoutBtn.style.display = 'none';
-        }
-    }
-
     function openDonationModal() {
-        const user = getUser();
-        if (user) {
+        if (window.djangoUser.isAuthenticated) {
             document.getElementById('donationModal').style.display = 'flex';
             // Auto-fill email if user is logged in
             const emailField = document.getElementById('email');
-            if (emailField && user.email) {
-                emailField.value = user.email;
+            if (emailField && window.djangoUser.email) {
+                emailField.value = window.djangoUser.email;
             }
         } else {
             // Set flag to open donation modal after login
@@ -234,6 +225,11 @@
 
     function closeDonationModal() {
         document.getElementById('donationModal').style.display = 'none';
+    }
+
+    function toggleProfileDropdown() {
+        const dropdown = document.getElementById('navProfileDropdown');
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
     }
 </script>
 

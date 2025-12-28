@@ -1,0 +1,518 @@
+{% extends 'member/base.html' %}
+{% load static %}
+
+{% block page_title %}My Tasks{% endblock %}
+
+{% block header_title %}My Tasks{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-white">My Tasks</h2>
+    <p class="text-slate-400">Manage and submit your assigned tasks</p>
+</div>
+
+<div class="bg-slate-800 rounded-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-white">Assigned Tasks</h3>
+        <div class="flex gap-2">
+            <input type="text" id="taskSearchInput" placeholder="Search tasks..." class="px-3 py-1 bg-slate-700 text-white rounded text-sm" oninput="filterTasks()">
+            <select id="statusFilter" class="px-3 py-1 bg-slate-700 text-white rounded text-sm" onchange="filterTasks()">
+                <option value="">All Status</option>
+                <option value="assigned">Assigned</option>
+                <option value="submitted">Submitted</option>
+                <option value="approved">Approved</option>
+                <option value="redo_requested">Needs Revision</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full" id="tasksTable">
+            <thead class="bg-slate-700">
+                <tr>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm cursor-pointer" onclick="sortTable(0)">Title <i class="fas fa-sort ml-1"></i></th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm cursor-pointer" onclick="sortTable(1)">Description <i class="fas fa-sort ml-1"></i></th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm cursor-pointer" onclick="sortTable(2)">Deadline <i class="fas fa-sort ml-1"></i></th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm cursor-pointer" onclick="sortTable(3)">Status <i class="fas fa-sort ml-1"></i></th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tasksTableBody">
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-slate-400">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p>Loading tasks...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="flex justify-between items-center mt-4">
+        <div class="text-sm text-slate-400" id="tableInfo">Loading...</div>
+        <div class="flex gap-2" id="pagination"></div>
+    </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div id="taskDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-slate-800 p-6 rounded-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-white">Task Details</h3>
+            <button onclick="closeTaskModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times fa-lg"></i>
+            </button>
+        </div>
+        <div id="taskDetailContent"></div>
+    </div>
+</div>
+
+<!-- Submit Task Modal -->
+<div id="submitTaskModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-slate-800 p-6 rounded-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+        <h3 class="text-xl font-bold text-white mb-4">Submit Task</h3>
+        <form id="submitTaskForm">
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Task Submission</label>
+                <div id="editor" class="bg-slate-700 text-white rounded" style="height: 200px;"></div>
+                <input type="hidden" id="submissionText">
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Attach Files (Optional)</label>
+                <input type="file" id="submissionFile" class="w-full p-2 bg-slate-700 text-white rounded" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="addFiles()">
+                <small class="text-slate-400">Click to add files one by one (PDF, images, documents)</small>
+                <div id="selectedFiles" class="mt-2"></div>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="submitTask()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Submit Task</button>
+                <button type="button" onclick="closeSubmitModal()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+<script>
+    let allTasks = [];
+    let filteredTasks = null;
+    let currentPage = 1;
+    let itemsPerPage = 10;
+    let sortColumn = -1;
+    let sortDirection = 'asc';
+    let currentTaskId = null;
+    let quill = null;
+    let selectedFiles = [];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTasks();
+    });
+    
+    async function loadTasks() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/tasks/my-tasks/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch tasks');
+            
+            allTasks = await response.json();
+            updateTable();
+            updatePagination();
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+            document.getElementById('tasksTableBody').innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-red-400">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Error loading tasks.</p>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    function filterTasks() {
+        const searchTerm = document.getElementById('taskSearchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        
+        filteredTasks = allTasks.filter(task => {
+            const matchesSearch = task.title.toLowerCase().includes(searchTerm) || 
+                                task.description.toLowerCase().includes(searchTerm);
+            const matchesStatus = !statusFilter || task.status === statusFilter;
+            
+            return matchesSearch && matchesStatus;
+        });
+        
+        currentPage = 1;
+        updateTable();
+        updatePagination();
+    }
+    
+    function sortTable(column) {
+        if (sortColumn === column) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = column;
+            sortDirection = 'asc';
+        }
+        
+        const tasks = filteredTasks || allTasks;
+        const sortedTasks = [...tasks].sort((a, b) => {
+            let aVal, bVal;
+            
+            switch(column) {
+                case 0: aVal = a.title; bVal = b.title; break;
+                case 1: aVal = a.description; bVal = b.description; break;
+                case 2: aVal = new Date(a.deadline); bVal = new Date(b.deadline); break;
+                case 3: aVal = a.status; bVal = b.status; break;
+            }
+            
+            if (column === 2) { // Date sorting
+                return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+            } else {
+                return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            }
+        });
+        
+        filteredTasks = sortedTasks;
+        updateTable();
+    }
+    
+    function updateTable() {
+        const tasks = filteredTasks || allTasks;
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageTasks = tasks.slice(start, end);
+        
+        const tbody = document.getElementById('tasksTableBody');
+        
+        if (tasks.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-slate-400">
+                        <i class="fas fa-tasks fa-2x mb-2"></i>
+                        <p>No tasks found.</p>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('tableInfo').textContent = 'No tasks';
+            return;
+        }
+        
+        const statusColors = {
+            'assigned': 'bg-blue-500',
+            'submitted': 'bg-yellow-500',
+            'approved': 'bg-green-500',
+            'redo_requested': 'bg-red-500'
+        };
+        
+        tbody.innerHTML = pageTasks.map(task => {
+            const deadline = new Date(task.deadline);
+            const isOverdue = new Date() > deadline && task.status === 'assigned';
+            
+            return `
+                <tr class="border-b border-slate-600">
+                    <td class="py-3 px-4 text-sm text-white">${task.title}</td>
+                    <td class="py-3 px-4 text-sm text-slate-300">${task.description.substring(0, 50)}${task.description.length > 50 ? '...' : ''}</td>
+                    <td class="py-3 px-4 text-sm ${isOverdue ? 'text-red-400' : 'text-slate-300'}">${deadline.toLocaleDateString()} ${isOverdue ? '(OVERDUE)' : ''}</td>
+                    <td class="py-3 px-4 text-sm">
+                        <span class="text-xs text-white px-2 py-1 rounded ${statusColors[task.status]}">${task.status.replace('_', ' ').toUpperCase()}</span>
+                    </td>
+                    <td class="py-3 px-4 text-sm">
+                        <div class="flex gap-2">
+                            <button onclick="viewTask(${task.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </button>
+                            ${task.status === 'assigned' || task.status === 'redo_requested' ? `
+                                <button onclick="showSubmitModal(${task.id})" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs">
+                                    <i class="fas fa-upload mr-1"></i>Submit
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        document.getElementById('tableInfo').textContent = 
+            `Showing ${start + 1}-${Math.min(end, tasks.length)} of ${tasks.length}`;
+    }
+    
+    function updatePagination() {
+        const tasks = filteredTasks || allTasks;
+        const totalPages = Math.ceil(tasks.length / itemsPerPage);
+        const pagination = document.getElementById('pagination');
+        
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+        
+        let paginationHTML = '';
+        
+        if (currentPage > 1) {
+            paginationHTML += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-1 bg-slate-700 text-white rounded text-sm hover:bg-slate-600">Previous</button>`;
+        }
+        
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === currentPage) {
+                paginationHTML += `<button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">${i}</button>`;
+            } else {
+                paginationHTML += `<button onclick="changePage(${i})" class="px-3 py-1 bg-slate-700 text-white rounded text-sm hover:bg-slate-600">${i}</button>`;
+            }
+        }
+        
+        if (currentPage < totalPages) {
+            paginationHTML += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-1 bg-slate-700 text-white rounded text-sm hover:bg-slate-600">Next</button>`;
+        }
+        
+        pagination.innerHTML = paginationHTML;
+    }
+    
+    function changePage(page) {
+        currentPage = page;
+        updateTable();
+        updatePagination();
+    }
+    
+    function addFiles() {
+        const fileInput = document.getElementById('submissionFile');
+        const files = Array.from(fileInput.files);
+        
+        files.forEach(file => {
+            if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                selectedFiles.push(file);
+            }
+        });
+        
+        updateFileDisplay();
+        fileInput.value = '';
+    }
+    
+    function updateFileDisplay() {
+        const container = document.getElementById('selectedFiles');
+        if (selectedFiles.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        container.innerHTML = selectedFiles.map((file, index) => `
+            <div class="flex items-center justify-between bg-slate-600 p-2 rounded mb-1">
+                <span class="text-slate-300 text-xs truncate">${file.name}</span>
+                <button type="button" onclick="removeFile(${index})" class="text-red-400 hover:text-red-300 text-xs ml-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        updateFileDisplay();
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    function showSuccessAnimation() {
+        // Create success overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        overlay.innerHTML = `
+            <div class="bg-white rounded-lg p-8 text-center animate-bounce">
+                <div class="text-6xl text-green-500 mb-4">✓</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Task Submitted Successfully!</h3>
+                <p class="text-gray-600">You will receive an email confirmation shortly.</p>
+            </div>
+        `;
+        
+        // Add falling animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                0% { transform: translateY(-100vh) rotate(0deg); }
+                100% { transform: translateY(100vh) rotate(360deg); }
+            }
+            .falling { animation: fall 3s linear infinite; }
+        `;
+        document.head.appendChild(style);
+        
+        // Add confetti
+        for (let i = 0; i < 20; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'fixed w-2 h-2 bg-yellow-400 falling';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.animationDelay = Math.random() * 3 + 's';
+            overlay.appendChild(confetti);
+        }
+        
+        document.body.appendChild(overlay);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+            document.head.removeChild(style);
+        }, 3000);
+    }
+    
+    function viewTask(taskId) {
+        const task = allTasks.find(t => t.id === taskId);
+        if (!task) return;
+        
+        const deadline = new Date(task.deadline).toLocaleString();
+        const isOverdue = new Date() > new Date(task.deadline) && task.status === 'assigned';
+        
+        document.getElementById('taskDetailContent').innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-2">${task.title}</h4>
+                    <p class="text-slate-300">${task.description}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-slate-300"><strong>Deadline:</strong> <span class="${isOverdue ? 'text-red-400' : 'text-white'}">${deadline} ${isOverdue ? '(OVERDUE)' : ''}</span></p>
+                        <p class="text-slate-300"><strong>Status:</strong> <span class="text-white">${task.status.replace('_', ' ').toUpperCase()}</span></p>
+                    </div>
+                </div>
+                ${task.task_materials && task.task_materials.length > 0 ? `
+                    <div>
+                        <h5 class="text-white font-medium mb-2">Materials:</h5>
+                        <div class="space-y-1">
+                            ${task.task_materials.map(m => `<a href="${m.url}" target="_blank" class="block text-blue-400 hover:underline text-sm"><i class="fas fa-file mr-1"></i>${m.filename}</a>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                ${task.task_links ? `
+                    <div>
+                        <h5 class="text-white font-medium mb-2">Helpful Links:</h5>
+                        <div class="text-slate-300 text-sm whitespace-pre-line">${task.task_links.split('\n').map(link => link.trim() ? `<a href="${link.startsWith('http') ? link : 'https://' + link}" target="_blank" class="text-blue-400 hover:underline block">${link}</a>` : '').join('')}</div>
+                    </div>
+                ` : ''}
+                ${task.submission_text || task.submission_file ? `
+                    <div class="bg-slate-700 p-3 rounded">
+                        <h5 class="text-white font-medium mb-2">Your Submission:</h5>
+                        ${task.submission_text ? `<p class="text-slate-300 text-sm mb-2">${task.submission_text}</p>` : ''}
+                        ${task.submission_file ? `<a href="${task.submission_file}" target="_blank" class="text-green-400 hover:underline text-sm"><i class="fas fa-file mr-1"></i>View File</a>` : ''}
+                    </div>
+                ` : ''}
+                ${task.admin_feedback ? `
+                    <div class="bg-slate-700 p-3 rounded">
+                        <h5 class="text-white font-medium mb-2">Admin Feedback:</h5>
+                        <p class="text-slate-300 text-sm">${task.admin_feedback}</p>
+                    </div>
+                ` : ''}
+                ${task.rating ? `
+                    <div class="bg-slate-700 p-3 rounded">
+                        <h5 class="text-white font-medium mb-2">Rating:</h5>
+                        <div class="flex items-center">
+                            <span class="text-yellow-400 text-lg mr-2">${task.rating}/10</span>
+                            <span class="text-yellow-400">${'★'.repeat(Math.floor(task.rating/2))}${'☆'.repeat(5-Math.floor(task.rating/2))}</span>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        document.getElementById('taskDetailModal').style.display = 'flex';
+    }
+    
+    function showSubmitModal(taskId) {
+        currentTaskId = taskId;
+        document.getElementById('submitTaskModal').style.display = 'flex';
+        
+        // Initialize Quill editor if not already done
+        if (!quill) {
+            quill = new Quill('#editor', {
+                theme: 'snow',
+                placeholder: 'Describe your work, findings, or results...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        ['link'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+        }
+        
+        quill.setContents([]);
+        selectedFiles = [];
+        document.getElementById('selectedFiles').innerHTML = '';
+        document.getElementById('submissionFile').value = '';
+    }
+    
+    function closeTaskModal() {
+        document.getElementById('taskDetailModal').style.display = 'none';
+    }
+    
+    function closeSubmitModal() {
+        document.getElementById('submitTaskModal').style.display = 'none';
+        document.getElementById('submitTaskForm').reset();
+        currentTaskId = null;
+    }
+    
+    async function submitTask() {
+        if (!currentTaskId) return;
+        
+        // Show loading state
+        const submitBtn = document.querySelector('#submitTaskModal button[onclick="submitTask()"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+        submitBtn.disabled = true;
+        
+        try {
+            const token = localStorage.getItem('access_token');
+            const formData = new FormData();
+            
+            // Get rich text content from Quill editor
+            const editorContent = quill.root.innerHTML;
+            formData.append('submission_text', editorContent);
+            
+            // Handle multiple files
+            for (let i = 0; i < selectedFiles.length; i++) {
+                formData.append('submission_file', selectedFiles[i]);
+            }
+            
+            const response = await fetch(`/api/tasks/${currentTaskId}/submit/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            });
+            
+            if (response.ok) {
+                showSuccessAnimation();
+                closeSubmitModal();
+                loadTasks();
+            } else {
+                alert('Error submitting task.');
+            }
+        } catch (error) {
+            console.error('Error submitting task:', error);
+            alert('Error submitting task.');
+        } finally {
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

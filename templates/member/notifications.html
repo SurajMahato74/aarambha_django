@@ -1,0 +1,120 @@
+{% extends 'member/base.html' %}
+{% load static %}
+
+{% block page_title %}All Notifications{% endblock %}
+
+{% block header_title %}
+<div class="flex items-center">
+    <a href="/member/dashboard/" class="text-orange-500 hover:text-orange-400 mr-3">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    All Notifications
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="bg-slate-800 rounded-lg p-6">
+    <div id="notificationsContainer">
+        <div class="text-center py-8">
+            <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+            <p class="text-slate-400">Loading notifications...</p>
+        </div>
+    </div>
+    
+    <div id="loadMoreContainer" class="text-center mt-6" style="display: none;">
+        <button id="loadMoreBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded">
+            Load More
+        </button>
+    </div>
+</div>
+
+<script>
+    const user = getUser();
+    if (!user || user.user_type !== 'member') window.location.href = '/';
+    
+    let currentPage = 1;
+    let hasMore = true;
+    let loading = false;
+    
+    loadNotifications();
+    
+    document.getElementById('loadMoreBtn').addEventListener('click', loadNotifications);
+    
+    async function loadNotifications() {
+        if (loading || !hasMore) return;
+        
+        loading = true;
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (loadMoreBtn) loadMoreBtn.textContent = 'Loading...';
+        
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) throw new Error('No authentication token');
+            
+            const response = await fetch(`/api/notices/my-notifications/?page=${currentPage}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch notifications');
+            
+            const data = await response.json();
+            const notifications = data.notifications || data.results || data || [];
+            const container = document.getElementById('notificationsContainer');
+            
+            if (currentPage === 1) {
+                if (notifications.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-bell-slash fa-3x text-slate-400 mb-3"></i>
+                            <p class="text-slate-400">No notifications available.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                container.innerHTML = '';
+            }
+            
+            notifications.forEach(notification => {
+                const createdDate = new Date(notification.created_at).toLocaleDateString();
+                const isUnread = !notification.is_read;
+                
+                const notificationElement = document.createElement('div');
+                notificationElement.className = `p-4 bg-slate-700/50 rounded mb-3 ${isUnread ? 'border-l-4 border-blue-500' : ''}`;
+                notificationElement.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h6 class="text-white font-medium">${notification.title}${isUnread ? ' <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded">New</span>' : ''}</h6>
+                        <span class="text-xs text-slate-400">${createdDate}</span>
+                    </div>
+                    <p class="text-slate-300 text-sm">${notification.message}</p>
+                `;
+                container.appendChild(notificationElement);
+            });
+            
+            hasMore = notifications.length === 10;
+            currentPage++;
+            
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+            if (hasMore) {
+                loadMoreContainer.style.display = 'block';
+                loadMoreBtn.textContent = 'Load More';
+            } else {
+                loadMoreContainer.style.display = 'none';
+            }
+            
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+            const container = document.getElementById('notificationsContainer');
+            if (currentPage === 1) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
+                        <p class="text-red-400">Error loading notifications.</p>
+                    </div>
+                `;
+            }
+        } finally {
+            loading = false;
+        }
+    }
+</script>
+{% endblock %}

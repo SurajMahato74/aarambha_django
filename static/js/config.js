@@ -64,7 +64,7 @@ async function fetchAPI(url, options = {}) {
         headers
     });
 
-    // Handle token expiration
+    // Handle token expiration - but don't redirect from profile page
     if (response.status === 401 && localStorage.getItem('refresh_token')) {
         try {
             const refreshResponse = await fetch('/api/token/refresh/', {
@@ -80,11 +80,17 @@ async function fetchAPI(url, options = {}) {
                 response = await fetch(url, { ...options, headers });
             } else {
                 clearToken();
-                window.location.href = '/login/';
+                // Don't redirect if we're on profile page
+                if (!window.location.pathname.includes('/guest/profile/')) {
+                    window.location.href = '/login/';
+                }
             }
         } catch (e) {
             clearToken();
-            window.location.href = '/login/';
+            // Don't redirect if we're on profile page
+            if (!window.location.pathname.includes('/guest/profile/')) {
+                window.location.href = '/login/';
+            }
         }
     }
 

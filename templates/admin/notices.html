@@ -1,0 +1,509 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block page_title %}Notice Board{% endblock %}
+
+{% block content %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<div class="mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-white">Notice Board</h2>
+            <p class="text-slate-400">Manage notices for members and volunteers</p>
+        </div>
+        <button onclick="showCreateModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded">
+            <i class="fas fa-plus mr-2"></i>Create Notice
+        </button>
+    </div>
+</div>
+
+<div class="bg-slate-800 rounded-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-white">All Notices</h3>
+        <div class="flex gap-2">
+            <input type="text" id="searchInput" placeholder="Search notices..." class="px-3 py-1 bg-slate-700 text-white rounded text-sm" oninput="filterNotices()">
+            <select id="visibilityFilter" class="px-3 py-1 bg-slate-700 text-white rounded text-sm" onchange="filterNotices()">
+                <option value="">All Visibility</option>
+                <option value="member">Members Only</option>
+                <option value="volunteer">Volunteers Only</option>
+                <option value="both">Both</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full" id="noticesTable">
+            <thead class="bg-slate-700">
+                <tr>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm">Title</th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm">Visibility</th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm">Email Status</th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm">Attachment</th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm">Status</th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm">Created</th>
+                    <th class="py-3 px-4 text-left text-slate-300 text-sm">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="noticesTableBody">
+                <tr>
+                    <td colspan="7" class="py-8 text-center text-slate-400">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p>Loading notices...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create/Edit Notice Modal -->
+<div id="noticeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-slate-800 p-6 rounded-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-white" id="modalTitle">Create Notice</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times fa-lg"></i>
+            </button>
+        </div>
+        <form id="noticeForm">
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Title</label>
+                <input type="text" id="noticeTitle" class="w-full p-2 bg-slate-700 text-white rounded" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Content</label>
+                <div id="editor" class="bg-slate-700 text-white rounded" style="height: 200px;"></div>
+                <input type="hidden" id="noticeContent">
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Visibility</label>
+                <select id="noticeVisibility" class="w-full p-2 bg-slate-700 text-white rounded">
+                    <option value="both">Members & Volunteers</option>
+                    <option value="member">Members Only</option>
+                    <option value="volunteer">Volunteers Only</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Assignment Mode</label>
+                <select id="assignmentMode" class="w-full p-2 bg-slate-700 text-white rounded" onchange="toggleAssignmentOptions()">
+                    <option value="all">All Users</option>
+                    <option value="individual">Individual Users</option>
+                    <option value="branch">By Branch</option>
+                    <option value="branch_individual">Branch + Individual</option>
+                </select>
+            </div>
+            <div id="branchSelection" class="mb-4" style="display: none;">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Select Branch</label>
+                <select id="branchSelect" class="w-full p-2 bg-slate-700 text-white rounded">
+                    <option value="">Loading branches...</option>
+                </select>
+            </div>
+            <div id="userSelection" class="mb-4" style="display: none;">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Select Users</label>
+                <input type="text" id="userSearchInput" placeholder="Search and select users..." class="w-full p-2 bg-slate-700 text-white rounded mb-2">
+                <div id="selectedUsers" class="space-y-1"></div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Attachment (Optional)</label>
+                <input type="file" id="noticeAttachment" class="w-full p-2 bg-slate-700 text-white rounded">
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="saveNotice()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-save mr-2"></i>Save Notice
+                </button>
+                <button type="button" onclick="closeModal()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allNotices = [];
+    let currentNoticeId = null;
+    let quill = null;
+    let selectedUserIds = [];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNotices();
+        loadBranches();
+        initializeQuill();
+    });
+    
+    function initializeQuill() {
+        quill = new Quill('#editor', {
+            theme: 'snow',
+            placeholder: 'Write your notice content...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    ['link'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['clean']
+                ]
+            }
+        });
+    }
+    
+    async function loadBranches() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/branches/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const branches = await response.json();
+                const select = document.getElementById('branchSelect');
+                select.innerHTML = '<option value="">Select branch...</option>' +
+                    branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            }
+        } catch (error) {
+            console.error('Error loading branches:', error);
+        }
+    }
+    
+    function toggleAssignmentOptions() {
+        const mode = document.getElementById('assignmentMode').value;
+        const branchDiv = document.getElementById('branchSelection');
+        const userDiv = document.getElementById('userSelection');
+        
+        branchDiv.style.display = (mode === 'branch' || mode === 'branch_individual') ? 'block' : 'none';
+        userDiv.style.display = (mode === 'individual' || mode === 'branch_individual') ? 'block' : 'none';
+        
+        if (mode === 'branch') {
+            document.getElementById('branchSelect').addEventListener('change', loadBranchUsers);
+        }
+    }
+    
+    async function loadBranchUsers() {
+        const branchId = document.getElementById('branchSelect').value;
+        if (!branchId) return;
+        
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`/api/users/?branch_id=${branchId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const users = await response.json();
+                setupUserSearch(users);
+            }
+        } catch (error) {
+            console.error('Error loading branch users:', error);
+        }
+    }
+    
+    async function loadNotices() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/notices/admin/notices/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch notices');
+            
+            allNotices = await response.json();
+            displayNotices(allNotices);
+        } catch (error) {
+            console.error('Error loading notices:', error);
+            document.getElementById('noticesTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="py-8 text-center text-red-400">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Error loading notices.</p>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    function displayNotices(notices) {
+        const tbody = document.getElementById('noticesTableBody');
+        
+        if (notices.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-8 text-center text-slate-400">
+                        <i class="fas fa-clipboard fa-2x mb-2"></i>
+                        <p>No notices found.</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = notices.map(notice => `
+            <tr class="border-b border-slate-600">
+                <td class="py-3 px-4 text-sm text-white">${notice.title}</td>
+                <td class="py-3 px-4 text-sm text-slate-300">${notice.visibility.replace('_', ' ').toUpperCase()}</td>
+                <td class="py-3 px-4 text-sm text-slate-300">${notice.email_status || 'No emails'}</td>
+                <td class="py-3 px-4 text-sm">
+                    ${notice.attachment ? `<i class="fas fa-paperclip text-green-400"></i>` : '<span class="text-slate-500">None</span>'}
+                </td>
+                <td class="py-3 px-4 text-sm">
+                    <span class="text-xs px-2 py-1 rounded ${notice.is_active ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}">
+                        ${notice.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td class="py-3 px-4 text-sm text-slate-300">${new Date(notice.created_at).toLocaleDateString()}</td>
+                <td class="py-3 px-4 text-sm">
+                    <div class="flex gap-2">
+                        <button onclick="editNotice(${notice.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="toggleNoticeStatus(${notice.id})" class="bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-toggle-${notice.is_active ? 'on' : 'off'}"></i>
+                        </button>
+                        <button onclick="deleteNotice(${notice.id})" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function filterNotices() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const visibilityFilter = document.getElementById('visibilityFilter').value;
+        
+        const filtered = allNotices.filter(notice => {
+            const matchesSearch = notice.title.toLowerCase().includes(searchTerm) || 
+                                notice.content.toLowerCase().includes(searchTerm);
+            const matchesVisibility = !visibilityFilter || notice.visibility === visibilityFilter;
+            
+            return matchesSearch && matchesVisibility;
+        });
+        
+        displayNotices(filtered);
+    }
+    
+    function showCreateModal() {
+        currentNoticeId = null;
+        document.getElementById('modalTitle').textContent = 'Create Notice';
+        document.getElementById('noticeForm').reset();
+        if (quill) quill.setContents([]);
+        selectedUserIds = [];
+        document.getElementById('selectedUsers').innerHTML = '';
+        document.getElementById('noticeModal').style.display = 'flex';
+        setupUserSearch();
+    }
+    
+    function editNotice(noticeId) {
+        const notice = allNotices.find(n => n.id === noticeId);
+        if (!notice) return;
+        
+        currentNoticeId = noticeId;
+        document.getElementById('modalTitle').textContent = 'Edit Notice';
+        document.getElementById('noticeTitle').value = notice.title;
+        document.getElementById('noticeContent').value = notice.content;
+        document.getElementById('noticeVisibility').value = notice.visibility;
+        document.getElementById('noticeModal').style.display = 'flex';
+    }
+    
+    function closeModal() {
+        document.getElementById('noticeModal').style.display = 'none';
+        document.getElementById('noticeForm').reset();
+        if (quill) quill.setContents([]);
+        selectedUserIds = [];
+        currentNoticeId = null;
+    }
+    
+    function setupUserSearch(users = null) {
+        const searchInput = document.getElementById('userSearchInput');
+        let allUsers = users;
+        
+        searchInput.addEventListener('input', async function() {
+            const searchTerm = this.value.toLowerCase();
+            if (searchTerm.length < 2) return;
+            
+            if (!allUsers) {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const response = await fetch('/api/users/', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) allUsers = await response.json();
+                } catch (error) {
+                    console.error('Error loading users:', error);
+                    return;
+                }
+            }
+            
+            const filteredUsers = allUsers.filter(user => 
+                user.email.toLowerCase().includes(searchTerm) ||
+                (user.first_name && user.first_name.toLowerCase().includes(searchTerm))
+            );
+            
+            showUserSuggestions(filteredUsers);
+        });
+    }
+    
+    function showUserSuggestions(users) {
+        const container = document.getElementById('selectedUsers');
+        const suggestions = users.slice(0, 5).map(user => `
+            <div class="bg-slate-600 p-2 rounded cursor-pointer hover:bg-slate-500" onclick="selectUser(${user.id}, '${user.email}')">
+                ${user.first_name ? user.first_name + ' ' + (user.last_name || '') : user.email}
+            </div>
+        `).join('');
+        
+        container.innerHTML = suggestions;
+    }
+    
+    function selectUser(userId, userEmail) {
+        if (selectedUserIds.includes(userId)) return;
+        
+        selectedUserIds.push(userId);
+        updateSelectedUsersDisplay();
+        document.getElementById('userSearchInput').value = '';
+    }
+    
+    function updateSelectedUsersDisplay() {
+        const container = document.getElementById('selectedUsers');
+        container.innerHTML = selectedUserIds.map((userId, index) => `
+            <div class="bg-slate-600 p-2 rounded flex justify-between items-center">
+                <span>User ID: ${userId}</span>
+                <button onclick="removeUser(${index})" class="text-red-400 hover:text-red-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    function removeUser(index) {
+        selectedUserIds.splice(index, 1);
+        updateSelectedUsersDisplay();
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    async function saveNotice() {
+        const title = document.getElementById('noticeTitle').value;
+        const content = quill.root.innerHTML;
+        const visibility = document.getElementById('noticeVisibility').value;
+        const assignmentMode = document.getElementById('assignmentMode').value;
+        const attachment = document.getElementById('noticeAttachment').files[0];
+        
+        if (!title || !content) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('content', content);
+        formData.append('visibility', visibility);
+        formData.append('assignment_mode', assignmentMode);
+        
+        if (assignmentMode === 'branch' || assignmentMode === 'branch_individual') {
+            const branchId = document.getElementById('branchSelect').value;
+            if (branchId) formData.append('branch_id', branchId);
+        }
+        
+        if (assignmentMode === 'individual' || assignmentMode === 'branch_individual') {
+            formData.append('assigned_to', JSON.stringify(selectedUserIds));
+        }
+        
+        if (attachment) {
+            formData.append('attachment', attachment);
+        }
+        
+        try {
+            const token = localStorage.getItem('access_token');
+            const url = currentNoticeId ? 
+                `/api/notices/admin/notices/${currentNoticeId}/` : 
+                '/api/notices/admin/notices/';
+            const method = currentNoticeId ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            });
+            
+            if (response.ok) {
+                alert(`Notice ${currentNoticeId ? 'updated' : 'created'} successfully!`);
+                closeModal();
+                loadNotices();
+            } else {
+                alert('Error saving notice.');
+            }
+        } catch (error) {
+            console.error('Error saving notice:', error);
+            alert('Error saving notice.');
+        }
+    }
+    
+    async function toggleNoticeStatus(noticeId) {
+        const notice = allNotices.find(n => n.id === noticeId);
+        if (!notice) return;
+        
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`/api/notices/admin/notices/${noticeId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    is_active: !notice.is_active
+                })
+            });
+            
+            if (response.ok) {
+                loadNotices();
+            } else {
+                alert('Error updating notice status.');
+            }
+        } catch (error) {
+            console.error('Error updating notice status:', error);
+            alert('Error updating notice status.');
+        }
+    }
+    
+    async function deleteNotice(noticeId) {
+        if (!confirm('Are you sure you want to delete this notice?')) return;
+        
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`/api/notices/admin/notices/${noticeId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            if (response.ok) {
+                alert('Notice deleted successfully!');
+                loadNotices();
+            } else {
+                alert('Error deleting notice.');
+            }
+        } catch (error) {
+            console.error('Error deleting notice:', error);
+            alert('Error deleting notice.');
+        }
+    }
+</script>
+{% endblock %}

@@ -1,71 +1,362 @@
-<!-- Applications Section -->
-<div id="applications" class="content-section" style="display: none;">
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
-            <h4 class="card-title mb-4 fw-bold">My Applications</h4>
+{% extends 'guest/base.html' %}
 
-            <!-- Stats Row -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-white shadow-sm">
-                        <div class="card-body text-center p-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-2">
-                                <i class="fas fa-file-lines fa-lg text-primary"></i>
-                            </div>
-                            <p class="small text-muted mb-1">Total Applications</p>
-                            <h5 class="fw-bold mb-0" id="totalApps">0</h5>
-                        </div>
-                    </div>
+{% block title %}My Applications{% endblock %}
+{% block page_title %}My Applications{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-slate-800 p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Total Applications</p>
+                    <p class="text-2xl font-bold text-white" id="totalApps">0</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-white shadow-sm">
-                        <div class="card-body text-center p-3">
-                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex p-3 mb-2">
-                                <i class="fas fa-clock fa-lg text-warning"></i>
-                            </div>
-                            <p class="small text-muted mb-1">Pending</p>
-                            <h5 class="fw-bold mb-0" id="pendingApps">0</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-white shadow-sm">
-                        <div class="card-body text-center p-3">
-                            <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex p-3 mb-2">
-                                <i class="fas fa-calendar fa-lg text-info"></i>
-                            </div>
-                            <p class="small text-muted mb-1">Interviews</p>
-                            <h5 class="fw-bold mb-0" id="interviewApps">0</h5>
-                        </div>
-                    </div>
-                </div>
+                <i class="fas fa-file-lines text-3xl text-indigo-500"></i>
             </div>
-
-            <!-- Applications Container -->
-            <div id="applicationsContainer" class="bg-white rounded p-4 shadow-sm">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="text-muted mt-3">Loading your applications...</p>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Pending</p>
+                    <p class="text-2xl font-bold text-yellow-500" id="pendingApps">0</p>
                 </div>
+                <i class="fas fa-clock text-3xl text-yellow-500"></i>
             </div>
-
-            <!-- Quick Actions (shown when no applications) -->
-            <div id="quickActions" style="display: none;" class="mt-4">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <a href="/member-form/" class="btn btn-outline-primary w-100 py-2">
-                            <i class="fas fa-user-plus me-2"></i> Become a Member
-                        </a>
-                    </div>
-                    <div class="col-md-6">
-                        <a href="/volunteer-form/" class="btn btn-outline-success w-100 py-2">
-                            <i class="fas fa-hands-helping me-2"></i> Become a Volunteer
-                        </a>
-                    </div>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Interviews</p>
+                    <p class="text-2xl font-bold text-blue-500" id="interviewApps">0</p>
                 </div>
+                <i class="fas fa-calendar text-3xl text-blue-500"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applications List -->
+    <div class="bg-slate-800 rounded-lg p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Your Applications</h2>
+        <div id="applicationsContainer">
+            <div class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                <p class="text-slate-400 mt-3">Loading your applications...</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions (shown when no applications) -->
+        <div id="quickActions" style="display: none;" class="mt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="/apply/member/" class="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800">
+                    <i class="fas fa-user-plus text-2xl text-white"></i>
+                    <div>
+                        <h3 class="text-white font-semibold">Apply as Member</h3>
+                        <p class="text-blue-100 text-sm">Submit member application</p>
+                    </div>
+                </a>
+                <a href="/apply/volunteer/" class="flex items-center gap-4 p-4 bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800">
+                    <i class="fas fa-hands-helping text-2xl text-white"></i>
+                    <div>
+                        <h3 class="text-white font-semibold">Apply as Volunteer</h3>
+                        <p class="text-green-100 text-sm">Submit volunteer application</p>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<!-- View Application Modal -->
+<div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white">Application Details</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadApplications() {
+    try {
+        const response = await fetchAPI('/api/applications/my-applications/');
+        const applications = await response.json();
+        
+        // Update stats
+        document.getElementById('totalApps').textContent = applications.length;
+        document.getElementById('pendingApps').textContent = applications.filter(a => a.status === 'pending').length;
+        document.getElementById('interviewApps').textContent = applications.filter(a => a.status === 'interview_scheduled').length;
+        
+        const container = document.getElementById('applicationsContainer');
+        const quickActions = document.getElementById('quickActions');
+        
+        if (applications.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-file-lines text-6xl text-slate-600 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-white mb-2">No Applications Yet</h3>
+                    <p class="text-slate-400">You haven't submitted any applications. Start by applying below.</p>
+                </div>
+            `;
+            quickActions.style.display = 'block';
+        } else {
+            container.innerHTML = `
+                <div class="grid gap-4">
+                    ${applications.map(app => `
+                        <div class="bg-slate-700 p-4 rounded-lg">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <h3 class="text-lg font-semibold text-white">${app.application_type.charAt(0).toUpperCase() + app.application_type.slice(1)} Application</h3>
+                                        <span class="px-2 py-1 rounded text-xs font-semibold ${getStatusColor(app.status)}">
+                                            ${app.status.replace('_', ' ').toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-300">
+                                        <div>
+                                            <span class="text-slate-400">Applied:</span>
+                                            <p class="text-white">${new Date(app.applied_at).toLocaleDateString()}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-400">Phone:</span>
+                                            <p class="text-white">${app.phone}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-400">Country:</span>
+                                            <p class="text-white">${app.country || 'Nepal'}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-400">Status:</span>
+                                            <p class="text-white">${app.status.replace('_', ' ')}</p>
+                                        </div>
+                                    </div>
+                                    ${app.status === 'interview_scheduled' && app.interview_datetime ? `
+                                        <div class="mt-3 p-3 bg-blue-900/30 rounded border border-blue-700">
+                                            <p class="text-blue-300 text-sm font-medium mb-1">Interview Scheduled</p>
+                                            <p class="text-blue-200 text-sm">${new Date(app.interview_datetime).toLocaleString()}</p>
+                                            ${app.interview_link ? `<a href="${app.interview_link}" target="_blank" class="text-blue-400 hover:underline text-sm">Join Meeting</a>` : ''}
+                                            ${!app.interview_acknowledged ? `
+                                                <button onclick="acknowledgeInterview(${app.id})" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                                                    Acknowledge Interview
+                                                </button>
+                                            ` : '<p class="text-green-400 text-sm mt-1">✓ Acknowledged</p>'}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <button onclick="viewApplication(${app.id})" class="ml-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                                    <i class="fas fa-eye mr-2"></i>View Details
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            quickActions.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading applications:', error);
+        document.getElementById('applicationsContainer').innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+                <h3 class="text-xl font-semibold text-white mb-2">Error Loading Applications</h3>
+                <p class="text-slate-400">Please try refreshing the page.</p>
+            </div>
+        `;
+    }
+}
+
+function getStatusColor(status) {
+    const colors = {
+        pending: 'bg-yellow-600 text-yellow-100',
+        interview_scheduled: 'bg-blue-600 text-blue-100',
+        rejected: 'bg-red-600 text-red-100',
+        approved: 'bg-green-600 text-green-100'
+    };
+    return colors[status] || 'bg-gray-600 text-gray-100';
+}
+
+async function viewApplication(id) {
+    try {
+        const response = await fetchAPI(`/api/applications/${id}/`);
+        const app = await response.json();
+        
+        const skills = Array.isArray(app.skills) ? app.skills : [];
+        const statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(app.status)}">${app.status.replace('_', ' ').toUpperCase()}</span>`;
+        
+        document.getElementById('modalContent').innerHTML = `
+            <div class="bg-gradient-to-br from-slate-700 to-slate-800 p-6 rounded-lg mb-6">
+                <div class="flex items-start gap-6">
+                    ${app.photo ? `
+                        <div class="flex-shrink-0">
+                            <img src="${app.photo}" class="w-24 h-24 rounded-lg object-cover border-2 border-slate-600" />
+                        </div>
+                    ` : ''}
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold text-white mb-2">${app.full_name}</h3>
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="text-slate-300">${app.user_email}</span>
+                            ${statusBadge}
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-300">
+                            <div><span class="text-slate-400">Phone:</span><br>${app.phone}</div>
+                            <div><span class="text-slate-400">DOB:</span><br>${app.date_of_birth || 'N/A'}</div>
+                            <div><span class="text-slate-400">Country:</span><br>${app.country || 'Nepal'}</div>
+                            <div><span class="text-slate-400">Type:</span><br>${app.application_type}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-700/50 p-4 rounded-lg">
+                    <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-home text-indigo-400"></i> Contact Information
+                    </h4>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <p class="text-slate-400 text-xs mb-1">Temporary Address</p>
+                            <p class="text-slate-200">${app.temporary_address}</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs mb-1">Permanent Address</p>
+                            <p class="text-slate-200">${app.permanent_address}</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs mb-1">Social Profile</p>
+                            <a href="${app.social_link}" target="_blank" class="text-blue-400 hover:underline break-all">${app.social_link}</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-slate-700/50 p-4 rounded-lg">
+                    <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-briefcase text-indigo-400"></i> Professional Background
+                    </h4>
+                    <p class="text-slate-200 text-sm leading-relaxed">${app.profession}</p>
+                </div>
+                
+                <div class="bg-slate-700/50 p-4 rounded-lg">
+                    <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-star text-indigo-400"></i> Skills & Availability
+                    </h4>
+                    <div class="mb-3">
+                        <p class="text-slate-400 text-xs mb-2">Skills</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${skills.map(skill => `<span class="px-2 py-1 bg-indigo-600/30 text-indigo-300 rounded text-xs">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-slate-400 text-xs mb-1">Time Commitment</p>
+                        <p class="text-slate-200 text-sm">${app.time_commitment}</p>
+                    </div>
+                </div>
+                
+                <div class="bg-slate-700/50 p-4 rounded-lg">
+                    <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-question-circle text-indigo-400"></i> Why Join Us?
+                    </h4>
+                    <p class="text-slate-200 text-sm leading-relaxed">${app.why_join}</p>
+                </div>
+            </div>
+            
+            <div class="mt-6 bg-slate-700/50 p-4 rounded-lg">
+                <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                    <i class="fas fa-user text-indigo-400"></i> About Yourself
+                </h4>
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <p class="text-slate-400 text-xs mb-1">Self Definition & Goals</p>
+                        <p class="text-slate-200 leading-relaxed">${app.self_definition}</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-400 text-xs mb-1">Hobbies, Interests & Achievements</p>
+                        <p class="text-slate-200 leading-relaxed">${app.hobbies_interests}</p>
+                    </div>
+                    ${app.ideas ? `
+                        <div>
+                            <p class="text-slate-400 text-xs mb-1">Ideas & Contributions</p>
+                            <p class="text-slate-200 leading-relaxed">${app.ideas}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            ${app.citizenship_front || app.citizenship_back ? `
+                <div class="mt-6 bg-slate-700/50 p-4 rounded-lg">
+                    <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-file-image text-indigo-400"></i> Documents
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${app.citizenship_front ? `
+                            <div>
+                                <p class="text-slate-400 text-xs mb-2">Citizenship Front</p>
+                                <a href="${app.citizenship_front}" target="_blank" class="block">
+                                    <img src="${app.citizenship_front}" class="w-full h-32 object-cover rounded border-2 border-slate-600 hover:border-indigo-400 transition" />
+                                </a>
+                            </div>
+                        ` : ''}
+                        ${app.citizenship_back ? `
+                            <div>
+                                <p class="text-slate-400 text-xs mb-2">Citizenship Back</p>
+                                <a href="${app.citizenship_back}" target="_blank" class="block">
+                                    <img src="${app.citizenship_back}" class="w-full h-32 object-cover rounded border-2 border-slate-600 hover:border-indigo-400 transition" />
+                                </a>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div class="text-center text-slate-400 text-xs pt-4 mt-6 border-t border-slate-700">
+                Applied on ${new Date(app.applied_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+        `;
+        
+        document.getElementById('viewModal').classList.remove('hidden');
+    } catch (error) {
+        console.error('Error loading application details:', error);
+        alert('Error loading application details. Please try again.');
+    }
+}
+
+function closeModal() {
+    document.getElementById('viewModal').classList.add('hidden');
+}
+
+async function acknowledgeInterview(id) {
+    try {
+        const response = await fetchAPI(`/api/applications/${id}/acknowledge-interview/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            alert('Interview acknowledged successfully!');
+            loadApplications();
+        } else {
+            alert('Failed to acknowledge interview. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error acknowledging interview:', error);
+        alert('Error acknowledging interview. Please try again.');
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('viewModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+// Load applications on page load
+// loadApplications(); // Removed to prevent automatic API calls
+</script>
+{% endblock %}

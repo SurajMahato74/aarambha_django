@@ -1,0 +1,229 @@
+{% extends 'member/base.html' %}
+{% load static %}
+
+{% block page_title %}Reading Materials{% endblock %}
+
+{% block header_title %}
+<div class="flex items-center">
+    <a href="/member/dashboard/" class="text-orange-500 hover:text-orange-400 mr-3">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    Reading Materials
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="bg-slate-800 rounded-lg p-6">
+    <div class="mb-4">
+        <div class="flex flex-wrap gap-2">
+            <button class="category-filter bg-orange-500 text-white px-3 py-1 rounded text-sm" data-category="all">
+                All Categories
+            </button>
+            <div id="categoryFilters"></div>
+        </div>
+    </div>
+    
+    <div id="materialsContainer">
+        <div class="text-center py-8">
+            <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+            <p class="text-slate-400">Loading materials...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const user = getUser();
+    if (!user || user.user_type !== 'member') window.location.href = '/';
+    
+    let materials = [];
+    let categories = [];
+    let currentCategory = 'all';
+    
+    loadMaterials();
+    loadCategories();
+    
+    async function loadMaterials() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/materials/my-materials/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            const data = await response.json();
+            materials = data.materials || [];
+            renderMaterials();
+        } catch (error) {
+            console.error('Error loading materials:', error);
+            document.getElementById('materialsContainer').innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
+                    <p class="text-red-400">Error loading materials.</p>
+                </div>
+            `;
+        }
+    }
+    
+    async function loadCategories() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/materials/categories/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            const data = await response.json();
+            categories = data.categories || [];
+            renderCategoryFilters();
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+    
+    function renderCategoryFilters() {
+        const container = document.getElementById('categoryFilters');
+        container.innerHTML = categories.map(category => `
+            <button class="category-filter bg-slate-600 hover:bg-slate-500 text-white px-3 py-1 rounded text-sm" data-category="${category.id}">
+                ${category.name}
+            </button>
+        `).join('');
+        
+        // Add event listeners
+        document.querySelectorAll('.category-filter').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.category-filter').forEach(b => {
+                    b.classList.remove('bg-orange-500');
+                    b.classList.add('bg-slate-600');
+                });
+                e.target.classList.remove('bg-slate-600');
+                e.target.classList.add('bg-orange-500');
+                
+                currentCategory = e.target.dataset.category;
+                renderMaterials();
+            });
+        });
+    }
+    
+    function renderMaterials() {
+        const container = document.getElementById('materialsContainer');
+        
+        let filteredMaterials = materials;
+        if (currentCategory !== 'all') {
+            filteredMaterials = materials.filter(m => m.category === categories.find(c => c.id == currentCategory)?.name);
+        }
+        
+        if (filteredMaterials.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-book fa-3x text-slate-400 mb-3"></i>
+                    <p class="text-slate-400">No materials available.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${filteredMaterials.map(material => `
+                    <div class="bg-slate-700/50 rounded-lg p-4 cursor-pointer hover:bg-slate-600/50 transition-colors" onclick="showMaterialDetail(${material.id})">
+                        ${material.cover_image_url ? `<img src="${material.cover_image_url}" alt="${material.title}" class="w-full h-32 object-cover rounded mb-3">` : ''}
+                        <div class="flex items-start justify-between mb-3">
+                            <h3 class="text-white font-medium text-lg">${material.title}</h3>
+                            <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded">${material.category}</span>
+                        </div>
+                        <p class="text-slate-300 text-sm mb-4 line-clamp-3">${material.description.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400">${new Date(material.created_at).toLocaleDateString()}</span>
+                            <button onclick="event.stopPropagation(); window.open('${material.file_url}', '_blank')" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-download mr-1"></i>Download
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+</script>
+
+<!-- Material Detail Modal -->
+<div id="materialDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-slate-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalTitle" class="text-2xl font-bold text-white"></h3>
+                <button onclick="closeMaterialModal()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2">
+                    <div id="modalCoverImage" class="mb-4"></div>
+                    <div class="mb-4">
+                        <h4 class="text-lg font-semibold text-white mb-2">Description</h4>
+                        <div id="modalDescription" class="text-slate-300 prose prose-invert max-w-none"></div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-slate-700 rounded-lg p-4">
+                        <h4 class="text-lg font-semibold text-white mb-3">Material Info</h4>
+                        <div class="space-y-2">
+                            <div>
+                                <span class="text-slate-400 text-sm">Category:</span>
+                                <span id="modalCategory" class="text-white ml-2"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-sm">Published:</span>
+                                <span id="modalDate" class="text-white ml-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <button id="modalDownloadBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded font-medium">
+                            <i class="fas fa-download mr-2"></i>Download Material
+                        </button>
+                        <button id="modalOpenBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded font-medium">
+                            <i class="fas fa-external-link-alt mr-2"></i>Open in New Tab
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showMaterialDetail(materialId) {
+        const material = materials.find(m => m.id === materialId);
+        if (!material) return;
+        
+        document.getElementById('modalTitle').textContent = material.title;
+        document.getElementById('modalCategory').textContent = material.category;
+        document.getElementById('modalDate').textContent = new Date(material.created_at).toLocaleDateString();
+        document.getElementById('modalDescription').innerHTML = material.description;
+        
+        if (material.cover_image_url) {
+            document.getElementById('modalCoverImage').innerHTML = `<img src="${material.cover_image_url}" alt="${material.title}" class="w-full h-48 object-cover rounded">`;
+        } else {
+            document.getElementById('modalCoverImage').innerHTML = '';
+        }
+        
+        document.getElementById('modalDownloadBtn').onclick = () => {
+            const a = document.createElement('a');
+            a.href = material.file_url;
+            a.download = material.title;
+            a.click();
+        };
+        
+        document.getElementById('modalOpenBtn').onclick = () => {
+            window.open(material.file_url, '_blank');
+        };
+        
+        document.getElementById('materialDetailModal').classList.remove('hidden');
+    }
+    
+    function closeMaterialModal() {
+        document.getElementById('materialDetailModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

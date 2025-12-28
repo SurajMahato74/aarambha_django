@@ -26,6 +26,8 @@ urlpatterns = [
     path('api/branches/', include('branches.urls')),
     path('api/applications/', include('applications.urls')),
     path('api/notices/', include('notices.urls')),
+    path('api/materials/', include('materials.urls')),
+    path('api/tasks/', include('tasks.urls')),
     path('api/core/', include('core.api_urls')),
     path('', include('core.urls')),
 ]

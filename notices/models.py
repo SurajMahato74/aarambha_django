@@ -2,6 +2,38 @@ from django.db import models
 from users.models import CustomUser
 from applications.models import Application
 
+class Notice(models.Model):
+    VISIBILITY_CHOICES = [
+        ('member', 'Members Only'),
+        ('volunteer', 'Volunteers Only'),
+        ('both', 'Members & Volunteers'),
+    ]
+    
+    ASSIGNMENT_MODE_CHOICES = [
+        ('all', 'All Users'),
+        ('individual', 'Individual Users'),
+        ('branch', 'By Branch'),
+        ('branch_individual', 'Branch + Individual'),
+    ]
+    
+    title = models.CharField(max_length=300)
+    content = models.TextField()
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='both')
+    assignment_mode = models.CharField(max_length=20, choices=ASSIGNMENT_MODE_CHOICES, default='all')
+    assigned_to = models.ManyToManyField('users.CustomUser', related_name='assigned_notices', blank=True)
+    branch = models.ForeignKey('branches.Branch', on_delete=models.SET_NULL, null=True, blank=True)
+    attachment = models.FileField(upload_to='notice_attachments/', blank=True, null=True)
+    created_by = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, related_name='created_notices')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+
 class UserNotification(models.Model):
     NOTIFICATION_TYPES = (
         ('application_submitted', 'Application Submitted'),
@@ -11,6 +43,9 @@ class UserNotification(models.Model):
         ('application_rejected', 'Application Rejected'),
         ('interview_scheduled', 'Interview Scheduled'),
         ('interview_rescheduled', 'Interview Rescheduled'),
+        ('task_assigned', 'Task Assigned'),
+        ('task_submitted', 'Task Submitted'),
+        ('task_reviewed', 'Task Reviewed'),
         ('general', 'General'),
     )
 

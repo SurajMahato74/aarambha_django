@@ -57,8 +57,25 @@ def website_volunteer_form(request):
 def website_sponsor_child_form(request):
     return render(request, 'website/sponsor_child_form.html', {'districts': NEPAL_DISTRICTS})
 
+def get_involved(request):
+    return render(request, 'website/get_involved.html')
+
 def login_view(request):
     return render(request, 'auth/login.html')
+
+def logout_view(request):
+    if request.method == 'POST':
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Logout requested by user: {request.user} via method: {request.method}")
+        from django.contrib.auth import logout
+        logout(request)
+        from django.shortcuts import redirect
+        from django.urls import reverse
+        return redirect(reverse('home'))
+    else:
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
 
 def admin_dashboard(request):
     return render(request, 'admin/dashboard.html')
@@ -68,6 +85,21 @@ def admin_users(request):
 
 def admin_branches(request):
     return render(request, 'admin/branches.html')
+
+def admin_tasks(request):
+    return render(request, 'admin/tasks.html')
+
+def admin_task_detail(request):
+    return render(request, 'admin/task_detail.html')
+
+def admin_notices(request):
+    return render(request, 'admin/notices.html')
+
+def member_notices(request):
+    return render(request, 'member/notices.html')
+
+def volunteer_notices(request):
+    return render(request, 'volunteer/notices.html')
 
 def admin_applications(request):
     return render(request, 'admin/applications.html')
@@ -113,21 +145,71 @@ def guest_welcome(request):
     }
     return render(request, 'guest/profile.html', context)  # Use the new combined template
 
-# Redirect other URLs to the combined page
 def guest_dashboard(request):
-    return redirect('guest_welcome')
+    return render(request, 'guest/dashboard.html')
 
 def guest_profile(request):
-    return redirect('guest_welcome')
+    # Always show profile if user reaches this page
+    contact_info = ContactInfo.get_active()
+    awards = Award.get_active_awards()
+    
+    # If Django user is authenticated, sync to localStorage
+    if request.user.is_authenticated:
+        from rest_framework_simplejwt.tokens import RefreshToken
+        import json
+        
+        refresh = RefreshToken.for_user(request.user)
+        user_data = {
+            'id': request.user.id,
+            'email': request.user.email,
+            'user_type': getattr(request.user, 'user_type', 'guest'),
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+        }
+        
+        context = {
+            'contact_info': contact_info,
+            'awards': awards,
+            'django_authenticated': True,
+            'access_token': str(refresh.access_token),
+            'refresh_token': str(refresh),
+            'user_data': json.dumps(user_data),
+        }
+    else:
+        context = {
+            'contact_info': contact_info,
+            'awards': awards,
+            'django_authenticated': False,
+        }
+    
+    return render(request, 'guest/profile.html', context)
 
 def guest_applications(request):
-    return redirect('guest_welcome')
+    return render(request, 'guest/applications.html')
 
 def member_dashboard(request):
     return render(request, 'member/dashboard.html')
 
+def member_tasks(request):
+    return render(request, 'member/tasks.html')
+
+def member_notifications(request):
+    return render(request, 'member/notifications.html')
+
+def admin_materials(request):
+    return render(request, 'admin/materials.html')
+
+def member_materials(request):
+    return render(request, 'member/materials.html')
+
 def volunteer_dashboard(request):
     return render(request, 'volunteer/dashboard.html')
+
+def volunteer_tasks(request):
+    return render(request, 'volunteer/tasks.html')
+
+def volunteer_materials(request):
+    return render(request, 'volunteer/materials.html')
 
 def admin_supportcards(request):
     from django.core.serializers import serialize
@@ -418,3 +500,7 @@ def donation_callback(request):
     logger.info("KHALTI CALLBACK HIT - Donation Payment")
 
     return HttpResponse("OK", status=200)
+
+def debug_auth(request):
+    """Debug page for authentication troubleshooting"""
+    return render(request, 'debug/auth-debug.html')

@@ -718,26 +718,49 @@
     let showFormAfterLogin = false;
 
     function startApplication() {
+      // Check both Django session and localStorage token
       const user = getUser();
-      if (!user) {
+      const isDjangoAuthenticated = window.djangoUser && window.djangoUser.isAuthenticated;
+      
+      if (!user && !isDjangoAuthenticated) {
         showFormAfterLogin = true;
         document.getElementById('loginModal').style.display = 'flex';
         return;
       }
       document.getElementById("startSection").style.display = "none";
-      document.getElementById("membershipForm").style.display = "block";
+      const form = document.getElementById("membershipForm");
+      form.style.display = "block";
+      form.classList.add("show");
     }
 
     function nextStep(step) {
+      console.log('Moving to step:', step); // Debug log
       // Hide all steps
       document.querySelectorAll(".form-step").forEach((s) => {
         s.classList.remove("active");
+        s.style.display = "none";
       });
 
       // Show target step
       const targetStep = document.getElementById("step" + step);
       if (targetStep) {
-        targetStep.classList.add("active");
+        // Hide all steps first
+        document.querySelectorAll(".form-step").forEach((s) => {
+          s.style.display = "none";
+        });
+        
+        // Show target step with positioning
+        targetStep.style.setProperty('display', 'block', 'important');
+        targetStep.style.setProperty('position', 'relative', 'important');
+        targetStep.style.setProperty('z-index', '999', 'important');
+        targetStep.style.setProperty('background', 'white', 'important');
+        
+        // Scroll to it
+        setTimeout(() => {
+          targetStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        
+        console.log('Step found and activated:', step);
       } else {
         console.error("Step " + step + " not found!");
       }
@@ -956,19 +979,28 @@
       submitBtn.disabled = true;
 
       try {
+        // Check authentication method
         const token = getToken();
-        if (!token) {
+        const isDjangoAuthenticated = window.djangoUser && window.djangoUser.isAuthenticated;
+        
+        if (!token && !isDjangoAuthenticated) {
           alert('Please login first to submit the application.');
-          window.location.href = '/login/'; // or wherever
+          window.location.href = '/accounts/login/';
           return;
         }
 
+        // Use appropriate authentication method
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        // For Django session auth, credentials are sent automatically
+
         const response = await fetch('/api/applications/submit/', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
+          headers: headers,
+          body: formData,
+          credentials: 'include' // Include cookies for session auth
         });
 
         const data = await response.json();
