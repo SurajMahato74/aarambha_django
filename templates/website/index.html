@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="{% static 'website/css/index.css' %}" />
   <link rel="stylesheet" href="{% static 'website/css/style.css' %}" />
   <!-- custom-css end -->
-  <link rel="icon" type="image.png' %}" href="{% static 'website/images/favicon.png' %}" />
+  <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
   <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
 </head>
 
@@ -172,7 +172,7 @@
   </section>
   <!--end Need your support -->
   <!-- START Who we are SECTION -->
-  <section class="who-section py-1 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+  <section id="who_we_are" class="who-section py-1 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
     <div class="container">
       <div class="vission__content">
         <div class="d-flex justify-content-center">
@@ -329,17 +329,10 @@
           <a href="{% url 'website_member_form' %}" class="btn btn--orange-white">Join Now</a>
         </div>
         <div class="split-banner__image" aria-labelledby="split-banner__caption">
-          <picture>
-            <source srcset="
-                  images/plantation-1024x683.jpg,
-                  images/plantation-1024x683.jpg 2x
-                " media="(min-width: 800px)" />
-            <img src="{% static 'website/images/plantation-1024x683.jpg' %}" srcset="
-                  images/plantation-1024x683.jpg,
-                  images/plantation-1024x683.jpg 2x
-                " alt="A woman looking very distressed in front of a building damaged by bombing" loading="lazy"
+        
+            <img src="{% static 'website/images/freetution.jpg' %}" alt="A woman looking very distressed in front of a building damaged by bombing" loading="lazy"
               fetchpriority="auto" decoding="async" class="" />
-          </picture>
+        
         </div>
       </div>
     </div>
@@ -365,16 +358,14 @@
           <a href="{% url 'website_volunteer_form' %}" class="btn btn--white-blue">join now</a>
         </div>
         <div class="split-banner__image" aria-labelledby="split-banner__caption">
-          <picture>
-            <source srcset="images/mission.png, images/mission.png 2x" media="(min-width: 800px)" />
-            <img src="{% static 'website/images/mission.png' %}" srcset="images/mission.png, images/mission.png 2x"
+            <img src="{% static 'website/images/mission.png' %}" 
               alt="A woman carries a small boy and a bright yellow water container" loading="lazy" fetchpriority="auto"
               decoding="async" class="" />
-          </picture>
         </div>
       </div>
     </div>
   </section>
+
 
   <!-- end be a volunteer section  -->
   <!-- START Events and Areas of Impact SECTION -->
@@ -573,7 +564,7 @@
           <div class="col-lg-3 col-md-6 col-6 mb-3">
             <h2><span>Q</span>uick Links</h2>
             <ul class="quick-links">
-              <li><a href="who-we-are">About Us</a></li>
+              <li><a href="#who_we_are">About Us</a></li>
               <li><a href="{% url 'website_member_form' %}">Be a Member</a></li>
               <li><a href="{% url 'website_volunteer_form' %}">Be a volunteer</a></li>
               <li><a href="">Our Work</a></li>

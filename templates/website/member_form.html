@@ -247,7 +247,7 @@
                   <div class="col-md-12">
                     <div class="form-group">
                       <label for="tempCountry">Country (Temporary Address) <span class="required">*</span></label>
-                      <select id="tempCountry" name="country" required class="w-100 p-2 border rounded">
+                      <select id="tempCountry" name="country" required class="w-100 p-2 ">
                         <option value="">Loading countries...</option>
                       </select>
                     </div>
@@ -255,7 +255,7 @@
                   <div class="col-md-12" id="tempDistrictField" style="display:none;">
                     <div class="form-group">
                       <label for="tempDistrict">District (Temporary Address) <span class="required">*</span></label>
-                      <select id="tempDistrict" name="district" class="w-100 p-2 border rounded">
+                      <select id="tempDistrict" name="district" class="w-100 p-2 ">
                         <option value="">Select District</option>
                         {% for district in districts %}
                         <option value="{{ district }}">{{ district }}</option>
@@ -319,7 +319,7 @@
                     <div class="form-group">
                       <label for="why_join">Why do you want to join Aarambha Foundation?<span
                           class="required">*</span></label>
-                      <textarea id="why_join" name="why_join" required class="w-100 p-2 border rounded"
+                      <textarea id="why_join" name="why_join" required class="w-100 p-2 "
                         rows="3"></textarea>
                     </div>
                   </div>
@@ -331,7 +331,7 @@
                         curricular activities, awards and certificates would
                         define you better.
                         <span class="required">*</span></label>
-                      <textarea id="self_definition" name="self_definition" required class="w-100 p-2 border rounded"
+                      <textarea id="self_definition" name="self_definition" required class="w-100 p-2 "
                         rows="3"></textarea>
                     </div>
                   </div>
@@ -340,7 +340,7 @@
                     <div class="form-group">
                       <label for="ideas">What ideas can you bring if you are given a platform
                         with a full support?</label>
-                      <textarea id="ideas" name="ideas" class="w-100 p-2 border rounded" rows="3"></textarea>
+                      <textarea id="ideas" name="ideas" class="w-100 p-2 " rows="3"></textarea>
                     </div>
                   </div>
 
@@ -422,12 +422,12 @@
                       <label for="other_organizations">Are you involved in any other organizations? What are
                         your expectations from us? Please add remarks if you
                         have any.</label>
-                      <textarea id="other_organizations" name="other_organizations" class="w-100 p-2 border rounded"
+                      <textarea id="other_organizations" name="other_organizations" class="w-100 p-2 "
                         rows="3"></textarea>
                     </div>
                   </div>
 
-                  <div class="col-md-12">
+                  <div class="col-md-12 d-none">
                     <button type="button" class="btn-success" onclick="nextStep(1)" style="background: #666">
                       Previous
                     </button>
@@ -503,10 +503,10 @@
                       " />
                 </div>
 
-                <button type="button" class="btn-success" onclick="nextStep(2)" style="background: #666">
+                <button type="button" class="btn-success d-none" onclick="nextStep(2)" style="background: #666">
                   Previous
                 </button>
-                <button type="button" class="start-btn" onclick="nextStep(4)">
+                <button type="button" class="start-btn d-none" onclick="nextStep(4)">
                   Next
                 </button>
               </div>
@@ -542,7 +542,6 @@
     </div>
   </div>
 
-  <a href="" class="floating-icon"><span><i class="bi bi-heart-fill"></i></span> DONATE</a>
 
   <footer class="footer__section wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
     <div class="footer_overlay pt-5">
@@ -766,6 +765,100 @@
     // Initial check
 
     document.addEventListener('DOMContentLoaded', updateNavbarAuth);
+      const originalHandleModalLogin = window.handleModalLogin;
+      window.handleModalLogin = async function (e) {
+        e.preventDefault();
+        const username = document.getElementById("modalUsername").value;
+        const password = document.getElementById("modalPassword").value;
+        const errorDiv = document.getElementById("modalLoginError");
+        const btn =
+          e.submitter || e.target.querySelector('button[type="submit"]');
+
+        btn.disabled = true;
+        btn.innerHTML = "Logging in...";
+        errorDiv.textContent = "";
+
+        try {
+          const response = await fetch("/api/users/login/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            setToken(data.access, data.refresh);
+            setUser(data.user);
+            document.getElementById("loginModal").style.display = "none";
+
+            updateNavbarAuth();
+
+            if (showFormAfterLogin) {
+              showFormAfterLogin = false;
+              document.getElementById("startSection").style.display = "none";
+              document.getElementById("membershipForm").style.display = "block";
+            }
+          } else {
+            errorDiv.textContent =
+              data.non_field_errors?.[0] ||
+              "Login failed. Please check credentials.";
+          }
+        } catch (error) {
+          console.error(error);
+          errorDiv.textContent = "Network error. Please try again.";
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = "Login";
+        }
+      };
+
+      // Override OTP login too
+      const originalVerifyModalOTP = window.verifyModalOTP;
+      window.verifyModalOTP = async function (btn) {
+        const email = document.getElementById("modalEmail").value;
+        const otp = document.getElementById("modalotpInput").value;
+        const errorDiv = document.getElementById("modalOtpError");
+
+        if (!otp || otp.length < 6) {
+          errorDiv.textContent = "Invalid OTP";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = "Verifying...";
+
+        try {
+          const response = await fetch("/api/users/verify-otp/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp }),
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            setToken(data.access, data.refresh);
+            setUser(data.user);
+            document.getElementById("loginModal").style.display = "none";
+
+            updateNavbarAuth();
+
+            if (showFormAfterLogin) {
+              showFormAfterLogin = false;
+              document.getElementById("startSection").style.display = "none";
+              document.getElementById("membershipForm").style.display = "block";
+            }
+          } else {
+            errorDiv.style.color = "#dc3545";
+            errorDiv.textContent = data.error || "Invalid OTP";
+          }
+        } catch (e) {
+          errorDiv.style.color = "#dc3545";
+          errorDiv.textContent = "Error verifying OTP";
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = "Verify & Login";
+        }
+      };
 
 
 
