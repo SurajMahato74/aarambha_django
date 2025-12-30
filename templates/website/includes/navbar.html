@@ -137,7 +137,7 @@
                 </div>
             </li>
 
-            <li class="navigation__level-one-item navigation__search" tabindex="0">
+            <li class="navigation__level-one-item navigation__search" tabindex="0" id="navAuthSection">
                 {% if user.is_authenticated %}
                     <a href="/guest/profile/" class="navigation__level-one-link">Profile</a>
                 {% else %}
@@ -149,14 +149,16 @@
 
         <button class="btn navigation__donate" onclick="openDonationModal()">Donate</button>
         
-        {% if user.is_authenticated %}
-        <form method="POST" action="{% url 'logout' %}" style="display: inline; margin-left: 1rem;">
-            {% csrf_token %}
-            <button type="submit" onclick="clearToken()" class="navigation__level-one-link" style="background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0.5rem;" title="Logout">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
-        </form>
-        {% endif %}
+        <div id="navLogoutSection" style="display: inline; margin-left: 1rem;">
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" onclick="clearToken()" class="navigation__level-one-link" style="background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0.5rem;" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </form>
+            {% endif %}
+        </div>
         <button class="navigation__toggle mobile-only--navigation" aria-expanded="false"
             aria-label="Open navigation menu" aria-controls="#navigation__level-one">
             <svg width="22" height="20" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true">
@@ -188,6 +190,9 @@
 <script>
     // Set user info for JavaScript
     window.djangoUser = JSON.parse(document.getElementById('django-user-data').textContent);
+    
+    // Make updateNavbarAuthState globally available
+    window.updateNavbarAuthState = updateNavbarAuthState;
 
     document.addEventListener('DOMContentLoaded', function () {
         fetch('/api/our-work/')  // Your API URL
@@ -231,6 +236,68 @@
         const dropdown = document.getElementById('navProfileDropdown');
         dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
     }
+
+    // Update navbar auth state based on both Django session and localStorage
+    function updateNavbarAuthState() {
+        const user = getUser(); // From localStorage
+        const navAuthSection = document.getElementById('navAuthSection');
+        const navLogoutSection = document.getElementById('navLogoutSection');
+        
+        if (!navAuthSection || !navLogoutSection) return;
+        
+        // Show logout if Django user is authenticated OR localStorage has user
+        const isAuthenticated = window.djangoUser.isAuthenticated || user;
+        
+        if (isAuthenticated) {
+            // Update profile link
+            const profileLink = navAuthSection.querySelector('a');
+            if (profileLink) {
+                profileLink.textContent = 'Profile';
+                profileLink.href = '/guest/profile/';
+                profileLink.onclick = null;
+            }
+            
+            // Show logout button if not already visible
+            if (!navLogoutSection.querySelector('form')) {
+                navLogoutSection.innerHTML = `
+                    <button onclick="handleDynamicLogout()" class="navigation__level-one-link" style="background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0.5rem;" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                `;
+            }
+            navLogoutSection.style.display = 'inline';
+        } else {
+            // Update to login link
+            const loginLink = navAuthSection.querySelector('a');
+            if (loginLink) {
+                loginLink.textContent = 'Login';
+                loginLink.href = 'javascript:void(0)';
+                loginLink.onclick = handleNavLoginClick;
+            }
+            
+            // Hide logout button
+            navLogoutSection.style.display = 'none';
+        }
+    }
+    
+    function handleDynamicLogout() {
+        if (confirm('Are you sure you want to logout?')) {
+            clearToken();
+            // If Django session exists, submit logout form
+            const logoutForm = document.querySelector('form[action*="logout"]');
+            if (logoutForm) {
+                logoutForm.submit();
+            } else {
+                // Just redirect to home
+                window.location.href = '/';
+            }
+        }
+    }
+    
+    // Check auth state on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateNavbarAuthState();
+    });
 </script>
 
 <a href="javascript:void(0)" onclick="openDonationModal()" class="floating-icon"><span><i

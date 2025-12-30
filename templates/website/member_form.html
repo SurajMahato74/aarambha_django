@@ -98,21 +98,87 @@
       background: #2d3b5b !important;
     }
 
-    .form-step {
+    .member-tab-container {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .member-tab-header {
+      display: flex;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .member-tab-button {
+      flex: 1;
+      padding: 12px 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      color: #666;
+      border-right: 1px solid #ddd;
+    }
+
+    .member-tab-button:last-child {
+      border-right: none;
+    }
+
+    .member-tab-button.member-active {
+      background: #2d3b5b;
+      color: white;
+    }
+
+    .member-tab-content {
       display: none;
+      padding: 20px;
+    }
+
+    .member-tab-content.member-active {
+      display: block;
+    }
+
+    .member-tab-navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .member-nav-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .member-nav-btn.member-prev {
+      background: #6c757d;
+      color: white;
+    }
+
+    .member-nav-btn.member-next {
+      background: #2d3b5b;
+      color: white;
+    }
+
+    .member-nav-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .form-step h2 {
       font-size: 18px;
       font-weight: 600;
+      margin-bottom: 10px;
     }
 
     .form-step p {
       color: #171717;
-    }
-
-    .form-step.active {
-      display: block;
+      margin-bottom: 20px;
     }
 
     .form-group {
@@ -209,6 +275,12 @@
               If you agree with the same, join today to become a member of
               Aarambha Family.
             </p>
+            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+              <h4 style="color: #2d3b5b; margin-bottom: 15px;"><i class="fas fa-info-circle"></i> Membership Information</h4>
+              <p style="margin-bottom: 10px;"><strong>Membership Fee:</strong> Rs. 1,000 (One-time payment)</p>
+              <p style="margin-bottom: 10px;"><strong>Benefits:</strong> Full voting rights, priority in programs, exclusive member events, and official membership certificate</p>
+              <p style="margin-bottom: 0; color: #666;"><strong>Note:</strong> After your application is approved, you will need to complete the membership fee payment to activate your full membership status.</p>
+            </div>
           </div>
           <hr style="border: 1px solid #000" />
           <div class="content">
@@ -222,318 +294,179 @@
               </button>
             </div>
             <form class="pb-4" id="membershipForm">
-              <!-- Step 1: Personal Information -->
-              <div class="form-step active" id="step1">
-                <div class="row">
-                  <div class="col-md-12">
-                    <h2 class="mb-0 pb-0">Personal Information</h2>
-                    <p>
-                      We ensure your personal information won't be shared in
-                      any public sites or agencies.
-                    </p>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="name">Name <span class="required">*</span></label>
-                      <input type="text" id="name" name="full_name" placeholder="First and last name" required />
-                    </div>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="dob">Date of Birth <span class="required">*</span></label>
-                      <input type="date" id="dob" name="date_of_birth" required />
-                    </div>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="tempCountry">Country (Temporary Address) <span class="required">*</span></label>
-                      <select id="tempCountry" name="country" required class="w-100 p-2 ">
-                        <option value="">Loading countries...</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-12" id="tempDistrictField" style="display:none;">
-                    <div class="form-group">
-                      <label for="tempDistrict">District (Temporary Address) <span class="required">*</span></label>
-                      <select id="tempDistrict" name="district" class="w-100 p-2 ">
-                        <option value="">Select District</option>
-                        {% for district in districts %}
-                        <option value="{{ district }}">{{ district }}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="tempAddress">Street Address / City (Temporary)
-                        <span class="required">*</span></label>
-                      <input type="text" id="tempAddress" name="temporary_address" placeholder="e.g., Kathmandu, Nepal"
-                        required />
-                    </div>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="permAddress">Permanent Address
-                        <span class="required">*</span></label>
-                      <input type="text" id="permAddress" name="permanent_address" placeholder="e.g., Bhaktapur, Nepal"
-                        required />
-                    </div>
-                  </div>
-
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="contactNumber">Contact Number <span class="required">*</span></label>
-                      <input type="text" id="contactNumber" name="phone" placeholder="+977 9800000000" required />
-                    </div>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="profession">Profession and Academic Qualification, Affiliated
-                        Institution:<span class="required">*</span></label>
-                      <input type="text" id="profession" name="profession" placeholder="" required />
-                    </div>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="fb_link">Link to any one of your facebook or linkedin or
-                        twitter account:<span class="required">*</span></label>
-                      <input type="text" id="fb_link" name="social_link" placeholder="" required />
-                    </div>
-                  </div>
-
-                  <div class="col-md-12 justify-content-end">
-                    <button type="button" class="start-btn" onclick="nextStep(2)">
-                      Next
-                    </button>
+              <div class="row">
+                <!-- Personal Information Section -->
+                <div class="col-12 mb-4">
+                  <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Personal Information</h3>
+                  <p style="color: #666;">We ensure your personal information won't be shared in any public sites or agencies.</p>
+                </div>
+                
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="name">Name <span class="required">*</span></label>
+                    <input type="text" id="name" name="full_name" placeholder="First and last name" required />
                   </div>
                 </div>
-              </div>
-              <!-- Step 2: Application  -->
-              <div class="form-step" id="step2">
-                <div class="row">
-                  <div class="col-md-12">
-                    <h2 class="mb-0 pb-0">Application Proper</h2>
-                  </div>
-
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="why_join">Why do you want to join Aarambha Foundation?<span
-                          class="required">*</span></label>
-                      <textarea id="why_join" name="why_join" required class="w-100 p-2 "
-                        rows="3"></textarea>
-                    </div>
-                  </div>
-
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="self_definition">How do you define yourself and your goal in life?<br />
-                        Your hobbies, interests, key features and extra
-                        curricular activities, awards and certificates would
-                        define you better.
-                        <span class="required">*</span></label>
-                      <textarea id="self_definition" name="self_definition" required class="w-100 p-2 "
-                        rows="3"></textarea>
-                    </div>
-                  </div>
-
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="ideas">What ideas can you bring if you are given a platform
-                        with a full support?</label>
-                      <textarea id="ideas" name="ideas" class="w-100 p-2 " rows="3"></textarea>
-                    </div>
-                  </div>
-
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label>What skills do you possess?
-                        <span class="required">*</span><br />
-                        <small>(Select all that apply)</small>
-                      </label>
-
-                      <div style="
-                            display: grid;
-                            grid-template-columns: repeat(
-                              auto-fit,
-                              minmax(200px, 1fr)
-                            );
-                            gap: 12px;
-                            margin-top: 10px;
-                          ">
-                        <label><input type="checkbox" name="skills" value="Leadership" />
-                          Leadership</label>
-                        <label><input type="checkbox" name="skills" value="Graphics Designing" />
-                          Graphics Designing</label>
-                        <label><input type="checkbox" name="skills" value="Photoshop" />
-                          Photoshop / Photo Editing</label>
-                        <label><input type="checkbox" name="skills" value="Web Designing" />
-                          Web Designing / Development</label>
-                        <label><input type="checkbox" name="skills" value="Team Building" />
-                          Team Building</label>
-                        <label><input type="checkbox" name="skills" value="Management" />
-                          Management / Coordination</label>
-                        <label><input type="checkbox" name="skills" value="Social Media Marketing" />
-                          Social Media Marketing</label>
-
-                        <label style="align-items: center">
-                          <input type="checkbox" id="otherSkillCheck" value="Other" />
-                          Other (please specify)
-                        </label>
-                      </div>
-
-                      <!-- Text box appears only when "Other" is checked -->
-                      <div id="otherSkillBox" style="margin-top: 12px; display: none">
-                        <input type="text" name="skills_other" placeholder="Please specify your skill..." style="
-                              width: 100%;
-                              padding: 12px;
-                              border: 1px solid #ccc;
-                              border-radius: 6px;
-                            " />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label>How much time can you give to Aarambha Foundation in
-                        a week? <span class="required">*</span></label>
-                      <div style="
-                            margin-top: 12px;
-                            display: flex;
-                            flex-direction: column;
-                            gap: 12px;
-                          ">
-                        <label><input type="radio" name="time_commitment" value="Less than 5 hours" required />
-                          Less than 5 hours a week</label>
-                        <label><input type="radio" name="time_commitment" value="5-10 hours" required />
-                          5–10 hours a week</label>
-                        <label><input type="radio" name="time_commitment" value="10-15 hours" required />
-                          10–15 hours a week</label>
-                        <label><input type="radio" name="time_commitment" value="15-20 hours" required />
-                          15–20 hours a week</label>
-                        <label><input type="radio" name="time_commitment" value="More than 20 hours" required />
-                          More than 20 hours a week</label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="other_organizations">Are you involved in any other organizations? What are
-                        your expectations from us? Please add remarks if you
-                        have any.</label>
-                      <textarea id="other_organizations" name="other_organizations" class="w-100 p-2 "
-                        rows="3"></textarea>
-                    </div>
-                  </div>
-
-                  <div class="col-md-12 d-none">
-                    <button type="button" class="btn-success" onclick="nextStep(1)" style="background: #666">
-                      Previous
-                    </button>
-                    <button type="button" class="start-btn" onclick="nextStep(3)">
-                      Next
-                    </button>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="dob">Date of Birth <span class="required">*</span></label>
+                    <input type="date" id="dob" name="date_of_birth" required />
                   </div>
                 </div>
-              </div>
-
-              <!-- Step 3: Document Uploads -->
-              <div class="form-step" id="step3">
-                <h2 class="mb-0 pb-0">Upload Required Documents</h2>
-                <p style="color: #555; margin-bottom: 20px">
-                  Please upload clear scans/photos of the following documents
-                  (JPG, PNG or PDF • Max 10 MB each).
-                </p>
-
-                <!-- Citizenship Front -->
-                <div class="form-group">
-                  <label for="citizenship_front">
-                    Upload Citizenship Front <span class="required">*</span>
-                  </label>
-                  <p style="font-size: 14px; color: #666; margin-top: -8px">
-                    Upload 1 supported file. Max 10 MB.
-                  </p>
-                  <input type="file" id="citizenship_front" name="citizenship_front"
-                    accept="image/jpeg,image/png,application/pdf" required style="
-                        margin-top: 10px;
-                        padding: 10px;
-                        border: 2px dashed #ccc;
-                        border-radius: 8px;
-                        width: 100%;
-                        background: #f9f9f9;
-                      " />
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="contactNumber">Contact Number <span class="required">*</span></label>
+                    <input type="text" id="contactNumber" name="phone" placeholder="+977 9800000000" required />
+                  </div>
+                </div>
+                
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="tempCountry">Country (Temporary Address) <span class="required">*</span></label>
+                    <select id="tempCountry" name="country" required class="w-100 p-2">
+                      <option value="">Loading countries...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4" id="tempDistrictField" style="display:none;">
+                  <div class="form-group">
+                    <label for="tempDistrict">District (Temporary Address) <span class="required">*</span></label>
+                    <select id="tempDistrict" name="district" class="w-100 p-2">
+                      <option value="">Select District</option>
+                      {% for district in districts %}
+                      <option value="{{ district }}">{{ district }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="tempAddress">Street Address / City (Temporary) <span class="required">*</span></label>
+                    <input type="text" id="tempAddress" name="temporary_address" placeholder="e.g., Kathmandu, Nepal" required />
+                  </div>
+                </div>
+                
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="permAddress">Permanent Address <span class="required">*</span></label>
+                    <input type="text" id="permAddress" name="permanent_address" placeholder="e.g., Bhaktapur, Nepal" required />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="profession">Profession and Academic Qualification <span class="required">*</span></label>
+                    <input type="text" id="profession" name="profession" placeholder="" required />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="fb_link">Social Media Link <span class="required">*</span></label>
+                    <input type="text" id="fb_link" name="social_link" placeholder="Facebook/LinkedIn/Twitter" required />
+                  </div>
                 </div>
 
-                <!-- Citizenship Back -->
-                <div class="form-group">
-                  <label for="citizenship_back">
-                    Upload Citizenship Back <span class="required">*</span>
-                  </label>
-                  <p style="font-size: 14px; color: #666; margin-top: -8px">
-                    Upload 1 supported file. Max 10 MB.
-                  </p>
-                  <input type="file" id="citizenship_back" name="citizenship_back"
-                    accept="image/jpeg,image/png,application/pdf" required style="
-                        margin-top: 10px;
-                        padding: 10px;
-                        border: 2px dashed #ccc;
-                        border-radius: 8px;
-                        width: 100%;
-                        background: #f9f9f9;
-                      " />
+                <!-- Application Section -->
+                <div class="col-12 mb-4 mt-4">
+                  <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Application Proper</h3>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="why_join">Why do you want to join Aarambha Foundation? <span class="required">*</span></label>
+                    <textarea id="why_join" name="why_join" required class="w-100 p-2" rows="3"></textarea>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="self_definition">How do you define yourself and your goal in life? <span class="required">*</span></label>
+                    <textarea id="self_definition" name="self_definition" required class="w-100 p-2" rows="3"></textarea>
+                  </div>
+                </div>
+                
+                <div class="col-12">
+                  <div class="form-group">
+                    <label for="ideas">What ideas can you bring if you are given a platform with a full support?</label>
+                    <textarea id="ideas" name="ideas" class="w-100 p-2" rows="3"></textarea>
+                  </div>
                 </div>
 
-                <!-- Photo -->
-                <div class="form-group">
-                  <label for="photo">
-                    Upload Photo <span class="required">*</span>
-                  </label>
-                  <p style="font-size: 14px; color: #666; margin-top: -8px">
-                    Upload 1 supported file. Max 10 MB. (Passport-size
-                    preferred)
-                  </p>
-                  <input type="file" id="photo" name="photo" accept="image/jpeg,image/png" required style="
-                        margin-top: 10px;
-                        padding: 10px;
-                        border: 2px dashed #ccc;
-                        border-radius: 8px;
-                        width: 100%;
-                        background: #f9f9f9;
-                      " />
+                <div class="col-12">
+                  <div class="form-group">
+                    <label>What skills do you possess? <span class="required">*</span><br /><small>(Select all that apply)</small></label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;">
+                      <label><input type="checkbox" name="skills" value="Leadership" /> Leadership</label>
+                      <label><input type="checkbox" name="skills" value="Graphics Designing" /> Graphics Designing</label>
+                      <label><input type="checkbox" name="skills" value="Photoshop" /> Photoshop / Photo Editing</label>
+                      <label><input type="checkbox" name="skills" value="Web Designing" /> Web Designing / Development</label>
+                      <label><input type="checkbox" name="skills" value="Team Building" /> Team Building</label>
+                      <label><input type="checkbox" name="skills" value="Management" /> Management / Coordination</label>
+                      <label><input type="checkbox" name="skills" value="Social Media Marketing" /> Social Media Marketing</label>
+                      <label><input type="checkbox" id="otherSkillCheck" value="Other" /> Other (please specify)</label>
+                    </div>
+                    <div id="otherSkillBox" style="margin-top: 12px; display: none">
+                      <input type="text" name="skills_other" placeholder="Please specify your skill..." style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;" />
+                    </div>
+                  </div>
                 </div>
 
-                <button type="button" class="btn-success d-none" onclick="nextStep(2)" style="background: #666">
-                  Previous
-                </button>
-                <button type="button" class="start-btn d-none" onclick="nextStep(4)">
-                  Next
-                </button>
-              </div>
-
-              <!-- Step 4: Final Submission -->
-              <div class="form-step" id="step4">
-                <h2>Almost Done!</h2>
-                <p>
-                  Thank you for your interest in becoming a member of
-                  <strong>Aarambha Foundation</strong>.
-                </p>
-                <p>
-                  After submission, our team will review your application and
-                  contact you soon.
-                </p>
-                <div class="form-group">
-                  <label>
-                    <input type="checkbox" required /> I agree to the terms
-                    and wish to join Aarambha Foundation as a member.
-                  </label>
+                <div class="col-12">
+                  <div class="form-group">
+                    <label>How much time can you give to Aarambha Foundation in a week? <span class="required">*</span></label>
+                    <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                      <label><input type="radio" name="time_commitment" value="Less than 5 hours" required /> Less than 5 hours a week</label>
+                      <label><input type="radio" name="time_commitment" value="5-10 hours" required /> 5–10 hours a week</label>
+                      <label><input type="radio" name="time_commitment" value="10-15 hours" required /> 10–15 hours a week</label>
+                      <label><input type="radio" name="time_commitment" value="15-20 hours" required /> 15–20 hours a week</label>
+                      <label><input type="radio" name="time_commitment" value="More than 20 hours" required /> More than 20 hours a week</label>
+                    </div>
+                  </div>
                 </div>
-                <button type="button" class="btn-success" onclick="nextStep(3)" style="background: #666">
-                  Previous
-                </button>
-                <button type="submit" class="start-btn" style="background: #2e8b57">
-                  Submit Application
-                </button>
+
+                <div class="col-12">
+                  <div class="form-group">
+                    <label for="other_organizations">Are you involved in any other organizations? What are your expectations from us?</label>
+                    <textarea id="other_organizations" name="other_organizations" class="w-100 p-2" rows="3"></textarea>
+                  </div>
+                </div>
+
+                <!-- Document Upload Section -->
+                <div class="col-12 mb-4 mt-4">
+                  <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Upload Required Documents</h3>
+                  <p style="color: #555;">Please upload clear scans/photos of the following documents (JPG, PNG or PDF • Max 10 MB each).</p>
+                </div>
+                
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="citizenship_front">Upload Citizenship Front <span class="required">*</span></label>
+                    <p style="font-size: 14px; color: #666;">Upload 1 supported file. Max 10 MB.</p>
+                    <input type="file" id="citizenship_front" name="citizenship_front" accept="image/jpeg,image/png,application/pdf" required style="margin-top: 10px; padding: 10px; border: 2px dashed #ccc; border-radius: 8px; width: 100%; background: #f9f9f9;" />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="citizenship_back">Upload Citizenship Back <span class="required">*</span></label>
+                    <p style="font-size: 14px; color: #666;">Upload 1 supported file. Max 10 MB.</p>
+                    <input type="file" id="citizenship_back" name="citizenship_back" accept="image/jpeg,image/png,application/pdf" required style="margin-top: 10px; padding: 10px; border: 2px dashed #ccc; border-radius: 8px; width: 100%; background: #f9f9f9;" />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="photo">Upload Photo <span class="required">*</span></label>
+                    <p style="font-size: 14px; color: #666;">Upload 1 supported file. Max 10 MB. (Passport-size preferred)</p>
+                    <input type="file" id="photo" name="photo" accept="image/jpeg,image/png" required style="margin-top: 10px; padding: 10px; border: 2px dashed #ccc; border-radius: 8px; width: 100%; background: #f9f9f9;" />
+                  </div>
+                </div>
+
+                <!-- Final Section -->
+                <div class="col-12 mb-4 mt-4">
+                  <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Almost Done!</h3>
+                  <p>Thank you for your interest in becoming a member of <strong>Aarambha Foundation</strong>.</p>
+                  <p>After submission, our team will review your application and contact you soon.</p>
+                  <div class="form-group">
+                    <label><input type="checkbox" required /> I agree to the terms and wish to join Aarambha Foundation as a member.</label>
+                  </div>
+                  <button type="submit" class="start-btn" style="background: #2e8b57; margin-top: 20px;">Submit Application</button>
+                </div>
               </div>
             </form>
           </div>
@@ -683,6 +616,29 @@
       </div>
     </div>
   </div>
+
+  <!-- Upgrade Confirmation Modal -->
+  <div id="upgradeModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div
+      style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%; text-align: center;">
+      <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: #111827;">Upgrade to Member</h2>
+      <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: left;">
+        <h4 style="color: #2d3b5b; margin-bottom: 15px;"><i class="fas fa-arrow-up"></i> Membership Upgrade</h4>
+        <p style="margin-bottom: 10px;"><strong>Current Status:</strong> Volunteer</p>
+        <p style="margin-bottom: 10px;"><strong>Upgrading to:</strong> Full Member</p>
+        <p style="margin-bottom: 10px;"><strong>Membership Fee:</strong> Rs. 1,000 (One-time payment)</p>
+        <p style="margin-bottom: 0; color: #666;"><strong>Note:</strong> Once approved, you will need to pay the membership fee to complete your upgrade.</p>
+      </div>
+      <p style="color: #4b5563; font-size: 0.875rem; margin-bottom: 1rem;">Do you want to proceed with the membership upgrade application?</p>
+      <div style="display: flex; gap: 0.5rem; justify-content: center;">
+        <button onclick="confirmUpgrade()"
+          style="background-color: #2d3b5b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600;">Yes, Upgrade</button>
+        <button onclick="closeUpgradeModal()"
+          style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-left: 10px; cursor: pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
   </div>
 
   {% include 'website/includes/login_modal.html' %}
@@ -706,7 +662,7 @@
       return cookieValue;
     }
     
-    function startApplication() {
+    async function startApplication() {
       // Check both Django session and localStorage token
       const user = getUser();
       const isDjangoAuthenticated = window.djangoUser && window.djangoUser.isAuthenticated;
@@ -716,39 +672,20 @@
         return;
       }
 
-      // Only show form if logged in
+      // Check application status
+      await checkApplicationStatus();
+      
+      // If still showing start section, show the form
+      if (document.getElementById('startSection').style.display !== 'none') {
+        showMemberForm();
+      }
+    }
+
+    function showMemberForm() {
       document.getElementById("startSection").style.display = "none";
       const form = document.getElementById("membershipForm");
       form.style.display = "block";
       form.classList.add("show");
-    }
-
-
-    function nextStep(step) {
-      console.log('Moving to step:', step);
-      
-      // Show all steps instead of hiding them
-      document.querySelectorAll(".form-step").forEach((s, index) => {
-        s.style.cssText = `
-          display: block !important;
-          visibility: visible !important;
-          opacity: 1 !important;
-          position: static !important;
-          width: 100% !important;
-          background: white !important;
-          padding: 20px !important;
-          margin: 10px 0 !important;
-          border: ${index + 1 === step ? '2px solid blue' : '1px solid #ccc'} !important;
-        `;
-      });
-      
-      const targetStep = document.getElementById("step" + step);
-      if (targetStep) {
-        setTimeout(() => {
-          targetStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-        console.log('All steps visible, highlighting step:', step);
-      }
     }
 
     // Check User Login Status and Show Modal
@@ -762,9 +699,79 @@
       updateNavbarAuth();
     }
 
-    // Initial check
+    // Check application status on page load
+    document.addEventListener('DOMContentLoaded', async function() {
+      updateNavbarAuth();
+      
+      // Check if user is logged in
+      const user = getUser();
+      const isDjangoAuthenticated = window.djangoUser && window.djangoUser.isAuthenticated;
+      
+      if (user || isDjangoAuthenticated) {
+        await checkApplicationStatus();
+      }
+    });
 
-    document.addEventListener('DOMContentLoaded', updateNavbarAuth);
+    async function checkApplicationStatus() {
+      try {
+        const token = getToken();
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const csrfToken = getCookie('csrftoken');
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
+
+        const response = await fetch('/api/applications/my-applications/', {
+          method: 'GET',
+          headers: headers,
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const applications = await response.json();
+          
+          // Check if user has any member applications
+          const hasMemberApplication = applications.some(app => app.application_type === 'member');
+          
+          if (hasMemberApplication) {
+            // User already has member application
+            document.getElementById('startSection').innerHTML = `
+              <h3 class="mt-1 pb-0">Application Status</h3>
+              <p class="mb-0">You have already submitted a membership application.</p>
+              <button class="start-btn" onclick="window.location.href='/guest/profile/#applications'">
+                See Application Status
+              </button>
+            `;
+            return;
+          }
+          
+          // Check if user is volunteer (has volunteer application but no member application)
+          const hasVolunteerApplication = applications.some(app => app.application_type === 'volunteer');
+          
+          if (hasVolunteerApplication) {
+            // User is volunteer, show upgrade option
+            document.getElementById('startSection').innerHTML = `
+              <h3 class="mt-1 pb-0">Upgrade to Member</h3>
+              <p class="mb-0">You are currently a volunteer. Upgrade to become a full member of Aarambha Foundation.</p>
+              <p style="color: #666; font-size: 14px; margin-top: 10px;"><strong>Note:</strong> Membership requires a one-time fee of Rs. 1,000 after approval.</p>
+              <button class="start-btn" onclick="showUpgradeModal()">
+                Upgrade to Member
+              </button>
+              <button class="start-btn" onclick="window.location.href='/guest/profile/#applications'" style="background: #6c757d; margin-left: 10px;">
+                See Application Status
+              </button>
+            `;
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking application status:', error);
+      }
+    }
       const originalHandleModalLogin = window.handleModalLogin;
       window.handleModalLogin = async function (e) {
         e.preventDefault();
@@ -917,6 +924,11 @@
       }
 
       formData.append('application_type', 'member');
+      
+      // Add upgrade flag if this is an upgrade application
+      if (window.isUpgradeApplication) {
+        formData.append('is_upgrade', 'true');
+      }
 
       // Handle Skills
       const skills = [];
@@ -1016,6 +1028,78 @@
 
     function closePaymentModal() {
       document.getElementById('paymentModal').style.display = 'none';
+    }
+
+    function showUpgradeModal() {
+      document.getElementById('upgradeModal').style.display = 'flex';
+    }
+
+    function closeUpgradeModal() {
+      document.getElementById('upgradeModal').style.display = 'none';
+    }
+
+    function confirmUpgrade() {
+      closeUpgradeModal();
+      // Call automatic upgrade API instead of showing form
+      performAutoUpgrade();
+    }
+
+    async function performAutoUpgrade() {
+      // Show loading state
+      Swal.fire({
+        title: 'Processing Upgrade...',
+        text: 'Please wait while we process your membership upgrade.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      try {
+        const token = getToken();
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const csrfToken = getCookie('csrftoken');
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
+
+        const response = await fetch('/api/applications/auto-upgrade/', {
+          method: 'POST',
+          headers: headers,
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          Swal.fire({
+            title: "Success!",
+            text: "Your membership upgrade application has been submitted successfully!",
+            icon: "success"
+          }).then(() => {
+            window.location.href = '/guest/profile/#applications';
+          });
+        } else {
+          Swal.fire({
+            title: "Error!",
+            text: data.error || "Failed to submit upgrade application.",
+            icon: "error"
+          });
+        }
+      } catch (error) {
+        console.error('Upgrade error:', error);
+        Swal.fire({
+          title: "Error!",
+          text: "Network error. Please try again.",
+          icon: "error"
+        });
+      }
     }
 
     async function proceedToPayment() {

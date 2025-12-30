@@ -215,12 +215,22 @@
                             <span class="material-symbols-outlined" style="font-size:20px">cancel</span>
                         </button>
                     ` : ''}
-                    ${app.status !== 'approved' && app.status !== 'rejected' ? `
-                        <button onclick="approveApplication(${app.id})" class="text-emerald-400 hover:text-emerald-300" title="Approve">
-                            <span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
+                    <button onclick="approveApplication(${app.id})" class="text-emerald-400 hover:text-emerald-300" title="Approve">
+                        <span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
+                    </button>
+                    ${app.application_type === 'member' && app.is_upgrade && app.status !== 'approved' ? `
+                        <button onclick="approveUpgrade(${app.id})" class="text-blue-400 hover:text-blue-300" title="Approve Upgrade">
+                            <span class="material-symbols-outlined" style="font-size:20px">upgrade</span>
                         </button>
+                    ` : ''}
+                    ${app.status !== 'rejected' ? `
                         <button onclick="openRejectModal(${app.id})" class="text-red-400 hover:text-red-300" title="Reject">
                             <span class="material-symbols-outlined" style="font-size:20px">close</span>
+                        </button>
+                    ` : ''}
+                    ${(app.status === 'approved' || app.status === 'rejected' || app.status === 'interview_scheduled') && !app.email_sent ? `
+                        <button onclick="resendEmail(${app.id})" class="text-orange-400 hover:text-orange-300" title="Resend Email">
+                            <span class="material-symbols-outlined" style="font-size:20px">mail</span>
                         </button>
                     ` : ''}
                 </div>
@@ -498,24 +508,59 @@
     async function approveApplication(id) {
         if (!confirm('Approve this application? User will receive login credentials via email.')) return;
 
-        const response = await fetchAPI(`/api/applications/${id}/update-status/`, {
+        // Show loading state
+        const approveBtn = document.querySelector(`button[onclick="approveApplication(${id})"]`);
+        const originalText = approveBtn.innerHTML;
+        approveBtn.disabled = true;
+        approveBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px; animation: spin 1s linear infinite;">refresh</span>';
+
+        try {
+            const response = await fetchAPI(`/api/applications/${id}/update-status/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    status: 'approved'
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.email_sent) {
+                    alert('Application approved! Credentials sent to user via email.');
+                } else {
+                    alert('Application approved but email failed to send. Please check email configuration.');
+                }
+                loadApplications();
+            } else {
+                alert('Failed to approve application');
+            }
+        } catch (error) {
+            alert('An error occurred while approving the application');
+        } finally {
+            // Reset button state
+            approveBtn.disabled = false;
+            approveBtn.innerHTML = originalText;
+        }
+    }
+
+    async function approveUpgrade(id) {
+        if (!confirm('Approve this upgrade application? User will be upgraded from volunteer to member and will need to pay the membership fee.')) return;
+
+        const response = await fetchAPI(`/api/applications/${id}/approve-upgrade/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                status: 'approved'
-            })
+            headers: { 'Content-Type': 'application/json' }
         });
 
         if (response.ok) {
             const data = await response.json();
             if (data.email_sent) {
-                alert('Application approved! Credentials sent to user via email.');
+                alert('Upgrade approved! User has been upgraded to member and notification sent via email.');
             } else {
-                alert('Application approved but email failed to send. Please check email configuration.');
+                alert('Upgrade approved but email failed to send. Please check email configuration.');
             }
             loadApplications();
         } else {
-            alert('Failed to approve application');
+            alert('Failed to approve upgrade');
         }
     }
 
@@ -558,7 +603,9 @@
                 if (data.email_sent) {
                     alert('Application rejected. Email sent to user.');
                 } else {
-                    alert('Application rejected but email failed to send. Please check email configuration.');
+                    alert('Application rejected but email failed to send.');
+                    // Add resend email button to the row
+                    addResendEmailButton(currentAppId);
                 }
                 closeRejectModal();
                 loadApplications();
@@ -672,6 +719,27 @@
             '</head><body>' + content + '<scr' + 'ipt>window.onload=function(){window.print()}</scr' + 'ipt></body></html>';
         printWindow.document.write(html);
         printWindow.document.close();
+    }
+
+    async function resendEmail(id) {
+        if (!confirm('Resend email notification to the user?')) return;
+
+        try {
+            const response = await fetchAPI(`/api/applications/${id}/resend-email/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                alert('Email sent successfully!');
+                loadApplications();
+            } else {
+                const data = await response.json();
+                alert('Failed to send email: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Network error occurred while sending email');
+        }
     }
 </script>
 {% endblock %}

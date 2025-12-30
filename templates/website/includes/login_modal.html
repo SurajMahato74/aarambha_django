@@ -279,7 +279,11 @@
                 document.getElementById('loginModal').style.display = 'none';
 
                 // Update navbar immediately
-                updateNavbarAuth();
+                if (window.updateNavbarAuthState) {
+                    window.updateNavbarAuthState();
+                } else {
+                    updateNavbarAuth();
+                }
 
                 // Check if donation modal should be opened after login
                 if (localStorage.getItem('openDonationAfterLogin') === 'true') {

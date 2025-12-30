@@ -156,6 +156,7 @@
 
 <body>
     {% include 'website/includes/navbar.html'%}
+    {% include 'website/includes/login_modal.html'%}
 
     <div class="container member-section">
         <div class="row justify-content-center">
@@ -184,32 +185,12 @@
 
                         <h3>How Sponsorship Works</h3>
                         <p>
-                            <strong>Step 1:</strong> Choose your sponsorship type and complete the application<br>
-                            <strong>Step 2:</strong> We'll match you with a child or children in need<br>
-                            <strong>Step 3:</strong> Make your contribution (monthly, annually, or one-time)<br>
+                            <strong>Step 1:</strong> Complete the application form<br>
+                            <strong>Step 2:</strong> We'll match you with a child in need<br>
+                            <strong>Step 3:</strong> Make your contribution<br>
                             <strong>Step 4:</strong> Receive updates, photos, and letters from your sponsored child<br>
                             <strong>Step 5:</strong> Witness the transformation and continue making a difference
                         </p>
-
-                        <h3>Sponsorship Types</h3>
-                        <div
-                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
-                            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-                                <h4>Full Sponsorship</h4>
-                                <p>Rs. 12,000 per year</p>
-                                <p>Complete support for one child covering all essential needs</p>
-                            </div>
-                            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-                                <h4>Partial Sponsorship</h4>
-                                <p>Rs. 6,000 per year</p>
-                                <p>Share sponsorship costs with another donor</p>
-                            </div>
-                            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-                                <h4>One-time Donation</h4>
-                                <p>Flexible amount</p>
-                                <p>Immediate support for urgent needs</p>
-                            </div>
-                        </div>
                     </div>
                     <hr style="border: 1px solid #000" />
                     <div class="content">
@@ -224,329 +205,231 @@
                             </button>
                         </div>
                         <form class="pb-4" id="sponsorshipForm">
-                            <!-- Step 1: Personal Information -->
-                            <div class="form-step active" id="step1">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <h2 class="mb-0 pb-0">Your Information</h2>
-                                        <p>
-                                            Please provide your details to proceed with the sponsorship.
-                                        </p>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="name">Full Name <span class="required">*</span></label>
-                                            <input type="text" id="name" name="full_name"
-                                                placeholder="First and last name" required />
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="email">Email Address <span class="required">*</span></label>
-                                            <input type="email" id="email" name="email" placeholder="your@email.com"
-                                                required />
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="phone">Phone Number <span class="required">*</span></label>
-                                            <input type="tel" id="phone" name="phone" placeholder="+977 9800000000"
-                                                required />
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="country">Country <span class="required">*</span></label>
-                                            <select id="country" name="country" required>
-                                                <option value="">Select Country</option>
-                                                <option value="Nepal" selected>Nepal</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="city">City <span class="required">*</span></label>
-                                            <input type="text" id="city" name="city" placeholder="Your city" required />
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="address">Street Address <span class="required">*</span></label>
-                                            <input type="text" id="address" name="address" placeholder="Street address"
-                                                required />
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="occupation">Occupation</label>
-                                            <input type="text" id="occupation" name="occupation"
-                                                placeholder="Your profession" />
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="organization">Organization/Company</label>
-                                            <input type="text" id="organization" name="organization"
-                                                placeholder="Company name" />
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12 justify-content-end">
-                                        <button type="button" class="start-btn" onclick="nextStep(2)">
-                                            Next
-                                        </button>
+                            <div class="row">
+                                <!-- Personal Information Section -->
+                                <div class="col-12 mb-4">
+                                    <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Your Information</h3>
+                                    <p style="color: #666;">Please provide your details to proceed with the sponsorship.</p>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="name">Full Name <span class="required">*</span></label>
+                                        <input type="text" id="name" name="full_name" placeholder="First and last name" required />
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Step 2: Sponsorship Details -->
-                            <div class="form-step" id="step2">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <h2 class="mb-0 pb-0">Sponsorship Preferences</h2>
-                                        <p>
-                                            Choose how you'd like to contribute and specify your preferences.
-                                        </p>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label>Sponsorship Type <span class="required">*</span></label>
-                                            <div
-                                                style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
-                                                <label><input type="radio" name="sponsorship_type"
-                                                        value="Full Sponsorship" required />
-                                                    Full Sponsorship (Rs. 12,000/year) - Complete support for one
-                                                    child</label>
-                                                <label><input type="radio" name="sponsorship_type"
-                                                        value="Partial Sponsorship" required />
-                                                    Partial Sponsorship (Rs. 6,000/year) - Share sponsorship with
-                                                    another donor</label>
-                                                <label><input type="radio" name="sponsorship_type"
-                                                        value="One-time Donation" required />
-                                                    One-time Donation - Flexible amount</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="child_gender">Preferred Child Gender</label>
-                                            <select id="child_gender" name="child_gender">
-                                                <option value="">No preference</option>
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="child_age">Preferred Child Age Group</label>
-                                            <select id="child_age" name="child_age">
-                                                <option value="">No preference</option>
-                                                <option value="5-8">5-8 years</option>
-                                                <option value="9-12">9-12 years</option>
-                                                <option value="13-16">13-16 years</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="special_requests">Special Requests or Preferences</label>
-                                            <textarea id="special_requests" name="special_requests" rows="3"
-                                                placeholder="Any specific preferences for the child you'd like to sponsor..."></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <button type="button" class="btn-success" onclick="nextStep(1)"
-                                            style="background: #666">
-                                            Previous
-                                        </button>
-                                        <button type="button" class="start-btn" onclick="nextStep(3)">
-                                            Next
-                                        </button>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="email">Email Address <span class="required">*</span></label>
+                                        <input type="email" id="email" name="email" placeholder="your@email.com" required />
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Step 3: Communication Preferences -->
-                            <div class="form-step" id="step3">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <h2 class="mb-0 pb-0">Communication Preferences</h2>
-                                        <p>
-                                            How would you like to receive updates about your sponsored child?
-                                        </p>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label>Update Frequency <span class="required">*</span></label>
-                                            <div
-                                                style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
-                                                <label><input type="radio" name="update_frequency" value="Quarterly"
-                                                        required />
-                                                    Quarterly (4 times per year) - Photos, letters, and progress
-                                                    reports</label>
-                                                <label><input type="radio" name="update_frequency" value="Biannually"
-                                                        required />
-                                                    Biannually (2 times per year) - Major updates and annual
-                                                    reports</label>
-                                                <label><input type="radio" name="update_frequency" value="Annually"
-                                                        required />
-                                                    Annually (1 time per year) - Annual progress summary</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label>Communication Method <span class="required">*</span></label>
-                                            <div
-                                                style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
-                                                <label><input type="checkbox" name="comm_method" value="Email" />
-                                                    Email updates</label>
-                                                <label><input type="checkbox" name="comm_method"
-                                                        value="Physical Mail" />
-                                                    Physical mail (letters and photos)</label>
-                                                <label><input type="checkbox" name="comm_method" value="Phone" />
-                                                    Phone calls for special occasions</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="message">Personal Message to the Child (Optional)</label>
-                                            <textarea id="message" name="message" rows="3"
-                                                placeholder="A message of encouragement for your sponsored child..."></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <button type="button" class="btn-success" onclick="nextStep(2)"
-                                            style="background: #666">
-                                            Previous
-                                        </button>
-                                        <button type="button" class="start-btn" onclick="nextStep(4)">
-                                            Next
-                                        </button>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="phone">Phone Number <span class="required">*</span></label>
+                                        <input type="tel" id="phone" name="phone" placeholder="+977 9800000000" required />
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Step 4: Payment Information -->
-                            <div class="form-step" id="step4">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <h2 class="mb-0 pb-0">Payment Information</h2>
-                                        <p>
-                                            How would you like to make your sponsorship contribution?
-                                        </p>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label>Payment Method <span class="required">*</span></label>
-                                            <div
-                                                style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
-                                                <label><input type="radio" name="payment_method" value="Bank Transfer"
-                                                        required />
-                                                    Bank Transfer - Direct bank deposit</label>
-                                                <label><input type="radio" name="payment_method" value="Online Payment"
-                                                        required />
-                                                    Online Payment - Khalti, eSewa, or credit card</label>
-                                                <label><input type="radio" name="payment_method" value="Cheque"
-                                                        required />
-                                                    Cheque - Mail to our office</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="payment_amount">Sponsorship Amount (Rs.)</label>
-                                            <input type="number" id="payment_amount" name="payment_amount"
-                                                placeholder="12000" min="1000" />
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="payment_frequency">Payment Frequency</label>
-                                            <select id="payment_frequency" name="payment_frequency">
-                                                <option value="One-time">One-time payment</option>
-                                                <option value="Monthly">Monthly</option>
-                                                <option value="Quarterly">Quarterly</option>
-                                                <option value="Annually">Annually</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="tax_deductible">Would you like a tax deduction receipt?</label>
-                                            <select id="tax_deductible" name="tax_deductible">
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <button type="button" class="btn-success" onclick="nextStep(3)"
-                                            style="background: #666">
-                                            Previous
-                                        </button>
-                                        <button type="button" class="start-btn" onclick="nextStep(5)">
-                                            Next
-                                        </button>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="country">Country <span class="required">*</span></label>
+                                        <select id="country" name="country" required>
+                                            <option value="">Select Country</option>
+                                            <option value="Nepal" selected>Nepal</option>
+                                        </select>
                                     </div>
                                 </div>
-                            </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="city">City <span class="required">*</span></label>
+                                        <input type="text" id="city" name="city" placeholder="Your city" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="address">Street Address <span class="required">*</span></label>
+                                        <input type="text" id="address" name="address" placeholder="Street address" required />
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="occupation">Occupation</label>
+                                        <input type="text" id="occupation" name="occupation" placeholder="Your profession" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="organization">Organization/Company</label>
+                                        <input type="text" id="organization" name="organization" placeholder="Company name" />
+                                    </div>
+                                </div>
 
-                            <!-- Step 5: Final Submission -->
-                            <div class="form-step" id="step5">
-                                <h2>Confirm Your Sponsorship</h2>
-                                <p>
-                                    Thank you for your interest in sponsoring a child through Aarambha Foundation.
-                                </p>
-                                <p>
-                                    This is a dummy form for demonstration purposes. In the future, this will integrate
-                                    with our backend for processing sponsorships and payments.
-                                </p>
-                                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                                    <h4>What happens next?</h4>
-                                    <ul style="text-align: left;">
-                                        <li>We'll review your application within 2-3 business days</li>
-                                        <li>You'll be matched with a child based on your preferences</li>
-                                        <li>You'll receive a welcome packet with your child's information</li>
-                                        <li>Regular updates will begin according to your chosen frequency</li>
-                                        <li>Your first payment will be processed</li>
-                                    </ul>
+                                <!-- Sponsorship Preferences Section -->
+                                <div class="col-12 mb-4 mt-4">
+                                    <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Sponsorship Preferences</h3>
+                                    <p style="color: #666;">Choose how you'd like to contribute and specify your preferences.</p>
                                 </div>
-                                <div class="form-group">
-                                    <label>
-                                        <input type="checkbox" required /> I agree to the terms and conditions of
-                                        sponsorship and authorize Aarambha Foundation to process my donation.
-                                    </label>
+                                
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Sponsorship Type <span class="required">*</span></label>
+                                        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                                            <label><input type="radio" name="sponsorship_type" value="Full Sponsorship" required />
+                                                Full Sponsorship (Rs. 12,000/year) - Complete support for one child</label>
+                                            <label><input type="radio" name="sponsorship_type" value="Partial Sponsorship" required />
+                                                Partial Sponsorship (Rs. 6,000/year) - Share sponsorship with another donor</label>
+                                            <label><input type="radio" name="sponsorship_type" value="One-time Donation" required />
+                                                One-time Donation - Flexible amount</label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>
-                                        <input type="checkbox" required /> I understand that my personal information
-                                        will be kept confidential and used only for sponsorship purposes.
-                                    </label>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="child_gender">Preferred Child Gender</label>
+                                        <select id="child_gender" name="child_gender">
+                                            <option value="">No preference</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <button type="button" class="btn-success" onclick="nextStep(4)"
-                                    style="background: #666">
-                                    Previous
-                                </button>
-                                <button type="submit" class="start-btn" style="background: #2e8b57">
-                                    Submit Sponsorship Application
-                                </button>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="child_age">Preferred Child Age Group</label>
+                                        <select id="child_age" name="child_age">
+                                            <option value="">No preference</option>
+                                            <option value="5-8">5-8 years</option>
+                                            <option value="9-12">9-12 years</option>
+                                            <option value="13-16">13-16 years</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="special_requests">Special Requests or Preferences</label>
+                                        <textarea id="special_requests" name="special_requests" rows="3" placeholder="Any specific preferences for the child you'd like to sponsor..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Communication Preferences Section -->
+                                <div class="col-12 mb-4 mt-4">
+                                    <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Communication Preferences</h3>
+                                    <p style="color: #666;">How would you like to receive updates about your sponsored child?</p>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Update Frequency <span class="required">*</span></label>
+                                        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                                            <label><input type="radio" name="update_frequency" value="Quarterly" required />
+                                                Quarterly (4 times per year) - Photos, letters, and progress reports</label>
+                                            <label><input type="radio" name="update_frequency" value="Biannually" required />
+                                                Biannually (2 times per year) - Major updates and annual reports</label>
+                                            <label><input type="radio" name="update_frequency" value="Annually" required />
+                                                Annually (1 time per year) - Annual progress summary</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Communication Method <span class="required">*</span></label>
+                                        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                                            <label><input type="checkbox" name="comm_method" value="Email" />
+                                                Email updates</label>
+                                            <label><input type="checkbox" name="comm_method" value="Physical Mail" />
+                                                Physical mail (letters and photos)</label>
+                                            <label><input type="checkbox" name="comm_method" value="Phone" />
+                                                Phone calls for special occasions</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="message">Personal Message to the Child (Optional)</label>
+                                        <textarea id="message" name="message" rows="3" placeholder="A message of encouragement for your sponsored child..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Information Section -->
+                                <div class="col-12 mb-4 mt-4">
+                                    <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Payment Information</h3>
+                                    <p style="color: #666;">How would you like to make your sponsorship contribution?</p>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Payment Method <span class="required">*</span></label>
+                                        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                                            <label><input type="radio" name="payment_method" value="Bank Transfer" required />
+                                                Bank Transfer - Direct bank deposit</label>
+                                            <label><input type="radio" name="payment_method" value="Online Payment" required />
+                                                Online Payment - Khalti, eSewa, or credit card</label>
+                                            <label><input type="radio" name="payment_method" value="Cheque" required />
+                                                Cheque - Mail to our office</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="payment_amount">Sponsorship Amount (Rs.)</label>
+                                        <input type="number" id="payment_amount" name="payment_amount" placeholder="12000" min="1000" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="payment_frequency">Payment Frequency</label>
+                                        <select id="payment_frequency" name="payment_frequency">
+                                            <option value="One-time">One-time payment</option>
+                                            <option value="Monthly">Monthly</option>
+                                            <option value="Quarterly">Quarterly</option>
+                                            <option value="Annually">Annually</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="tax_deductible">Would you like a tax deduction receipt?</label>
+                                        <select id="tax_deductible" name="tax_deductible">
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Final Section -->
+                                <div class="col-12 mb-4 mt-4">
+                                    <h3 style="color: #2d3b5b; border-bottom: 2px solid #8f5556; padding-bottom: 5px;">Confirm Your Sponsorship</h3>
+                                    <p>Thank you for your interest in sponsoring a child through Aarambha Foundation.</p>
+                                    <p>This is a dummy form for demonstration purposes. In the future, this will integrate with our backend for processing sponsorships and payments.</p>
+                                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                        <h4>What happens next?</h4>
+                                        <ul style="text-align: left;">
+                                            <li>We'll review your application within 2-3 business days</li>
+                                            <li>You'll be matched with a child based on your preferences</li>
+                                            <li>You'll receive a welcome packet with your child's information</li>
+                                            <li>Regular updates will begin according to your chosen frequency</li>
+                                            <li>Your first payment will be processed</li>
+                                        </ul>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" required /> I agree to the terms and conditions of sponsorship and authorize Aarambha Foundation to process my donation.
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" required /> I understand that my personal information will be kept confidential and used only for sponsorship purposes.
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="start-btn" style="background: #2e8b57; margin-top: 20px;">Submit Sponsorship Application</button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -683,23 +566,14 @@
     <script src="{% static 'js/config.js' %}"></script>
     <script>
         function startApplication() {
-            const user = getUser(); // getUser should return null if not logged in
+            const user = getUser();
             if (!user) {
                 document.getElementById('loginModal').style.display = 'flex';
-                return; // stop execution, don't show the form yet
+                return;
             }
 
-            // Only show form if logged in
             document.getElementById("startSection").style.display = "none";
             document.getElementById("sponsorshipForm").style.display = "block";
-        }
-
-        function nextStep(step) {
-            document
-                .querySelectorAll(".form-step")
-                .forEach((s) => s.classList.remove("active"));
-            document.getElementById("step" + step).classList.add("active");
-            window.scrollTo(0, 0);
         }
 
         // Check User Login Status and Show Modal
@@ -730,5 +604,6 @@
     </script>
 
 </body>
+<script src="{% static 'js/config.js' %}"></script>
 
 </html>

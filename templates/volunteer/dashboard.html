@@ -139,7 +139,22 @@
 <script src="{% static 'js/auth-utils.js' %}"></script>
 <script>
     const user = getUser();
-    if (!user || user.user_type !== 'volunteer') window.location.href = '/';
+    if (!user) {
+        console.log('No user found, redirecting to home');
+        window.location.href = '/';
+        return;
+    }
+    
+    console.log('User found:', user);
+    console.log('User type:', user.user_type);
+    
+    // Allow both volunteers and members to access for now
+    if (user.user_type !== 'volunteer' && user.user_type !== 'member') {
+        console.log('User is not volunteer or member, redirecting to home');
+        window.location.href = '/';
+        return;
+    }
+    
     document.getElementById('userName').textContent = user.username || user.email;
     document.getElementById('userInitial').textContent = (user.username || user.email)[0].toUpperCase();
     document.getElementById('welcomeName').textContent = user.first_name || user.username || 'Volunteer';
