@@ -44,6 +44,7 @@ class Application(models.Model):
     
     # Meta
     application_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    is_upgrade = models.BooleanField(default=False)  # Track if this is an upgrade application
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     interview_datetime = models.DateTimeField(null=True, blank=True)
     interview_link = models.URLField(blank=True)
