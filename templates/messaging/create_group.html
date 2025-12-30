@@ -1,0 +1,130 @@
+{% extends 'member/base.html' %}
+
+{% block title %}Create Group{% endblock %}
+{% block page_title %}Create Group{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-center space-x-3">
+        <a href="{% url 'member_list' %}" class="text-slate-400 hover:text-white">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="text-xl font-semibold text-white">Create Group</h2>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-slate-800 rounded-lg p-6">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <!-- Group Name -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Group Name *</label>
+                <input type="text" name="name" required placeholder="Enter group name..." 
+                       class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Description -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Description</label>
+                <textarea name="description" rows="3" placeholder="Optional group description..." 
+                          class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="mb-4">
+                <div class="mb-3">
+                    <input type="text" id="memberSearch" placeholder="Search members..." 
+                           class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex gap-2">
+                    <select id="branchFilter" class="px-3 py-2 bg-slate-700 border-0 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Branches</option>
+                        {% for branch in branches %}
+                            <option value="{{ branch }}">{{ branch }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="typeFilter" class="px-3 py-2 bg-slate-700 border-0 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Types</option>
+                        <option value="member">Members</option>
+                        <option value="volunteer">Volunteers</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Members Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-slate-300 mb-3">Select Members</label>
+                <div class="max-h-64 overflow-y-auto bg-slate-700 rounded p-3 space-y-2">
+                    {% for user in users %}
+                    <label class="flex items-center space-x-3 p-2 hover:bg-slate-600 rounded cursor-pointer user-item"
+                           data-branch="{{ user.branch.name|default:'N/A' }}" 
+                           data-type="{{ user.user_type }}"
+                           data-name="{{ user.get_full_name|default:user.email|lower }}">
+                        <input type="checkbox" name="members" value="{{ user.id }}" 
+                               class="w-4 h-4 text-blue-600 bg-slate-600 border-slate-500 rounded focus:ring-blue-500">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium
+                            {% if user.is_superuser %}bg-yellow-600{% elif user.user_type == 'member' %}bg-blue-600{% else %}bg-green-600{% endif %}">
+                            {% if user.is_superuser %}
+                                <i class="fas fa-crown text-xs"></i>
+                            {% else %}
+                                {{ user.first_name|first|default:user.email|first|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-white text-sm">{{ user.get_full_name|default:user.email }}</div>
+                            <div class="text-slate-400 text-xs">
+                                {% if user.is_superuser %}Admin{% else %}{{ user.user_type|title }}{% endif %}
+                                {% if user.branch %} • {{ user.branch.name }}{% endif %}
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-3">
+                <a href="{% url 'member_list' %}" class="px-4 py-2 text-slate-400 hover:text-white">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded">
+                    Create Group
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function applyFilters() {
+    const searchTerm = document.getElementById('memberSearch').value.toLowerCase();
+    const branchFilter = document.getElementById('branchFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    
+    const userItems = document.querySelectorAll('.user-item');
+    
+    userItems.forEach(item => {
+        const name = item.dataset.name;
+        const branch = item.dataset.branch;
+        const type = item.dataset.type;
+        
+        const matchesSearch = !searchTerm || name.includes(searchTerm);
+        const matchesBranch = !branchFilter || branch === branchFilter;
+        const matchesType = !typeFilter || type === typeFilter;
+        
+        if (matchesSearch && matchesBranch && matchesType) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Event listeners
+document.getElementById('memberSearch').addEventListener('input', applyFilters);
+document.getElementById('branchFilter').addEventListener('change', applyFilters);
+document.getElementById('typeFilter').addEventListener('change', applyFilters);
+</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Event Reviews - {{ event.title }}{% endblock %}
+{% block page_title %}Event Reviews{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h2 class="text-xl font-semibold text-white">{{ event.title }}</h2>
+        <p class="text-slate-400">User reviews and ratings</p>
+    </div>
+    <a href="/admin/events/" class="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i> Back to Events
+    </a>
+</div>
+
+<!-- Event Info -->
+<div class="card rounded-lg p-4 mb-6">
+    <div class="grid grid-cols-3 gap-4 text-sm">
+        <div>
+            <span class="text-slate-400">Date:</span>
+            <span class="text-white ml-2">{{ event.start_datetime|date:"M d, Y" }}</span>
+        </div>
+        <div>
+            <span class="text-slate-400">Type:</span>
+            <span class="text-white ml-2">{{ event.get_event_type_display }}</span>
+        </div>
+        <div>
+            <span class="text-slate-400">Status:</span>
+            <span class="badge {{ event.is_active|yesno:'bg-emerald-900/30 text-emerald-300,bg-slate-700 text-slate-400' }} ml-2">
+                {{ event.is_active|yesno:"Active,Inactive" }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<hr class="border-slate-700 mb-6">
+
+<!-- Reviews List -->
+<div id="reviewsList" class="space-y-4">
+    <!-- Reviews will be loaded here -->
+</div>
+
+<script>
+let reviews = {{ reviews|safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadReviews();
+});
+
+function loadReviews() {
+    const container = document.getElementById('reviewsList');
+    container.innerHTML = '';
+    
+    if (reviews.length === 0) {
+        container.innerHTML = `
+            <div class="card rounded-lg p-8 text-center">
+                <i class="fas fa-star text-4xl text-slate-500 mb-4"></i>
+                <h3 class="text-lg font-medium text-slate-300 mb-2">No Reviews Yet</h3>
+                <p class="text-slate-400">This event hasn't received any reviews from participants.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    reviews.forEach(review => {
+        const reviewCard = document.createElement('div');
+        reviewCard.className = 'card rounded-lg p-6';
+        
+        reviewCard.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-white">${review.user_name}</h3>
+                    <p class="text-slate-400 text-sm">${review.user_email}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="flex text-yellow-400 text-lg">
+                        ${'★'.repeat(review.rating)}<span class="text-slate-600">${'★'.repeat(5 - review.rating)}</span>
+                    </div>
+                    <span class="text-slate-400 text-sm">${review.rating}/5</span>
+                </div>
+            </div>
+            
+            <div class="bg-slate-700/30 rounded-lg p-4">
+                <p class="text-slate-300 leading-relaxed">${review.review}</p>
+            </div>
+        `;
+        
+        container.appendChild(reviewCard);
+    });
+}
+</script>
+{% endblock %}

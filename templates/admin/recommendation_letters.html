@@ -1,0 +1,368 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Recommendation Letters{% endblock %}
+{% block page_title %}Recommendation Letters{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-xl font-semibold text-white">Recommendation Letters</h2>
+        <p class="text-slate-400">Manage recommendation letter requests from members</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card rounded-lg p-4">
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <input type="text" id="searchInput" placeholder="Search by user or purpose..." 
+                       class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <select id="statusFilter" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div>
+                <button onclick="clearFilters()" class="w-full px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg">
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Letters Table -->
+    <div class="card rounded-lg p-6">
+        <table id="lettersTable" class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-slate-700">
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">User</th>
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Purpose</th>
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Status</th>
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Requested</th>
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="lettersTableBody">
+                <!-- Populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Approve Recommendation Letter</h3>
+            <button onclick="closeApproveModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="approveForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="letter_id" id="approveLetterId">
+            <input type="hidden" name="action" value="approve">
+            
+            <!-- PDF Upload -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Upload Signed Letter (PDF) *</label>
+                <input type="file" name="signed_letter" accept=".pdf" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <!-- Admin Comment -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Comment (Optional)</label>
+                <textarea name="admin_notes" rows="3" placeholder="Add any comments..." class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeApproveModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" id="approveBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                    <span class="approve-text">Approve & Send</span>
+                    <span class="approve-loading hidden"><i class="fas fa-spinner fa-spin"></i> Processing...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Reject Recommendation Letter</h3>
+            <button onclick="closeRejectModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="rejectForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="letter_id" id="rejectLetterId">
+            <input type="hidden" name="action" value="reject">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Reason for Rejection</label>
+                <textarea name="admin_notes" rows="4" placeholder="Please provide a reason for rejection..." class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500" required></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeRejectModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" id="rejectBtn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg">
+                    <span class="reject-text">Reject</span>
+                    <span class="reject-loading hidden"><i class="fas fa-spinner fa-spin"></i> Processing...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Include Quill CSS -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<!-- Include Quill JS -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+<style>
+/* Enhanced editor styles for better Word content support */
+.ql-editor {
+    font-family: 'Times New Roman', serif !important;
+    line-height: 1.6 !important;
+}
+
+.ql-editor table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+}
+
+.ql-editor table td, .ql-editor table th {
+    border: 1px solid #000 !important;
+    padding: 8px !important;
+    text-align: left !important;
+}
+
+.ql-editor img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 10px auto !important;
+}
+
+/* Preserve Word formatting */
+.ql-editor p {
+    margin: 0 0 10px 0 !important;
+}
+
+.ql-editor h1, .ql-editor h2, .ql-editor h3 {
+    margin: 15px 0 10px 0 !important;
+}
+</style>
+
+<script>
+const letters = {{ letters|safe }};
+let filteredLetters = [...letters];
+
+function renderLetters() {
+    const tbody = document.getElementById('lettersTableBody');
+    
+    if (filteredLetters.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="py-8 text-center text-slate-400">
+                    <i class="fas fa-file-alt text-2xl mb-2"></i>
+                    <div>No letters found</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = filteredLetters.map(letter => `
+        <tr class="border-b border-slate-700 hover:bg-slate-700/30">
+            <td class="py-3 px-4">
+                <div class="text-white font-medium">${letter.user_name}</div>
+                <div class="text-slate-400 text-xs">${letter.user_email}</div>
+            </td>
+            <td class="py-3 px-4">
+                <div class="text-white font-medium">${letter.purpose}</div>
+                <div class="text-slate-400 text-xs">${letter.description.replace(/<[^>]*>/g, '').substring(0, 50)}...</div>
+            </td>
+            <td class="py-3 px-4">
+                <span class="badge ${getStatusBadgeClass(letter.status)}">${letter.status.charAt(0).toUpperCase() + letter.status.slice(1)}</span>
+            </td>
+            <td class="py-3 px-4 text-slate-400">
+                <div>${new Date(letter.created_at).toLocaleDateString()}</div>
+                <div class="text-xs">${new Date(letter.created_at).toLocaleTimeString()}</div>
+            </td>
+            <td class="py-3 px-4">
+                <div class="flex gap-2">
+                    <button onclick="viewDetails(${letter.id}, '${letter.purpose}', '${letter.description}', '${letter.user_name}', '${letter.user_email}', '${letter.status}', '${new Date(letter.created_at).toLocaleDateString()}', '${letter.user_type}', '${letter.user_branch || 'N/A'}', ${letter.events_attended}, ${letter.tasks_submitted}, '${new Date(letter.date_joined).toLocaleDateString()}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${letter.status === 'pending' ? `
+                        <button onclick="openApproveModal(${letter.id}, '${letter.user_name}', '${letter.purpose}')" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button onclick="openRejectModal(${letter.id}, '${letter.purpose}')" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getStatusBadgeClass(status) {
+    switch(status) {
+        case 'pending': return 'bg-yellow-900 text-yellow-300';
+        case 'approved': return 'bg-green-900 text-green-300';
+        case 'rejected': return 'bg-red-900 text-red-300';
+        default: return 'bg-gray-900 text-gray-300';
+    }
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    filteredLetters = letters.filter(letter => {
+        const matchesSearch = letter.user_name.toLowerCase().includes(searchTerm) || 
+                            letter.purpose.toLowerCase().includes(searchTerm) ||
+                            letter.user_email.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || letter.status === statusFilter;
+        
+        return matchesSearch && matchesStatus;
+    });
+    
+    renderLetters();
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    applyFilters();
+}
+
+function openApproveModal(id, userName, purpose) {
+    document.getElementById('approveLetterId').value = id;
+    document.getElementById('approveModal').classList.remove('hidden');
+}
+
+function closeApproveModal() {
+    document.getElementById('approveModal').classList.add('hidden');
+}
+
+function openRejectModal(id, purpose) {
+    document.getElementById('rejectLetterId').value = id;
+    document.getElementById('rejectModal').classList.remove('hidden');
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+    document.getElementById('rejectForm').reset();
+}
+
+function viewDetails(id, purpose, description, userName, userEmail, status, requested, userType, userBranch, eventsAttended, tasksSubmitted, dateJoined) {
+    const modal = document.createElement('div');
+    modal.id = 'detailsModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-slate-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-white">Letter Details: ${purpose}</h3>
+                <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">User Information</label>
+                    <div class="p-3 bg-slate-700 rounded-lg text-slate-300 space-y-1">
+                        <div><strong>Name:</strong> ${userName}</div>
+                        <div><strong>Email:</strong> ${userEmail}</div>
+                        <div><strong>Type:</strong> ${userType.charAt(0).toUpperCase() + userType.slice(1)}</div>
+                        <div><strong>Branch:</strong> ${userBranch}</div>
+                        <div><strong>Joined:</strong> ${dateJoined}</div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">User Statistics</label>
+                    <div class="p-3 bg-slate-700 rounded-lg text-slate-300 space-y-1">
+                        <div><strong>Events Attended:</strong> ${eventsAttended}</div>
+                        <div><strong>Tasks Submitted:</strong> ${tasksSubmitted}</div>
+                        <div><strong>Status:</strong> ${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+                        <div><strong>Requested:</strong> ${requested}</div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Purpose</label>
+                    <div class="p-3 bg-slate-700 rounded-lg text-slate-300">${purpose}</div>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Description</label>
+                <div class="p-3 bg-slate-700 rounded-lg text-slate-300 max-h-40 overflow-y-auto">${description}</div>
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button onclick="closeDetailsModal()" class="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeDetailsModal() {
+    const modal = document.getElementById('detailsModal');
+    if (modal) modal.remove();
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    renderLetters();
+    
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('statusFilter').addEventListener('change', applyFilters);
+    
+    // Handle approve form submission
+    document.getElementById('approveForm').addEventListener('submit', function(e) {
+        // Show loading state
+        const btn = document.getElementById('approveBtn');
+        btn.querySelector('.approve-text').classList.add('hidden');
+        btn.querySelector('.approve-loading').classList.remove('hidden');
+        btn.disabled = true;
+    });
+    
+    // Handle reject form submission
+    document.getElementById('rejectForm').addEventListener('submit', function(e) {
+        // Show loading state
+        const btn = document.getElementById('rejectBtn');
+        btn.querySelector('.reject-text').classList.add('hidden');
+        btn.querySelector('.reject-loading').classList.remove('hidden');
+        btn.disabled = true;
+    });
+});
+
+// Close modals when clicking outside
+document.getElementById('approveModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeApproveModal();
+    }
+});
+
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRejectModal();
+    }
+});
+</script>
+{% endblock %}

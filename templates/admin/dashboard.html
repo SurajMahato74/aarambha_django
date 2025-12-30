@@ -5,59 +5,210 @@
 
 {% block content %}
 <!-- Stats -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-10 mb-8">
-    <div class="card p-5 rounded-lg bg-transparent">
-        <p class="text-slate-400 text-xs">Total Users</p>
-        <p class="text-2xl font-bold text-white mt-1">1,248</p>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Total Users</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ stats.total_users }}</p>
+            </div>
+            <i class="fas fa-users text-2xl text-blue-500"></i>
+        </div>
     </div>
-    <div class="card p-5 rounded-lg bg-transparent">
-        <p class="text-slate-400 text-xs">Branches</p>
-        <p class="text-2xl font-bold text-white mt-1">12</p>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Branches</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ stats.total_branches }}</p>
+            </div>
+            <i class="fas fa-building text-2xl text-green-500"></i>
+        </div>
     </div>
-    <div class="card p-5 rounded-lg bg-transparent">
-        <p class="text-slate-400 text-xs">Applications</p>
-        <p class="text-2xl font-bold text-white mt-1">45</p>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Applications</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ stats.total_applications }}</p>
+            </div>
+            <i class="fas fa-file-alt text-2xl text-yellow-500"></i>
+        </div>
     </div>
-    <div class="card p-5 rounded-lg bg-transparent">
-        <p class="text-slate-400 text-xs">Revenue</p>
-        <p class="text-2xl font-bold text-white mt-1">₹5.42L</p>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Total Payments</p>
+                <p class="text-2xl font-bold text-white mt-1">${{ stats.total_payments|floatformat:0 }}</p>
+            </div>
+            <i class="fas fa-dollar-sign text-2xl text-purple-500"></i>
+        </div>
     </div>
 </div>
 
-<!-- Recent Activity -->
-<div class="card rounded-lg overflow-hidden bg-transparent">
-    <div class="p-5 border-b border-slate-700">
-        <h3 class="font-medium text-white">Recent Activity</h3>
+<!-- Additional Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Events</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ stats.total_events }}</p>
+            </div>
+            <i class="fas fa-calendar text-2xl text-red-500"></i>
+        </div>
     </div>
-    <table class="w-full">
-        <thead class="bg-slate-800/50 text-xs text-slate-400">
-            <tr>
-                <th class="text-left p-4">User</th>
-                <th class="text-left p-4">Action</th>
-                <th class="text-left p-4">Time</th> 
-                <th class="text-left p-4">Status</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-700">
-            <tr class="hover:bg-slate-800/30 transition">
-                <td class="p-4">Rohan Sharma</td>
-                <td class="p-4">Submitted application</td>
-                <td class="p-4 text-slate-400">2 hours ago</td>
-                <td class="p-4"><span class="badge bg-amber-900/30 text-amber-300">Pending</span></td>
-            </tr>
-            <tr class="hover:bg-slate-800/30 transition">
-                <td class="p-4">Priya Mehta</td>
-                <td class="p-4">Payment completed</td>
-                <td class="p-4 text-slate-400">5 hours ago</td>
-                <td class="p-4"><span class="badge bg-emerald-900/30 text-emerald-300">Success</span></td>
-            </tr>
-            <tr class="hover:bg-slate-800/30 transition">
-                <td class="p-4">Arjun Patel</td>
-                <td class="p-4">Certificate issued</td>
-                <td class="p-4 text-slate-400">1 day ago</td>
-                <td class="p-4"><span class="badge bg-emerald-900/30 text-emerald-300">Done</span></td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Tasks</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ stats.total_tasks }}</p>
+            </div>
+            <i class="fas fa-tasks text-2xl text-indigo-500"></i>
+        </div>
+    </div>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Notices</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ stats.total_notices }}</p>
+            </div>
+            <i class="fas fa-bell text-2xl text-orange-500"></i>
+        </div>
+    </div>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Messages</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ stats.total_messages }}</p>
+            </div>
+            <i class="fas fa-comments text-2xl text-teal-500"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Recent Applications -->
+    <div class="card rounded-lg overflow-hidden bg-slate-800/50">
+        <div class="p-5 border-b border-slate-700">
+            <h3 class="font-medium text-white flex items-center">
+                <i class="fas fa-file-alt mr-2 text-yellow-500"></i>
+                Recent Applications
+            </h3>
+        </div>
+        <div class="max-h-80 overflow-y-auto">
+            {% for app in recent_applications %}
+            <div class="p-4 border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-white font-medium">{{ app.full_name }}</p>
+                        <p class="text-slate-400 text-sm">{{ app.get_application_type_display }} Application</p>
+                        <p class="text-slate-500 text-xs">{{ app.applied_at|timesince }} ago</p>
+                    </div>
+                    <span class="badge {% if app.status == 'pending' %}bg-yellow-900/30 text-yellow-300{% elif app.status == 'approved' %}bg-green-900/30 text-green-300{% else %}bg-red-900/30 text-red-300{% endif %}">
+                        {{ app.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-4 text-center text-slate-400">
+                <i class="fas fa-inbox text-2xl mb-2"></i>
+                <p>No recent applications</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Recent Notices -->
+    <div class="card rounded-lg overflow-hidden bg-slate-800/50">
+        <div class="p-5 border-b border-slate-700">
+            <h3 class="font-medium text-white flex items-center">
+                <i class="fas fa-bell mr-2 text-orange-500"></i>
+                Recent Notices
+            </h3>
+        </div>
+        <div class="max-h-80 overflow-y-auto">
+            {% for notice in recent_notices %}
+            <div class="p-4 border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-white font-medium">{{ notice.title }}</p>
+                        <p class="text-slate-400 text-sm">{{ notice.message|truncatechars:60 }}</p>
+                        <p class="text-slate-500 text-xs">{{ notice.created_at|timesince }} ago</p>
+                    </div>
+                    <span class="badge bg-blue-900/30 text-blue-300">{{ notice.get_user_type_display }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-4 text-center text-slate-400">
+                <i class="fas fa-bell-slash text-2xl mb-2"></i>
+                <p>No recent notices</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Events and Payments -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Recent Events -->
+    <div class="card rounded-lg overflow-hidden bg-slate-800/50">
+        <div class="p-5 border-b border-slate-700">
+            <h3 class="font-medium text-white flex items-center">
+                <i class="fas fa-calendar mr-2 text-red-500"></i>
+                Recent Events
+            </h3>
+        </div>
+        <div class="max-h-80 overflow-y-auto">
+            {% for event in recent_events %}
+            <div class="p-4 border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-white font-medium">{{ event.title }}</p>
+                        <p class="text-slate-400 text-sm">{{ event.get_event_type_display }} - {{ event.get_venue_type_display }}</p>
+                        <p class="text-slate-500 text-xs">{{ event.start_datetime|date:"M d, Y" }}</p>
+                    </div>
+                    <span class="badge {% if event.is_active %}bg-green-900/30 text-green-300{% else %}bg-gray-900/30 text-gray-300{% endif %}">
+                        {% if event.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-4 text-center text-slate-400">
+                <i class="fas fa-calendar-times text-2xl mb-2"></i>
+                <p>No recent events</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Recent Payments -->
+    <div class="card rounded-lg overflow-hidden bg-slate-800/50">
+        <div class="p-5 border-b border-slate-700">
+            <h3 class="font-medium text-white flex items-center">
+                <i class="fas fa-dollar-sign mr-2 text-purple-500"></i>
+                Recent Payments
+            </h3>
+        </div>
+        <div class="max-h-80 overflow-y-auto">
+            {% for payment in recent_payments %}
+            <div class="p-4 border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-white font-medium">${{ payment.amount }}</p>
+                        <p class="text-slate-400 text-sm">{{ payment.user.get_full_name|default:payment.user.email }}</p>
+                        <p class="text-slate-500 text-xs">{{ payment.paid_at|timesince }} ago</p>
+                    </div>
+                    <span class="badge {% if payment.is_verified %}bg-green-900/30 text-green-300{% else %}bg-yellow-900/30 text-yellow-300{% endif %}">
+                        {% if payment.is_verified %}Verified{% else %}Pending{% endif %}
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-4 text-center text-slate-400">
+                <i class="fas fa-credit-card text-2xl mb-2"></i>
+                <p>No recent payments</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 {% endblock %}

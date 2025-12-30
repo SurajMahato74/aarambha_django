@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .districts import NEPAL_DISTRICTS
-from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Event, Partner, ContactInfo, Award, OurWork
+from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Partner, ContactInfo, Award, OurWork, RecommendationLetter
 from decimal import Decimal
 
 def website_home(request):
@@ -9,7 +9,6 @@ def website_home(request):
     who_we_are = WhoWeAre.get_active()
     growing_our_impact = GrowingOurImpact.get_active()
     statistics = Statistics.get_active()
-    events = Event.get_active_events()
     partners = Partner.get_active_partners()
     contact_info = ContactInfo.get_active()
     awards = Award.get_active_awards()
@@ -20,7 +19,6 @@ def website_home(request):
         'who_we_are': who_we_are,
         'growing_our_impact': growing_our_impact,
         'statistics': statistics,
-        'events': events,
         'partners': partners,
         'contact_info': contact_info,
         'awards': awards,
@@ -78,7 +76,54 @@ def logout_view(request):
         return HttpResponseNotAllowed(['POST'])
 
 def admin_dashboard(request):
-    return render(request, 'admin/dashboard.html')
+    from users.models import CustomUser
+    from branches.models import Branch
+    from applications.models import Application
+    from payments.models import Payment
+    from events.models import Event, EventParticipation
+    from tasks.models import Task
+    from notices.models import Notice, UserNotification
+    from messaging.models import Message
+    from django.db.models import Count, Sum
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # Calculate statistics
+    total_users = CustomUser.objects.count()
+    total_branches = Branch.objects.count()
+    total_applications = Application.objects.count()
+    total_payments = Payment.objects.aggregate(total=Sum('amount'))['total'] or 0
+    total_events = Event.objects.count()
+    total_tasks = Task.objects.count()
+    total_notices = Notice.objects.count()
+    total_messages = Message.objects.count()
+    
+    # Recent activity (last 30 days)
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    recent_applications = Application.objects.filter(applied_at__gte=thirty_days_ago).order_by('-applied_at')[:10]
+    recent_payments = Payment.objects.filter(paid_at__gte=thirty_days_ago).order_by('-paid_at')[:5]
+    recent_events = Event.objects.filter(created_at__gte=thirty_days_ago).order_by('-created_at')[:5]
+    
+    # Recent notices for admin
+    recent_notices = Notice.objects.filter(is_active=True).order_by('-created_at')[:5]
+    
+    context = {
+        'stats': {
+            'total_users': total_users,
+            'total_branches': total_branches,
+            'total_applications': total_applications,
+            'total_payments': total_payments,
+            'total_events': total_events,
+            'total_tasks': total_tasks,
+            'total_notices': total_notices,
+            'total_messages': total_messages,
+        },
+        'recent_applications': recent_applications,
+        'recent_payments': recent_payments,
+        'recent_events': recent_events,
+        'recent_notices': recent_notices,
+    }
+    return render(request, 'admin/dashboard.html', context)
 
 def admin_users(request):
     return render(request, 'admin/users.html')
@@ -186,6 +231,9 @@ def guest_profile(request):
 
 def guest_applications(request):
     return render(request, 'guest/applications.html')
+
+def member_profile(request):
+    return render(request, 'member/profile.html')
 
 def member_dashboard(request):
     return render(request, 'member/dashboard.html')
@@ -317,31 +365,6 @@ def payment_success(request, pk):
     logger.info("KHALTI CALLBACK HIT - Application Payment")
 
     return HttpResponse("OK", status=200)
-def admin_events(request):
-    from django.core.serializers import serialize
-    import json
-
-    events = Event.objects.all().order_by('order', '-created_at')
-
-    # Serialize events to JSON for JavaScript
-    events_json = []
-    for event in events:
-        events_json.append({
-            'id': event.id,
-            'title': event.title,
-            'description': event.description,
-            'image': event.image.url if event.image else None,
-            'event_date': event.event_date.isoformat() if event.event_date else None,
-            'location': event.location,
-            'order': event.order,
-            'is_active': event.is_active,
-            'created_at': event.created_at.isoformat(),
-        })
-
-    context = {
-        'events': json.dumps(events_json)
-    }
-    return render(request, 'admin/events.html', context)
 def admin_partners(request):
     from django.core.serializers import serialize
     import json
@@ -365,6 +388,246 @@ def admin_partners(request):
         'partners': json.dumps(partners_json)
     }
     return render(request, 'admin/partners.html', context)
+
+def admin_events(request):
+    """Event management admin page"""
+    from events.models import Event, EventParticipation
+    from django.db.models import Avg, Count
+    import json
+    
+    events = Event.objects.all().order_by('-start_datetime')
+    
+    # Serialize events to JSON for JavaScript
+    events_json = []
+    for event in events:
+        # Calculate review statistics
+        reviews = EventParticipation.objects.filter(event=event, review__isnull=False).exclude(review='')
+        avg_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
+        review_count = reviews.count()
+        
+        events_json.append({
+            'id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'image': event.image.url if event.image else None,
+            'event_type': event.event_type,
+            'venue_type': event.venue_type,
+            'venue_name': event.venue_name,
+            'venue_address': event.venue_address,
+            'meeting_link': event.meeting_link,
+            'meeting_id': event.meeting_id,
+            'meeting_password': event.meeting_password,
+            'contact_person': event.contact_person,
+            'contact_phone': event.contact_phone,
+            'contact_email': event.contact_email,
+            'start_datetime': event.start_datetime.isoformat() if event.start_datetime else None,
+            'end_datetime': event.end_datetime.isoformat() if event.end_datetime else None,
+            'user_type': event.user_type,
+            'max_participants': event.max_participants,
+            'requires_application': event.requires_application,
+            'is_active': event.is_active,
+            'created_at': event.created_at.isoformat(),
+            'avg_rating': round(avg_rating, 1) if avg_rating else None,
+            'review_count': review_count,
+        })
+    
+    context = {
+        'events': json.dumps(events_json)
+    }
+    return render(request, 'admin/events.html', context)
+
+def admin_event_participants(request, event_id):
+    """Event participants management page"""
+    from events.models import Event, EventParticipation
+    import json
+    
+    event = get_object_or_404(Event, id=event_id)
+    participants = EventParticipation.objects.filter(event=event).select_related('user').order_by('-applied_at')
+    
+    # Serialize participants to JSON
+    participants_json = []
+    for p in participants:
+        participants_json.append({
+            'id': p.id,
+            'user_name': p.user.get_full_name() or p.user.email,
+            'user_email': p.user.email,
+            'user_type': p.user.user_type,
+            'status': p.status,
+            'application_message': p.application_message or '',
+            'admin_notes': p.admin_notes or '',
+            'applied_at': p.applied_at.isoformat(),
+            'attended': p.attended,
+            'rating': p.rating,
+            'review': p.review or '',
+        })
+    
+    context = {
+        'event': event,
+        'participants': json.dumps(participants_json)
+    }
+    return render(request, 'admin/event_participants.html', context)
+
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+@csrf_exempt
+def admin_event_reviews(request, event_id):
+    """Event reviews detail page"""
+    from events.models import Event, EventParticipation
+    import json
+    
+    event = get_object_or_404(Event, id=event_id)
+    reviews = EventParticipation.objects.filter(
+        event=event, 
+        review__isnull=False
+    ).exclude(review='').select_related('user').order_by('-rating', '-id')
+    
+    # Serialize reviews to JSON
+    reviews_json = []
+    for review in reviews:
+        reviews_json.append({
+            'user_name': review.user.get_full_name() or review.user.email,
+            'user_email': review.user.email,
+            'rating': review.rating,
+            'review': review.review,
+            'created_at': review.id,  # Using ID as proxy for creation order
+        })
+    
+    context = {
+        'event': event,
+        'reviews': json.dumps(reviews_json)
+    }
+    return render(request, 'admin/event_reviews.html', context)
+
+@csrf_exempt
+def toggle_attendance(request, participation_id):
+    """Toggle attendance for event participant"""
+    from events.models import EventParticipation
+    from notices.models import UserNotification
+    from django.http import JsonResponse
+    from django.utils import timezone
+    from django.core.mail import send_mail
+    from django.conf import settings
+    from django.views.decorators.csrf import csrf_exempt
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        participation = get_object_or_404(EventParticipation, id=participation_id)
+        
+        # Toggle attendance
+        participation.attended = not participation.attended
+        if request.user.is_authenticated:
+            participation.attendance_marked_by = request.user
+            participation.attendance_marked_at = timezone.now()
+        participation.save()
+        
+        # Create notification if marked present
+        if participation.attended:
+            UserNotification.objects.create(
+                user=participation.user,
+                notification_type='event_attended',
+                title=f'Attendance Marked: {participation.event.title}',
+                message=f'Your attendance has been marked for "{participation.event.title}"'
+            )
+            
+            # Send email
+            try:
+                subject = f'✅ Attendance Confirmed: {participation.event.title}'
+                message = f'''Dear {participation.user.first_name or participation.user.email},
+
+Your attendance has been confirmed for "{participation.event.title}".
+
+📅 Event: {participation.event.title}
+📍 Date: {participation.event.start_datetime.strftime("%B %d, %Y at %I:%M %p")}
+
+Thank you for participating!
+
+Best regards,
+Aarambha Foundation Team'''
+                
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[participation.user.email],
+                    fail_silently=True,
+                )
+            except:
+                pass
+        
+        return JsonResponse({
+            'success': True,
+            'attended': participation.attended,
+            'message': f'Attendance {"marked" if participation.attended else "unmarked"}'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    """Toggle attendance for event participant"""
+    from events.models import EventParticipation
+    from notices.models import UserNotification
+    from django.http import JsonResponse
+    from django.utils import timezone
+    from django.core.mail import send_mail
+    from django.conf import settings
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        participation = get_object_or_404(EventParticipation, id=participation_id)
+        
+        # Toggle attendance
+        participation.attended = not participation.attended
+        if request.user.is_authenticated:
+            participation.attendance_marked_by = request.user
+            participation.attendance_marked_at = timezone.now()
+        participation.save()
+        
+        # Create notification if marked present
+        if participation.attended:
+            UserNotification.objects.create(
+                user=participation.user,
+                notification_type='event_attended',
+                title=f'Attendance Marked: {participation.event.title}',
+                message=f'Your attendance has been marked for "{participation.event.title}"'
+            )
+            
+            # Send email
+            try:
+                subject = f'✅ Attendance Confirmed: {participation.event.title}'
+                message = f'''Dear {participation.user.first_name or participation.user.email},
+
+Your attendance has been confirmed for "{participation.event.title}".
+
+📅 Event: {participation.event.title}
+📍 Date: {participation.event.start_datetime.strftime("%B %d, %Y at %I:%M %p")}
+
+Thank you for participating!
+
+Best regards,
+Aarambha Foundation Team'''
+                
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[participation.user.email],
+                    fail_silently=True,
+                )
+            except:
+                pass
+        
+        return JsonResponse({
+            'success': True,
+            'attended': participation.attended,
+            'message': f'Attendance {"marked" if participation.attended else "unmarked"}'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 def contact_us(request):
     contact_info = ContactInfo.get_active()
     context = {
@@ -504,3 +767,293 @@ def donation_callback(request):
 def debug_auth(request):
     """Debug page for authentication troubleshooting"""
     return render(request, 'debug/auth-debug.html')
+
+
+def member_recommendation_letters(request):
+    """Member recommendation letters page"""
+    if request.method == 'POST':
+        from django.contrib import messages
+        from notices.models import UserNotification
+        from django.core.mail import send_mail
+        from django.conf import settings
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        logger.info(f"POST data: {request.POST}")
+        
+        purpose = request.POST.get('purpose')
+        description = request.POST.get('description')
+        
+        logger.info(f"Purpose: {purpose}, Description length: {len(description) if description else 0}")
+        
+        if purpose and description:
+            try:
+                letter = RecommendationLetter.objects.create(
+                    user=request.user,
+                    purpose=purpose,
+                    description=description
+                )
+                logger.info(f"Created letter with ID: {letter.id}")
+                
+                # Create notification
+                UserNotification.objects.create(
+                    user=request.user,
+                    notification_type='general',
+                    title='Recommendation Letter Request Submitted',
+                    message=f'Your recommendation letter request for "{purpose}" has been submitted and is under review.'
+                )
+                
+                # Send email to admin
+                try:
+                    send_mail(
+                        subject=f'New Recommendation Letter Request - {purpose}',
+                        message=f'New recommendation letter request from {request.user.get_full_name() or request.user.email}\n\nPurpose: {purpose}\nDescription: {description}',
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[settings.EMAIL_HOST_USER],
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    logger.error(f"Email error: {e}")
+                
+                messages.success(request, 'Recommendation letter request submitted successfully!')
+                return redirect('member_recommendation_letters')
+            except Exception as e:
+                logger.error(f"Error creating letter: {e}")
+                messages.error(request, f'Error creating request: {str(e)}')
+        else:
+            logger.warning(f"Missing fields - Purpose: {bool(purpose)}, Description: {bool(description)}")
+            messages.error(request, 'Please fill in all required fields.')
+    
+    # Get user statistics
+    from events.models import EventParticipation
+    from tasks.models import TaskSubmission
+    
+    events_attended = EventParticipation.objects.filter(user=request.user, attended=True).count()
+    tasks_submitted = TaskSubmission.objects.filter(user=request.user).count()
+    
+    letters = RecommendationLetter.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'letters': letters,
+        'user_stats': {
+            'events_attended': events_attended,
+            'tasks_submitted': tasks_submitted,
+            'user_type': request.user.user_type,
+            'date_joined': request.user.date_joined,
+        }
+    }
+    return render(request, 'member/recommendation_letters.html', context)
+
+
+def volunteer_recommendation_letters(request):
+    """Volunteer recommendation letters page"""
+    if request.method == 'POST':
+        from django.contrib import messages
+        from notices.models import UserNotification
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
+        purpose = request.POST.get('purpose')
+        description = request.POST.get('description')
+        
+        if purpose and description:
+            RecommendationLetter.objects.create(
+                user=request.user,
+                purpose=purpose,
+                description=description
+            )
+            
+            # Create notification
+            UserNotification.objects.create(
+                user=request.user,
+                notification_type='general',
+                title='Recommendation Letter Request Submitted',
+                message=f'Your recommendation letter request for "{purpose}" has been submitted and is under review.'
+            )
+            
+            # Send email to admin
+            try:
+                send_mail(
+                    subject=f'New Recommendation Letter Request - {purpose}',
+                    message=f'New recommendation letter request from {request.user.get_full_name() or request.user.email}\n\nPurpose: {purpose}\nDescription: {description}',
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[settings.EMAIL_HOST_USER],
+                    fail_silently=True,
+                )
+            except:
+                pass
+            
+            messages.success(request, 'Recommendation letter request submitted successfully!')
+            return redirect('volunteer_recommendation_letters')
+        else:
+            messages.error(request, 'Please fill in all required fields.')
+    
+    # Get user statistics
+    from events.models import EventParticipation
+    from tasks.models import TaskSubmission
+    
+    events_attended = EventParticipation.objects.filter(user=request.user, attended=True).count()
+    tasks_submitted = TaskSubmission.objects.filter(user=request.user).count()
+    
+    letters = RecommendationLetter.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'letters': letters,
+        'user_stats': {
+            'events_attended': events_attended,
+            'tasks_submitted': tasks_submitted,
+            'user_type': request.user.user_type,
+            'date_joined': request.user.date_joined,
+        }
+    }
+    return render(request, 'volunteer/recommendation_letters.html', context)
+
+
+def admin_recommendation_letters(request):
+    """Admin recommendation letters management page"""
+    import json
+    from django.contrib import messages
+    from notices.models import UserNotification
+    from django.core.mail import send_mail
+    from django.conf import settings
+    from django.utils import timezone
+    
+    if request.method == 'POST':
+        letter_id = request.POST.get('letter_id')
+        action = request.POST.get('action')
+        
+        if action == 'approve':
+            signed_letter = request.FILES.get('signed_letter')
+            admin_notes = request.POST.get('admin_notes', '')
+            
+            try:
+                letter = get_object_or_404(RecommendationLetter, id=letter_id)
+                letter.status = 'approved'
+                letter.admin_notes = admin_notes
+                letter.approved_at = timezone.now()
+                
+                if signed_letter:
+                    letter.signed_letter = signed_letter
+                
+                letter.save()
+                
+                # Create notification
+                UserNotification.objects.create(
+                    user=letter.user,
+                    notification_type='general',
+                    title='Recommendation Letter Approved',
+                    message=f'Your recommendation letter request for "{letter.purpose}" has been approved.'
+                )
+                
+                # Send email
+                try:
+                    subject = f'✅ Recommendation Letter Approved - {letter.purpose}'
+                    message = f'''Dear {letter.user.first_name or letter.user.email},
+
+Your recommendation letter request has been approved!
+
+📄 Purpose: {letter.purpose}
+📅 Approved: {timezone.now().strftime("%B %d, %Y")}
+
+📎 Your signed letter is now available for download in your portal.
+
+Best regards,
+Aarambha Foundation Team'''
+                    
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[letter.user.email],
+                        fail_silently=True,
+                    )
+                except:
+                    pass
+                
+                messages.success(request, 'Recommendation letter approved successfully!')
+                
+            except Exception as e:
+                messages.error(request, f'Error approving letter: {str(e)}')
+        
+        elif action == 'reject':
+            admin_notes = request.POST.get('admin_notes', '')
+            
+            try:
+                letter = get_object_or_404(RecommendationLetter, id=letter_id)
+                letter.status = 'rejected'
+                letter.admin_notes = admin_notes
+                letter.save()
+                
+                # Create notification
+                UserNotification.objects.create(
+                    user=letter.user,
+                    notification_type='general',
+                    title='Recommendation Letter Request Update',
+                    message=f'Your recommendation letter request for "{letter.purpose}" has been reviewed.'
+                )
+                
+                # Send email
+                try:
+                    subject = f'📋 Recommendation Letter Request Update - {letter.purpose}'
+                    message = f'''Dear {letter.user.first_name or letter.user.email},
+
+We have reviewed your recommendation letter request.
+
+📄 Purpose: {letter.purpose}
+📅 Reviewed: {timezone.now().strftime("%B %d, %Y")}
+
+{f"Note: {admin_notes}" if admin_notes else ""}
+
+Best regards,
+Aarambha Foundation Team'''
+                    
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[letter.user.email],
+                        fail_silently=True,
+                    )
+                except:
+                    pass
+                
+                messages.success(request, 'Recommendation letter rejected successfully!')
+                
+            except Exception as e:
+                messages.error(request, f'Error rejecting letter: {str(e)}')
+        
+        return redirect('admin_recommendation_letters')
+    
+    letters = RecommendationLetter.objects.all().select_related('user').order_by('-created_at')
+    
+    letters_json = []
+    for letter in letters:
+        # Get user statistics
+        from events.models import EventParticipation
+        from tasks.models import TaskSubmission
+        
+        events_attended = EventParticipation.objects.filter(user=letter.user, attended=True).count()
+        tasks_submitted = TaskSubmission.objects.filter(user=letter.user).count()
+        
+        letters_json.append({
+            'id': letter.id,
+            'user_name': letter.user.get_full_name() or letter.user.email,
+            'user_email': letter.user.email,
+            'user_type': letter.user.user_type,
+            'user_branch': str(getattr(letter.user, 'branch', None)) if getattr(letter.user, 'branch', None) else None,
+            'date_joined': letter.user.date_joined.isoformat(),
+            'events_attended': events_attended,
+            'tasks_submitted': tasks_submitted,
+            'purpose': letter.purpose,
+            'description': letter.description,
+            'status': letter.status,
+            'admin_notes': letter.admin_notes or '',
+            'letter_content': letter.letter_content or '',
+            'signed_letter': letter.signed_letter.url if letter.signed_letter else None,
+            'created_at': letter.created_at.isoformat(),
+        })
+    
+    context = {
+        'letters': json.dumps(letters_json)
+    }
+    return render(request, 'admin/recommendation_letters.html', context)

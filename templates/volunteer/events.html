@@ -1,0 +1,558 @@
+{% extends 'volunteer/base.html' %}
+
+{% block title %}Events{% endblock %}
+{% block page_title %}Events{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-xl font-semibold text-white">Events & Meetings</h2>
+        <p class="text-slate-400">View and participate in upcoming events</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card rounded-lg p-4">
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <input type="text" id="searchInput" placeholder="Search events..." 
+                       class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <select id="eventTypeFilter" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">All Event Types</option>
+                    <option value="meeting">Meeting</option>
+                    <option value="training">Training</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="conference">Conference</option>
+                    <option value="social">Social Event</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div>
+                <button onclick="clearFilters()" class="w-full px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg">
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <hr class="border-slate-700">
+
+    <!-- Events List -->
+    <div id="eventsList" class="grid gap-6">
+        {% for event in events %}
+        <div class="event-card card rounded-lg p-6" data-title="{{ event.title|lower }}" data-description="{{ event.description|lower }}" data-type="{{ event.event_type }}">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <h3 class="text-lg font-semibold text-white">{{ event.title }}</h3>
+                        <span class="badge bg-blue-900 text-blue-300">{{ event.get_event_type_display }}</span>
+                        <span class="badge bg-purple-900 text-purple-300">{{ event.get_venue_type_display }}</span>
+                    </div>
+                    <p class="text-slate-300 mb-3">{{ event.description }}</p>
+                    
+                    <!-- Event Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ event.start_datetime|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ event.start_datetime|time:"H:i" }} - {{ event.end_datetime|time:"H:i" }}</span>
+                        </div>
+                        
+                        {% if event.venue_type == 'physical' %}
+                            {% if event.venue_name %}
+                            <div class="flex items-center gap-2 text-slate-400">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ event.venue_name }}</span>
+                            </div>
+                            {% endif %}
+                            {% if event.venue_address %}
+                            <div class="flex items-center gap-2 text-slate-400">
+                                <i class="fas fa-location-dot"></i>
+                                <span>{{ event.venue_address|truncatechars:50 }}</span>
+                            </div>
+                            {% endif %}
+                        {% elif event.venue_type == 'online' %}
+                            {% if event.meeting_link %}
+                            <div class="flex items-center gap-2 text-slate-400">
+                                <i class="fas fa-video"></i>
+                                <span>Online Meeting</span>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                        
+                        {% if event.max_participants %}
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="fas fa-users"></i>
+                            <span>Max {{ event.max_participants }} participants</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if event.contact_person %}
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="fas fa-user"></i>
+                            <span>Contact: {{ event.contact_person }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if event.contact_phone %}
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="fas fa-phone"></i>
+                            <span>{{ event.contact_phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Participation Status & Actions -->
+                <div class="ml-6 text-right">
+                    {% if event.user_participation %}
+                        {% if event.user_participation.status == 'applied' %}
+                            <span class="badge bg-yellow-900 text-yellow-300 mb-2">Applied</span>
+                        {% elif event.user_participation.status == 'approved' %}
+                            <span class="badge bg-green-900 text-green-300 mb-2">Approved</span>
+                        {% elif event.user_participation.status == 'rejected' %}
+                            <span class="badge bg-red-900 text-red-300 mb-2">Rejected</span>
+                        {% elif event.user_participation.status == 'attended' %}
+                            <span class="badge bg-blue-900 text-blue-300 mb-2">Attended</span>
+                        {% elif event.user_participation.status == 'absent' %}
+                            <span class="badge bg-gray-900 text-gray-300 mb-2">Absent</span>
+                        {% endif %}
+                        
+                        {% if event.user_participation.attended %}
+                            <span class="badge bg-green-900 text-green-300 mb-2 ml-2">Present</span>
+                            <div class="mt-2 flex gap-2">
+                                <button onclick="openCertificateModal({{ event.id }}, '{{ event.title|escapejs }}', '{{ user.get_full_name|default:user.email|escapejs }}', '{{ event.start_datetime|date:"F d, Y" }}', '{{ event.venue_name|default:"" }}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-certificate"></i> Certificate
+                                </button>
+                                {% if event.user_participation.review %}
+                                    <button onclick="openReviewModal({{ event.id }}, '{{ event.title|escapejs }}', {{ event.user_participation.rating|default:5 }}, '{{ event.user_participation.review|escapejs }}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-edit"></i> Edit Review
+                                    </button>
+                                {% else %}
+                                    <button onclick="openReviewModal({{ event.id }}, '{{ event.title|escapejs }}')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-star"></i> Write Review
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if event.user_participation.status == 'approved' and event.venue_type == 'online' and event.meeting_link %}
+                        <div class="mt-2">
+                            <a href="{{ event.meeting_link }}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-video"></i> Join Meeting
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if event.user_participation.status == 'approved' and event.venue_type == 'online' and event.meeting_id %}
+                        <div class="mt-2 text-xs text-slate-400">
+                            <div>Meeting ID: {{ event.meeting_id }}</div>
+                            {% if event.meeting_password %}
+                            <div>Password: {{ event.meeting_password }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        {% if event.requires_application %}
+                            <button onclick="openApplicationModal({{ event.id }}, '{{ event.title|escapejs }}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm">
+                                <i class="fas fa-paper-plane"></i> Apply
+                            </button>
+                        {% else %}
+                            <form method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="apply_event">
+                                <input type="hidden" name="event_id" value="{{ event.id }}">
+                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+                                    <i class="fas fa-check"></i> Register
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Additional Info -->
+            {% if event.user_participation and event.user_participation.admin_notes %}
+            <div class="mt-4 p-3 bg-slate-700 rounded-lg">
+                <div class="text-sm font-medium text-slate-300 mb-1">Admin Notes:</div>
+                <div class="text-sm text-slate-400">{{ event.user_participation.admin_notes }}</div>
+            </div>
+            {% endif %}
+            
+            <!-- Reviews Section -->
+            {% if event.review_count %}
+            <div class="mt-4 p-3 bg-slate-700/30 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="flex text-yellow-400">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= event.avg_rating|floatformat:0|add:0 %}
+                                    ★
+                                {% else %}
+                                    <span class="text-slate-600">★</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="text-sm text-slate-300">{{ event.avg_rating|floatformat:1 }}/5 ({{ event.review_count }} review{{ event.review_count|pluralize }})</span>
+                    </div>
+                    <a href="/events/{{ event.id }}/reviews/" class="text-blue-400 hover:text-blue-300 text-sm hover:underline">
+                        View All Reviews
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="no-events-msg card rounded-lg p-8 text-center">
+            <i class="fas fa-calendar-times text-4xl text-slate-500 mb-4"></i>
+            <h3 class="text-lg font-medium text-slate-300 mb-2">No Events Available</h3>
+            <p class="text-slate-400">There are no events assigned to you at the moment.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Application Modal -->
+<div id="applicationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="modalTitle" class="text-lg font-semibold text-white">Apply for Event</h3>
+            <button onclick="closeApplicationModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="applicationForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="apply_event">
+            <input type="hidden" name="event_id" id="applicationEventId">
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Application Message (Optional)</label>
+                <textarea name="application_message" rows="4" placeholder="Why do you want to participate in this event?" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeApplicationModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" id="submitApplicationBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg flex items-center gap-2">
+                    <span id="submitBtnText">Submit Application</span>
+                    <div id="submitLoader" class="hidden animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="reviewModalTitle" class="text-lg font-semibold text-white">Write Review</h3>
+            <button onclick="closeReviewModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="reviewForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="submit_review">
+            <input type="hidden" name="event_id" id="reviewEventId">
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Rating</label>
+                <div class="flex gap-1" id="starRating">
+                    <button type="button" class="star text-2xl text-gray-400 hover:text-yellow-400" data-rating="1">★</button>
+                    <button type="button" class="star text-2xl text-gray-400 hover:text-yellow-400" data-rating="2">★</button>
+                    <button type="button" class="star text-2xl text-gray-400 hover:text-yellow-400" data-rating="3">★</button>
+                    <button type="button" class="star text-2xl text-gray-400 hover:text-yellow-400" data-rating="4">★</button>
+                    <button type="button" class="star text-2xl text-gray-400 hover:text-yellow-400" data-rating="5">★</button>
+                </div>
+                <input type="hidden" name="rating" id="selectedRating" value="5">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Review (Optional)</label>
+                <textarea name="review" rows="4" placeholder="Share your experience..." class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg">
+                    Submit Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Certificate Modal -->
+<div id="certificateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto" style="width: 900px; height: 650px;">
+        <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-600 to-purple-600">
+            <h3 class="text-xl font-semibold text-white">🏆 Event Certificate</h3>
+            <div class="flex gap-3">
+                <button onclick="printCertificate()" class="bg-white hover:bg-gray-100 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 shadow-md hover:shadow-lg">
+                    <i class="fas fa-print"></i> Print Certificate
+                </button>
+                <button onclick="closeCertificateModal()" class="text-white hover:text-gray-200 p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 cursor-pointer">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="certificateContent" class="p-4" style="min-height: 580px;">
+            <!-- Certificate content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+function openCertificateModal(eventId, eventTitle, userName, eventDate, venueName) {
+    const certificateContent = `
+        <div style="position: relative; width: 100%; height: 580px; background: white; margin: 10px; border: 8px solid #2c3e50; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.3); overflow: hidden;">
+            <div style="position: relative; width: 100%; height: 100%; background: linear-gradient(45deg, #f8f9fa 0%, #ffffff 50%, #f8f9fa 100%); border: 3px solid #34495e; border-radius: 8px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+                
+                <!-- Watermark -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(52, 73, 94, 0.03); font-weight: bold; z-index: 1; white-space: nowrap; font-family: Georgia, serif;">AARAMBHA FOUNDATION</div>
+                
+                <!-- Decorative corners -->
+                <div style="position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; border: 3px solid #3498db; border-right: none; border-bottom: none;"></div>
+                <div style="position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border: 3px solid #3498db; border-left: none; border-bottom: none;"></div>
+                <div style="position: absolute; bottom: 20px; left: 20px; width: 40px; height: 40px; border: 3px solid #3498db; border-right: none; border-top: none;"></div>
+                <div style="position: absolute; bottom: 20px; right: 20px; width: 40px; height: 40px; border: 3px solid #3498db; border-left: none; border-top: none;"></div>
+                
+                <!-- Header -->
+                <div style="text-align: center; z-index: 2; position: relative;">
+                    <img src="/static/website/images/logo.png" alt="Aarambha Foundation" style="width: 60px; height: 60px; margin: 0 auto 15px; display: block; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); object-fit: contain;" />
+                    <div style="font-size: 24px; color: #2c3e50; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; font-family: Georgia, serif;">Aarambha Foundation</div>
+                    <div style="font-size: 18px; color: #34495e; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; font-family: Georgia, serif;">Certificate of Participation</div>
+                </div>
+                
+                <!-- Content -->
+                <div style="text-align: center; z-index: 2; position: relative; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; max-width: 100%;">
+                    <div style="font-size: 16px; color: #7f8c8d; margin-bottom: 15px; font-family: Georgia, serif;">This is to certify that</div>
+                    <div style="font-size: 30px; color: #2c3e50; font-weight: bold; margin-bottom: 20px; text-decoration: underline; text-decoration-color: #3498db; text-underline-offset: 8px; font-family: Georgia, serif; word-wrap: break-word; max-width: 100%;">${userName}</div>
+                    <div style="font-size: 14px; color: #34495e; line-height: 1.5; margin-bottom: 20px; font-family: Georgia, serif; max-width: 100%; word-wrap: break-word;">
+                        has successfully participated in
+                        <div style="font-size: 18px; color: #2980b9; font-weight: bold; margin: 10px 0; word-wrap: break-word;">${eventTitle}</div>
+                        held on ${eventDate}
+                        ${venueName ? '<br/>at ' + venueName : ''}
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div style="display: flex; justify-content: space-between; align-items: end; z-index: 2; position: relative; margin-top: 20px;">
+                    <div style="text-align: center; flex: 1;">
+                        <div style="width: 150px; height: 60px; margin: 0 auto 5px; background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMTUwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTAgNDBDMjAgMzUgMzAgMzAgNDAgMzVDNTAgNDAgNjAgMzUgNzAgNDBDODAgNDUgOTAgNDAgMTAwIDM1QzExMCAzMCAxMjAgMzUgMTMwIDQwQzE0MCA0NSAxNTAgNDAiIHN0cm9rZT0iIzM0NDk1ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+Cjx0ZXh0IHg9Ijc1IiB5PSIyNSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjMzQ0OTVlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TLiBTaGFybWE8L3RleHQ+CjwvdGV4dD4KPC9zdmc+') no-repeat center; background-size: contain;"></div>
+                        <div style="font-size: 12px; color: #7f8c8d; font-family: Georgia, serif;">Authorized Signature</div>
+                    </div>
+                    
+                    <div style="text-align: right; font-size: 10px; color: #95a5a6; font-family: Georgia, serif; line-height: 1.3; max-width: 200px;">
+                        <div style="font-weight: bold; color: #34495e; margin-bottom: 3px; font-size: 11px;">Certificate ID: AF-${eventId}-${Math.random().toString(36).substr(2, 6).toUpperCase()}</div>
+                        <div>Issued: ${new Date().toLocaleDateString()}</div>
+                        <div>Verified by: Aarambha Foundation</div>
+                        <div style="margin-top: 5px; border-top: 1px solid #ecf0f1; padding-top: 3px;">
+                            <div>Basundhara, Kathmandu, Nepal</div>
+                            <div>+977 (984)346-7402</div>
+                            <div>we.aarambha@gmail.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('certificateContent').innerHTML = certificateContent;
+    document.getElementById('certificateModal').classList.remove('hidden');
+}
+
+function closeCertificateModal() {
+    document.getElementById('certificateModal').classList.add('hidden');
+}
+
+function printCertificate() {
+    const certificateContent = document.getElementById('certificateContent').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Certificate</title>
+            <style>
+                @page { size: A4 landscape; margin: 0.5in; }
+                body { margin: 0; padding: 0; font-family: Georgia, serif; width: 100%; height: 100vh; }
+                @media print { 
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .certificate-container { width: 100% !important; height: 100vh !important; margin: 0 !important; }
+                }
+                .certificate-container { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; }
+            </style>
+        </head>
+        <body>
+            <div class="certificate-container">
+                ${certificateContent.replace('width: 100%; height: 580px;', 'width: 10in; height: 6.5in;').replace('margin: 10px;', 'margin: 0;')}
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Close modal when clicking outside
+document.getElementById('certificateModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCertificateModal();
+    }
+});
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const eventType = document.getElementById('eventTypeFilter').value;
+    const eventCards = document.querySelectorAll('.event-card');
+    let visibleCount = 0;
+    
+    eventCards.forEach(card => {
+        const title = card.dataset.title;
+        const description = card.dataset.description;
+        const type = card.dataset.type;
+        
+        const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+        const matchesType = !eventType || type === eventType;
+        
+        if (matchesSearch && matchesType) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Show/hide no events message
+    const noEventsMsg = document.querySelector('.no-events-msg');
+    if (noEventsMsg) {
+        noEventsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('eventTypeFilter').value = '';
+    applyFilters();
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('eventTypeFilter').addEventListener('change', applyFilters);
+    
+    document.getElementById('applicationForm').addEventListener('submit', function() {
+        const submitBtn = document.getElementById('submitApplicationBtn');
+        const submitText = document.getElementById('submitBtnText');
+        const loader = document.getElementById('submitLoader');
+        
+        submitBtn.disabled = true;
+        submitText.textContent = 'Submitting...';
+        loader.classList.remove('hidden');
+    });
+});
+
+function openReviewModal(eventId, eventTitle, existingRating = 5, existingReview = '') {
+    document.getElementById('reviewModalTitle').textContent = existingReview ? `Edit Review: ${eventTitle}` : `Write Review: ${eventTitle}`;
+    document.getElementById('reviewEventId').value = eventId;
+    
+    // Pre-populate existing review data
+    if (existingReview) {
+        document.querySelector('textarea[name="review"]').value = existingReview;
+        document.getElementById('selectedRating').value = existingRating;
+        
+        // Update star display
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((star, index) => {
+            if (index < existingRating) {
+                star.classList.remove('text-gray-400');
+                star.classList.add('text-yellow-400');
+            } else {
+                star.classList.remove('text-yellow-400');
+                star.classList.add('text-gray-400');
+            }
+        });
+    }
+    
+    document.getElementById('reviewModal').classList.remove('hidden');
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    document.getElementById('reviewForm').reset();
+    // Reset stars
+    document.querySelectorAll('.star').forEach(star => {
+        star.classList.remove('text-yellow-400');
+        star.classList.add('text-gray-400');
+    });
+}
+
+// Star rating system
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('eventTypeFilter').addEventListener('change', applyFilters);
+    
+    document.getElementById('applicationForm').addEventListener('submit', function() {
+        const submitBtn = document.getElementById('submitApplicationBtn');
+        const submitText = document.getElementById('submitBtnText');
+        const loader = document.getElementById('submitLoader');
+        
+        submitBtn.disabled = true;
+        submitText.textContent = 'Submitting...';
+        loader.classList.remove('hidden');
+    });
+    
+    const stars = document.querySelectorAll('.star');
+    
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            document.getElementById('selectedRating').value = rating;
+            
+            // Update star display
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.remove('text-gray-400');
+                    s.classList.add('text-yellow-400');
+                } else {
+                    s.classList.remove('text-yellow-400');
+                    s.classList.add('text-gray-400');
+                }
+            });
+        });
+    });
+});
+
+function openApplicationModal(eventId, eventTitle) {
+    document.getElementById('modalTitle').textContent = `Apply for: ${eventTitle}`;
+    document.getElementById('applicationEventId').value = eventId;
+    document.getElementById('applicationModal').classList.remove('hidden');
+}
+
+function closeApplicationModal() {
+    document.getElementById('applicationModal').classList.add('hidden');
+    document.getElementById('applicationForm').reset();
+    // Reset button state
+    document.getElementById('submitBtnText').textContent = 'Submit Application';
+    document.getElementById('submitLoader').classList.add('hidden');
+    document.getElementById('submitApplicationBtn').disabled = false;
+}
+
+// Close modal when clicking outside
+document.getElementById('applicationModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeApplicationModal();
+    }
+});
+</script>
+{% endblock %}

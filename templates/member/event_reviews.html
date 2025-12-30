@@ -1,0 +1,72 @@
+{% extends 'member/base.html' %}
+
+{% block title %}Event Reviews - {{ event.title }}{% endblock %}
+{% block page_title %}Event Reviews{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h2 class="text-xl font-semibold text-white">{{ event.title }}</h2>
+        <p class="text-slate-400">User reviews and ratings</p>
+    </div>
+    <a href="/member/events/" class="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i> Back to Events
+    </a>
+</div>
+
+<!-- Event Info -->
+<div class="card rounded-lg p-4 mb-6">
+    <div class="grid grid-cols-3 gap-4 text-sm">
+        <div>
+            <span class="text-slate-400">Date:</span>
+            <span class="text-white ml-2">{{ event.start_datetime|date:"M d, Y" }}</span>
+        </div>
+        <div>
+            <span class="text-slate-400">Type:</span>
+            <span class="text-white ml-2">{{ event.get_event_type_display }}</span>
+        </div>
+        <div>
+            <span class="text-slate-400">Reviews:</span>
+            <span class="text-white ml-2">{{ reviews.count }} review{{ reviews.count|pluralize }}</span>
+        </div>
+    </div>
+</div>
+
+<hr class="border-slate-700 mb-6">
+
+<!-- Reviews List -->
+<div class="space-y-4">
+    {% for review in reviews %}
+    <div class="card rounded-lg p-6">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h3 class="text-lg font-semibold text-white">{{ review.user.get_full_name|default:review.user.email }}</h3>
+                <p class="text-slate-400 text-sm">{{ review.user.user_type|capfirst }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="flex text-yellow-400 text-lg">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= review.rating %}
+                            ★
+                        {% else %}
+                            <span class="text-slate-600">★</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="text-slate-400 text-sm">{{ review.rating }}/5</span>
+            </div>
+        </div>
+        
+        <div class="bg-slate-700/30 rounded-lg p-4">
+            <p class="text-slate-300 leading-relaxed">{{ review.review }}</p>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card rounded-lg p-8 text-center">
+        <i class="fas fa-star text-4xl text-slate-500 mb-4"></i>
+        <h3 class="text-lg font-medium text-slate-300 mb-2">No Reviews Yet</h3>
+        <p class="text-slate-400">This event hasn't received any reviews from participants.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

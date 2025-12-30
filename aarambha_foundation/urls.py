@@ -28,7 +28,11 @@ urlpatterns = [
     path('api/notices/', include('notices.urls')),
     path('api/materials/', include('materials.urls')),
     path('api/tasks/', include('tasks.urls')),
+    path('api/payments/', include('payments.urls')),
     path('api/core/', include('core.api_urls')),
+    path('api/events/', include('events.api_urls')),
+    path('messaging/', include('messaging.urls')),
+    path('', include('events.urls')),
     path('', include('core.urls')),
 ]
 

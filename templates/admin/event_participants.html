@@ -1,0 +1,352 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Event Participants - {{ event.title }}{% endblock %}
+{% block page_title %}Event Participants{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h2 class="text-xl font-semibold text-white">{{ event.title }}</h2>
+        <p class="text-slate-400">Manage event participants and applications</p>
+    </div>
+    <a href="/admin/events/" class="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i> Back to Events
+    </a>
+</div>
+
+<!-- Event Info -->
+<div class="card rounded-lg p-4 mb-6">
+    <div class="grid grid-cols-3 gap-4 text-sm">
+        <div>
+            <span class="text-slate-400">Date:</span>
+            <span class="text-white ml-2">{{ event.start_datetime|date:"M d, Y" }}</span>
+        </div>
+        <div>
+            <span class="text-slate-400">Type:</span>
+            <span class="text-white ml-2">{{ event.get_event_type_display }}</span>
+        </div>
+        <div>
+            <span class="text-slate-400">Status:</span>
+            <span class="badge {{ event.is_active|yesno:'bg-emerald-900/30 text-emerald-300,bg-slate-700 text-slate-400' }} ml-2">
+                {{ event.is_active|yesno:"Active,Inactive" }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<hr class="border-slate-700 mb-6">
+
+<!-- Participants Table -->
+<div class="card rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-800/50 text-xs text-slate-400">
+                <tr>
+                    <th class="text-left p-4">Participant</th>
+                    <th class="text-left p-4">Email</th>
+                    <th class="text-left p-4">Type</th>
+                    <th class="text-left p-4">Status</th>
+                    <th class="text-left p-4">Applied Date</th>
+                    <th class="text-left p-4">Attendance</th>
+                    <th class="text-left p-4">Review</th>
+                    <th class="text-left p-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="participantsTableBody" class="divide-y divide-slate-700">
+                <!-- Participants will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Update Participant Status</h3>
+            <button onclick="closeStatusModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="statusForm">
+            <input type="hidden" id="participantId">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Status</label>
+                <select id="participantStatus" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    <option value="applied">Applied</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="attended">Attended</option>
+                    <option value="absent">Absent</option>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Admin Notes</label>
+                <textarea id="adminNotes" rows="3" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeStatusModal()" class="px-4 py-2 text-slate-400 hover:text-white">Cancel</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                    Update Status
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- User Detail Modal -->
+<div id="userDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">User Details</h3>
+            <button onclick="closeUserDetailModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Full Name</label>
+                    <p id="detail-user-name" class="text-white"></p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Email</label>
+                    <p id="detail-user-email" class="text-slate-300"></p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">User Type</label>
+                    <p id="detail-user-type" class="text-slate-300 capitalize"></p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Application Message</label>
+                    <div id="detail-application-message" class="bg-slate-700/50 rounded-lg p-3 text-slate-300 text-sm"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Applied Date</label>
+                    <p id="detail-applied-date" class="text-slate-300"></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end mt-6">
+            <button onclick="closeUserDetailModal()" class="px-4 py-2 text-slate-400 hover:text-white">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">User Review</h3>
+            <button onclick="closeReviewModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-1">Reviewer</label>
+                <p id="review-user-name" class="text-white"></p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-1">Rating</label>
+                <div id="review-stars" class="flex text-yellow-400 text-lg"></div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-1">Review</label>
+                <div id="review-text" class="bg-slate-700/50 rounded-lg p-3 text-slate-300 text-sm"></div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end mt-6">
+            <button onclick="closeReviewModal()" class="px-4 py-2 text-slate-400 hover:text-white">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let participants = {{ participants|safe }};
+
+// Load participants on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadParticipants();
+});
+
+function loadParticipants() {
+    const tbody = document.getElementById('participantsTableBody');
+    tbody.innerHTML = '';
+    
+    if (participants.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="p-8 text-center text-slate-400">
+                    <i class="fas fa-users text-4xl mb-4"></i>
+                    <p>No participants yet.</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    participants.forEach(participant => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-800/30 transition';
+        
+        const statusColors = {
+            'applied': 'bg-yellow-900/30 text-yellow-300',
+            'approved': 'bg-green-900/30 text-green-300',
+            'rejected': 'bg-red-900/30 text-red-300',
+            'attended': 'bg-blue-900/30 text-blue-300',
+            'absent': 'bg-gray-900/30 text-gray-300'
+        };
+        
+        row.innerHTML = `
+            <td class="p-4 font-medium text-white">${participant.user_name}</td>
+            <td class="p-4 text-slate-300">${participant.user_email}</td>
+            <td class="p-4 text-slate-300 capitalize">${participant.user_type}</td>
+            <td class="p-4">
+                <span class="badge ${statusColors[participant.status] || 'bg-slate-700 text-slate-400'}">
+                    ${participant.status.charAt(0).toUpperCase() + participant.status.slice(1)}
+                </span>
+            </td>
+            <td class="p-4 text-slate-300">${new Date(participant.applied_at).toLocaleDateString()}</td>
+            <td class="p-4">
+                <span class="badge ${participant.attended ? 'bg-green-900/30 text-green-300' : 'bg-slate-700 text-slate-400'}">
+                    ${participant.attended ? 'Present' : 'Not Marked'}
+                </span>
+            </td>
+            <td class="p-4">
+                ${participant.review ? `
+                    <div class="flex items-center gap-2">
+                        <div class="flex text-yellow-400">
+                            ${'★'.repeat(participant.rating || 0)}<span class="text-slate-600">${'★'.repeat(5 - (participant.rating || 0))}</span>
+                        </div>
+                        <button onclick="viewReview('${participant.user_name}', ${participant.rating}, '${participant.review.replace(/'/g, "\\'")}')"
+                                class="text-blue-400 hover:text-blue-300 text-sm" title="View Review">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                ` : '<span class="text-slate-500 text-sm">No review</span>'}
+            </td>
+            <td class="p-4">
+                <div class="flex gap-2">
+                    <button onclick="viewUserDetail(${participant.id})" class="text-blue-400 hover:text-blue-300" title="View User Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="openStatusModal(${participant.id}, '${participant.status}', '${participant.admin_notes}')" 
+                            class="text-indigo-400 hover:text-indigo-300" title="Update Status">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="toggleAttendance(${participant.id}, ${participant.attended})" 
+                            class="${participant.attended ? 'text-green-400 hover:text-green-300' : 'text-gray-400 hover:text-gray-300'}" 
+                            title="${participant.attended ? 'Mark Absent' : 'Mark Present'}">
+                        <i class="fas fa-${participant.attended ? 'user-check' : 'user-plus'}"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function openStatusModal(participantId, currentStatus, adminNotes) {
+    document.getElementById('participantId').value = participantId;
+    document.getElementById('participantStatus').value = currentStatus;
+    document.getElementById('adminNotes').value = adminNotes;
+    document.getElementById('statusModal').classList.remove('hidden');
+}
+
+function closeStatusModal() {
+    document.getElementById('statusModal').classList.add('hidden');
+}
+
+function viewUserDetail(participantId) {
+    const participant = participants.find(p => p.id === participantId);
+    if (!participant) return;
+    
+    document.getElementById('detail-user-name').textContent = participant.user_name;
+    document.getElementById('detail-user-email').textContent = participant.user_email;
+    document.getElementById('detail-user-type').textContent = participant.user_type;
+    document.getElementById('detail-application-message').textContent = participant.application_message || 'No message provided';
+    document.getElementById('detail-applied-date').textContent = new Date(participant.applied_at).toLocaleString();
+    
+    document.getElementById('userDetailModal').classList.remove('hidden');
+}
+
+function closeUserDetailModal() {
+    document.getElementById('userDetailModal').classList.add('hidden');
+}
+
+function viewReview(userName, rating, reviewText) {
+    document.getElementById('review-user-name').textContent = userName;
+    document.getElementById('review-stars').innerHTML = '★'.repeat(rating) + '<span class="text-slate-600">' + '★'.repeat(5 - rating) + '</span>';
+    document.getElementById('review-text').textContent = reviewText || 'No review text provided';
+    document.getElementById('reviewModal').classList.remove('hidden');
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+}
+
+function toggleAttendance(participantId, currentAttendance) {
+    const participant = participants.find(p => p.id === participantId);
+    if (!participant) return;
+    
+    // Make API call to toggle attendance
+    fetch(`/admin/events/attendance/${participantId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update local data
+            participant.attended = data.attended;
+            
+            // Refresh the table
+            loadParticipants();
+            
+            // Show success message
+            alert(data.message + (data.attended ? ' and notification sent!' : ''));
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update attendance');
+    });
+}
+
+// Form submission (placeholder - would need actual backend endpoint)
+document.getElementById('statusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('Status update functionality would be implemented here');
+    closeStatusModal();
+});
+</script>
+{% endblock %}

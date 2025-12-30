@@ -28,7 +28,7 @@
             <a href="/member/dashboard/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
                 <i class="fas fa-home w-4"></i> Dashboard
             </a>
-            <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+            <a href="/member/profile/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
                 <i class="fas fa-user w-4"></i> My Profile
             </a>
             <a href="/member/tasks/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
@@ -40,8 +40,17 @@
             <a href="/member/materials/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
                 <i class="fas fa-book w-4"></i> Reading Materials
             </a>
-            <a href="#" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+            <a href="/member/events/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
                 <i class="fas fa-calendar w-4"></i> Events
+            </a>
+            <a href="/member/recommendation-letters/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-file-alt w-4"></i> Recommendation Letters
+            </a>
+            <a href="{% url 'member_list' %}" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-users w-4"></i> Members
+            </a>
+            <a href="{% url 'conversations' %}" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
+                <i class="fas fa-comments w-4"></i> Messages
             </a>
         </nav>
         <div class="p-3 border-t border-slate-700 space-y-2">

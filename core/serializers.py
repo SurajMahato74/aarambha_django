@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Event, Partner, ContactInfo, Award, OurWork, SchoolDropoutReport
+from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Partner, ContactInfo, Award, OurWork, SchoolDropoutReport
 
 class HeroSectionSerializer(serializers.ModelSerializer):
     background_image = serializers.ImageField(required=False, allow_null=True)
@@ -118,25 +118,6 @@ class WhoWeAreSerializer(serializers.ModelSerializer):
 
         return representation
 
-
-class EventSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(required=False, allow_null=True)
-    
-    class Meta:
-        model = Event
-        fields = ['id', 'title', 'description', 'image', 'event_date', 'location', 'order', 'is_active', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        request = self.context.get('request')
-        
-        if instance.image and request:
-            representation['image'] = request.build_absolute_uri(instance.image.url)
-        else:
-            representation['image'] = None
-
-        return representation
 
 class PartnerSerializer(serializers.ModelSerializer):
     logo = serializers.ImageField(required=True)

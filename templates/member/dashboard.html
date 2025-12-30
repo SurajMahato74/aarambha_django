@@ -6,37 +6,46 @@
 {% block header_title %}Member Dashboard{% endblock %}
 
 {% block content %}
-<div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-8 mb-6 text-white">
-    <h2 class="text-3xl font-bold mb-2">Welcome, <span id="welcomeName">Member</span>!</h2>
-    <p class="text-indigo-100">You are now a member of Aarambha Foundation. Let's make a difference together!</p>
+<div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-4 mb-6 text-white">
+    <h2 class="text-xl font-bold mb-1">Welcome, <span id="welcomeName">Member</span>!</h2>
+    <p class="text-indigo-100 text-sm">Let's make a difference together!</p>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-    <div class="bg-slate-800 p-6 rounded-lg">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-slate-400 text-sm">My Events</p>
-                <p class="text-3xl font-bold text-white">0</p>
-            </div>
-            <i class="fas fa-calendar text-4xl text-blue-500"></i>
-        </div>
-    </div>
-    <div class="bg-slate-800 p-6 rounded-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/member/tasks/'">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-slate-400 text-sm">My Tasks</p>
-                <p class="text-3xl font-bold text-white">0</p>
+                <p class="text-2xl font-bold text-white" id="taskCount">0</p>
             </div>
-            <i class="fas fa-tasks text-4xl text-green-500"></i>
+            <i class="fas fa-tasks text-3xl text-green-500"></i>
         </div>
     </div>
-    <div class="bg-slate-800 p-6 rounded-lg">
+    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/member/notifications/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">Contributions</p>
-                <p class="text-3xl font-bold text-white">0</p>
+                <p class="text-slate-400 text-sm">Notices</p>
+                <p class="text-2xl font-bold text-white" id="noticeCount">0</p>
             </div>
-            <i class="fas fa-heart text-4xl text-red-500"></i>
+            <i class="fas fa-bell text-3xl text-yellow-500"></i>
+        </div>
+    </div>
+    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/messaging/conversations/'">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-sm">Messages</p>
+                <p class="text-2xl font-bold text-white" id="messageCount">0</p>
+            </div>
+            <i class="fas fa-comments text-3xl text-blue-500"></i>
+        </div>
+    </div>
+    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/events/'">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-sm">My Events</p>
+                <p class="text-2xl font-bold text-white" id="eventCount">0</p>
+            </div>
+            <i class="fas fa-calendar text-3xl text-purple-500"></i>
         </div>
     </div>
 </div>
@@ -59,8 +68,71 @@
     if (!user || user.user_type !== 'member') window.location.href = '/';
     document.getElementById('welcomeName').textContent = user.first_name || user.username || 'Member';
     
-    // Load notices on page load
-    loadNotices();
+    // Load all data on page load
+    loadDashboardData();
+    
+    async function loadDashboardData() {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+        
+        // Load notices
+        loadNotices();
+        
+        // Load task count
+        loadTaskCount(token);
+        
+        // Load message count
+        loadMessageCount(token);
+        
+        // Load event count
+        loadEventCount(token);
+    }
+    
+    async function loadTaskCount(token) {
+        try {
+            const response = await fetch('/api/tasks/my-tasks/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const tasks = data.results || data || [];
+                document.getElementById('taskCount').textContent = tasks.length;
+            }
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+        }
+    }
+    
+    async function loadMessageCount(token) {
+        try {
+            const response = await fetch('/messaging/api/conversations/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const conversations = data.conversations || [];
+                const unreadCount = conversations.filter(c => c.unread_count > 0).length;
+                document.getElementById('messageCount').textContent = unreadCount;
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+        }
+    }
+    
+    async function loadEventCount(token) {
+        try {
+            const response = await fetch('/api/events/my-events/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const events = data.results || data || [];
+                document.getElementById('eventCount').textContent = events.length;
+            }
+        } catch (error) {
+            console.error('Error loading events:', error);
+        }
+    }
     
     async function loadNotices() {
         try {
@@ -76,6 +148,10 @@
             const data = await response.json();
             const notificationsList = data.notifications || data.results || data || [];
             const container = document.getElementById('noticesContainer');
+            
+            // Update notice count in card
+            const unreadCount = notificationsList.filter(n => !n.is_read).length;
+            document.getElementById('noticeCount').textContent = unreadCount;
             
             if (notificationsList.length === 0) {
                 container.innerHTML = `

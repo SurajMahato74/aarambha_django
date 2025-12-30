@@ -4,8 +4,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Q
-from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Event, Partner, ContactInfo, Award, OurWork, SchoolDropoutReport
-from .serializers import HeroSectionSerializer, SupportCardSerializer, WhoWeAreSerializer, GrowingOurImpactSerializer, StatisticsSerializer, EventSerializer, PartnerSerializer, ContactInfoSerializer, AwardSerializer, OurWorkSerializer, SchoolDropoutReportSerializer
+from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Partner, ContactInfo, Award, OurWork, SchoolDropoutReport
+from .serializers import HeroSectionSerializer, SupportCardSerializer, WhoWeAreSerializer, GrowingOurImpactSerializer, StatisticsSerializer, PartnerSerializer, ContactInfoSerializer, AwardSerializer, OurWorkSerializer, SchoolDropoutReportSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -435,91 +435,6 @@ def support_card_toggle_active(request, pk):
     except SupportCard.DoesNotExist:
         return Response({'error': 'Support card not found'}, status=status.HTTP_404_NOT_FOUND)
 
-# Event API Views
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def event_list(request):
-    """List all active events (public endpoint)"""
-    events = Event.get_active_events()
-    serializer = EventSerializer(events, many=True, context={'request': request})
-    return Response(serializer.data)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def event_list_admin(request):
-    """List all events for admin"""
-    events = Event.objects.all().order_by('order', '-created_at')
-    serializer = EventSerializer(events, many=True, context={'request': request})
-    return Response(serializer.data)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def event_detail(request, pk):
-    """Get a specific event"""
-    try:
-        event = Event.objects.get(pk=pk)
-        serializer = EventSerializer(event, context={'request': request})
-        return Response(serializer.data)
-    except Event.DoesNotExist:
-        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])
-def event_create(request):
-    """Create a new event"""
-    serializer = EventSerializer(data=request.data, context={'request': request})
-    if serializer.is_valid():
-        event = serializer.save()
-        return Response(
-            EventSerializer(event, context={'request': request}).data,
-            status=status.HTTP_201_CREATED
-        )
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['PATCH', 'PUT'])
-@permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])
-def event_update(request, pk):
-    """Update an event"""
-    try:
-        event = Event.objects.get(pk=pk)
-    except Event.DoesNotExist:
-        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    serializer = EventSerializer(
-        event, 
-        data=request.data, 
-        partial=True,
-        context={'request': request}
-    )
-    if serializer.is_valid():
-        event = serializer.save()
-        return Response(EventSerializer(event, context={'request': request}).data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def event_delete(request, pk):
-    """Delete an event"""
-    try:
-        event = Event.objects.get(pk=pk)
-        event.delete()
-        return Response({'message': 'Event deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
-    except Event.DoesNotExist:
-        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
-
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def event_toggle_active(request, pk):
-    """Toggle active status of an event"""
-    try:
-        event = Event.objects.get(pk=pk)
-        event.is_active = not event.is_active
-        event.save()
-        return Response(EventSerializer(event, context={'request': request}).data)
-    except Event.DoesNotExist:
-        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
 # Partner API Views
 @api_view(['GET'])
 @permission_classes([AllowAny])

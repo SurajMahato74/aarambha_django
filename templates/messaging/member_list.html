@@ -1,0 +1,343 @@
+{% extends 'member/base.html' %}
+
+{% block title %}Members{% endblock %}
+{% block page_title %}Members{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h2 class="text-xl font-semibold text-white">Members</h2>
+        <div class="flex gap-2">
+            <a href="{% url 'conversations' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm">
+                <i class="fas fa-comments"></i> Messages
+            </a>
+            <a href="{% url 'create_group' %}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm">
+                <i class="fas fa-users"></i> Group
+            </a>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="bg-slate-800 rounded-lg p-3">
+        <input type="text" id="searchInput" placeholder="Search members..." 
+               class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+
+    <!-- Filters -->
+    <div class="flex gap-2">
+        <select id="branchFilter" class="px-3 py-2 bg-slate-700 border-0 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">All Branches</option>
+            {% for branch in branches %}
+                <option value="{{ branch }}">{{ branch }}</option>
+            {% endfor %}
+        </select>
+        <select id="typeFilter" class="px-3 py-2 bg-slate-700 border-0 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">All Types</option>
+            <option value="member">Members</option>
+            <option value="volunteer">Volunteers</option>
+        </select>
+    </div>
+
+    <!-- Members List -->
+    <div class="bg-slate-800 rounded-lg divide-y divide-slate-700" id="membersList">
+        {% for user in users %}
+        <div class="flex items-center justify-between p-4 hover:bg-slate-700 transition-colors user-item" 
+             data-name="{{ user.get_full_name|default:user.email }}" 
+             data-branch="{{ user.branch.name|default:'N/A' }}" 
+             data-type="{{ user.user_type }}">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium overflow-hidden cursor-pointer
+                    {% if user.is_superuser %}bg-yellow-600{% elif user.user_type == 'member' %}bg-blue-600{% else %}bg-green-600{% endif %}" onclick="showUserProfile({{ user.id }})">
+                    {% if user.applications.first.photo %}
+                        <img src="{{ user.applications.first.photo.url }}" alt="{{ user.get_full_name }}" class="w-full h-full object-cover">
+                    {% elif user.is_superuser %}
+                        <i class="fas fa-crown"></i>
+                    {% else %}
+                        {{ user.first_name|first|default:user.email|first|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="text-white font-medium cursor-pointer hover:text-blue-400" onclick="showUserProfile({{ user.id }})">{{ user.get_full_name|default:user.email }}</div>
+                    <div class="text-slate-400 text-sm">
+                        {% if user.is_superuser %}Admin{% else %}{{ user.user_type|title }}{% endif %}
+                        {% if user.branch %} • {{ user.branch.name }}{% endif %}
+                    </div>
+                </div>
+            </div>
+            <button onclick="openChatModal({{ user.id }}, '{{ user.get_full_name|default:user.email|escapejs }}')" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                Message
+            </button>
+        </div>
+        {% empty %}
+        <div class="p-8 text-center text-slate-400">
+            <i class="fas fa-users text-3xl mb-2"></i>
+            <div>No members found</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Chat Modal -->
+<div id="chatModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg w-full max-w-2xl h-[600px] mx-4 flex flex-col">
+        <!-- Chat Header -->
+        <div class="flex items-center justify-between p-4 border-b border-slate-700">
+            <div class="flex items-center space-x-3">
+                <div id="chatAvatar" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-blue-600 overflow-hidden">
+                    A
+                </div>
+                <div>
+                    <div id="chatUserName" class="text-white font-medium">User Name</div>
+                    <div class="text-slate-400 text-sm">Online</div>
+                </div>
+            </div>
+            <button onclick="closeChatModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="messagesArea" class="flex-1 overflow-y-auto p-4 space-y-3">
+            <div class="text-center text-slate-400 text-sm py-4">
+                Start your conversation
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="p-4 border-t border-slate-700">
+            <div class="flex space-x-3">
+                <input type="text" id="messageInput" placeholder="Type a message..." 
+                       class="flex-1 px-3 py-2 bg-slate-700 border-0 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUserId = null;
+let currentConversationId = null;
+
+function openChatModal(userId, userName) {
+    currentUserId = userId;
+    document.getElementById('chatUserName').textContent = userName;
+    
+    // Find user data from the page
+    const userItem = document.querySelector(`[onclick="openChatModal(${userId}, '${userName.replace(/'/g, "\\'")}')"]`).closest('.user-item');
+    const userPhoto = userItem.querySelector('img');
+    
+    const chatAvatar = document.getElementById('chatAvatar');
+    if (userPhoto) {
+        chatAvatar.innerHTML = `<img src="${userPhoto.src}" alt="${userName}" class="w-full h-full object-cover">`;
+    } else {
+        chatAvatar.textContent = userName.charAt(0).toUpperCase();
+    }
+    
+    document.getElementById('chatModal').classList.remove('hidden');
+    
+    // Load existing conversation or create new one
+    loadConversation(userId);
+}
+
+function closeChatModal() {
+    document.getElementById('chatModal').classList.add('hidden');
+    document.getElementById('messageInput').value = '';
+    document.getElementById('messagesArea').innerHTML = '<div class="text-center text-slate-400 text-sm py-4">Start your conversation</div>';
+}
+
+function loadConversation(userId) {
+    // Check if conversation exists or create message request
+    fetch(`/messaging/get-conversation/${userId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.conversation_id) {
+                currentConversationId = data.conversation_id;
+                loadMessages(data.conversation_id);
+            } else {
+                // No existing conversation
+                currentConversationId = null;
+                document.getElementById('messagesArea').innerHTML = '<div class="text-center text-slate-400 text-sm py-4">Start your conversation</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading conversation:', error);
+        });
+}
+
+function loadMessages(conversationId) {
+    fetch(`/messaging/get-messages/${conversationId}/`)
+        .then(response => response.json())
+        .then(data => {
+            const messagesArea = document.getElementById('messagesArea');
+            messagesArea.innerHTML = '';
+            
+            data.messages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                const isOwn = message.sender_id === {{ user.id }};
+                
+                messageDiv.className = `flex ${isOwn ? 'justify-end' : 'justify-start'}`;
+                messageDiv.innerHTML = `
+                    <div class="max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                        isOwn ? 'bg-blue-600 text-white' : 'bg-slate-700 text-white'
+                    }">
+                        <div class="text-sm">${message.content}</div>
+                        <div class="text-xs opacity-70 mt-1">${new Date(message.created_at).toLocaleTimeString()}</div>
+                    </div>
+                `;
+                messagesArea.appendChild(messageDiv);
+            });
+            
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        })
+        .catch(error => {
+            console.error('Error loading messages:', error);
+        });
+}
+
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const content = messageInput.value.trim();
+    
+    if (!content) return;
+    
+    const data = {
+        user_id: currentUserId,
+        content: content,
+        conversation_id: currentConversationId
+    };
+    
+    fetch('/messaging/send-message-ajax/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            messageInput.value = '';
+            if (data.conversation_id) {
+                currentConversationId = data.conversation_id;
+                loadMessages(data.conversation_id);
+            }
+        } else {
+            alert(data.message || 'Error sending message');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending message:', error);
+    });
+}
+
+// Send message on Enter key
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+});
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const branchFilter = document.getElementById('branchFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    
+    const userItems = document.querySelectorAll('.user-item');
+    
+    userItems.forEach(item => {
+        const name = item.dataset.name.toLowerCase();
+        const branch = item.dataset.branch;
+        const type = item.dataset.type;
+        
+        const matchesSearch = name.includes(searchTerm);
+        const matchesBranch = !branchFilter || branch === branchFilter;
+        const matchesType = !typeFilter || type === typeFilter;
+        
+        if (matchesSearch && matchesBranch && matchesType) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Event listeners
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('branchFilter').addEventListener('change', applyFilters);
+document.getElementById('typeFilter').addEventListener('change', applyFilters);
+
+// Close modal when clicking outside
+document.getElementById('chatModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeChatModal();
+    }
+});
+</script>
+{% endblock %}
+
+function showUserProfile(userId) {
+    fetch(`/messaging/user-profile/${userId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const profileContent = document.getElementById('profileContent');
+                profileContent.innerHTML = `
+                    <div class="text-center mb-4">
+                        <div class="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden bg-blue-600 flex items-center justify-center">
+                            ${data.user.photo ? 
+                                `<img src="${data.user.photo}" alt="${data.user.name}" class="w-full h-full object-cover">` :
+                                `<span class="text-white text-lg font-medium">${data.user.name.charAt(0).toUpperCase()}</span>`
+                            }
+                        </div>
+                        <h4 class="text-white font-semibold text-lg">${data.user.name}</h4>
+                        <p class="text-slate-400">${data.user.user_type}</p>
+                        ${data.user.branch ? `<p class="text-slate-400 text-sm">${data.user.branch}</p>` : ''}
+                    </div>
+                    <div class="space-y-2 text-left">
+                        <div><span class="text-slate-400">Email:</span> <span class="text-white">${data.user.email}</span></div>
+                        ${data.user.phone ? `<div><span class="text-slate-400">Phone:</span> <span class="text-white">${data.user.phone}</span></div>` : ''}
+                        ${data.user.address ? `<div><span class="text-slate-400">Address:</span> <span class="text-white">${data.user.address}</span></div>` : ''}
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="openChatModal(${userId}, '${data.user.name.replace(/'/g, "\\'")}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+                            Message
+                        </button>
+                        <button onclick="closeUserProfile()" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-2 rounded">
+                            Close
+                        </button>
+                    </div>
+                `;
+                document.getElementById('userProfileModal').classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading user profile:', error);
+        });
+}
+
+function closeUserProfile() {
+    document.getElementById('userProfileModal').classList.add('hidden');
+}
+<!-- User Profile Modal -->
+<div id="userProfileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white">User Profile</h3>
+                <button onclick="closeUserProfile()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="profileContent" class="text-center">
+                <!-- Profile content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,314 @@
+{% extends 'member/base.html' %}
+{% load static %}
+
+{% block page_title %}My Profile{% endblock %}
+
+{% block header_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="bg-slate-800 rounded-lg shadow-sm">
+    <!-- Tab Navigation -->
+    <div class="border-b border-slate-700">
+        <nav class="flex space-x-8 px-6">
+            <button class="profile-tab active py-3 px-1 border-b-2 border-indigo-500 text-indigo-400 font-medium" data-tab="details">
+                <i class="fas fa-user mr-2"></i>Details
+            </button>
+            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="payments">
+                <i class="fas fa-credit-card mr-2"></i>Payments
+            </button>
+            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="certificates">
+                <i class="fas fa-certificate mr-2"></i>Certificates
+            </button>
+            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="reviews">
+                <i class="fas fa-star mr-2"></i>Reviews
+            </button>
+        </nav>
+    </div>
+    
+    <!-- Tab Content -->
+    <div class="p-6">
+        <!-- Profile Details Tab -->
+        <div id="details-tab" class="tab-content">
+            <div id="profileDetails">
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+                    <p class="text-slate-400">Loading profile details...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payments Tab -->
+        <div id="payments-tab" class="tab-content hidden">
+            <div id="paymentsContent">
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+                    <p class="text-slate-400">Loading payments...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Certificates Tab -->
+        <div id="certificates-tab" class="tab-content hidden">
+            <div id="certificatesContent">
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+                    <p class="text-slate-400">Loading certificates...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reviews Tab -->
+        <div id="reviews-tab" class="tab-content hidden">
+            <div id="reviewsContent">
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+                    <p class="text-slate-400">Loading reviews...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const user = getUser();
+    if (!user || user.user_type !== 'member') window.location.href = '/';
+    
+    // Load profile details on page load
+    loadProfileDetails();
+    
+    // Tab switching
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('profile-tab')) {
+            const tabName = e.target.dataset.tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.profile-tab').forEach(tab => {
+                tab.classList.remove('active', 'border-indigo-500', 'text-indigo-400');
+                tab.classList.add('border-transparent', 'text-slate-400');
+            });
+            e.target.classList.add('active', 'border-indigo-500', 'text-indigo-400');
+            e.target.classList.remove('border-transparent', 'text-slate-400');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            
+            // Load tab-specific data
+            if (tabName === 'payments') loadPayments();
+            else if (tabName === 'certificates') loadCertificates();
+            else if (tabName === 'reviews') loadReviews();
+        }
+    });
+    
+    async function loadProfileDetails() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/users/profile/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const profile = await response.json();
+                document.getElementById('profileDetails').innerHTML = `
+                    <div class="space-y-6">
+                        <div class="text-center">
+                            <div class="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                                ${(profile.first_name || profile.email || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <h3 class="text-xl font-semibold text-white">${profile.first_name || ''} ${profile.last_name || ''}</h3>
+                            <p class="text-slate-400">${profile.email}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-700/50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-white mb-2">Account Information</h4>
+                                <p class="text-slate-300"><strong>User Type:</strong> ${profile.user_type}</p>
+                                <p class="text-slate-300"><strong>Branch:</strong> ${profile.branch || 'Not assigned'}</p>
+                                <p class="text-slate-300"><strong>Joined:</strong> ${new Date(profile.date_joined).toLocaleDateString()}</p>
+                                <p class="text-slate-300"><strong>Status:</strong> ${profile.is_active ? 'Active' : 'Inactive'}</p>
+                            </div>
+                            
+                            <div class="bg-slate-700/50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-white mb-2">Contact Information</h4>
+                                <p class="text-slate-300"><strong>Email:</strong> ${profile.email}</p>
+                                <p class="text-slate-300"><strong>Phone:</strong> ${profile.phone || 'Not provided'}</p>
+                                <p class="text-slate-300"><strong>Address:</strong> ${profile.address || 'Not provided'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading profile details:', error);
+            document.getElementById('profileDetails').innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
+                    <p class="text-red-400">Error loading profile details</p>
+                </div>
+            `;
+        }
+    }
+    
+    async function loadPayments() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/payments/my-payments/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const payments = await response.json();
+                const paymentsList = payments.results || payments || [];
+                
+                if (paymentsList.length === 0) {
+                    document.getElementById('paymentsContent').innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-credit-card fa-3x text-slate-400 mb-3"></i>
+                            <p class="text-slate-400">No payments found</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('paymentsContent').innerHTML = `
+                        <div class="space-y-4">
+                            ${paymentsList.map(payment => `
+                                <div class="bg-slate-700/50 rounded-lg p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-semibold text-white">Payment #${payment.id}</h4>
+                                            <p class="text-slate-300">Amount: $${payment.amount}</p>
+                                            <p class="text-slate-300">Method: ${payment.payment_method}</p>
+                                            <p class="text-slate-300">Date: ${new Date(payment.paid_at).toLocaleDateString()}</p>
+                                        </div>
+                                        <span class="px-2 py-1 rounded text-sm ${
+                                            payment.is_verified ? 'bg-green-600 text-green-100' : 'bg-yellow-600 text-yellow-100'
+                                        }">
+                                            ${payment.is_verified ? 'Verified' : 'Pending'}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading payments:', error);
+            document.getElementById('paymentsContent').innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
+                    <p class="text-red-400">Error loading payments</p>
+                </div>
+            `;
+        }
+    }
+    
+    async function loadCertificates() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/events/my-certificates/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const certificates = await response.json();
+                const certList = certificates.results || certificates || [];
+                
+                if (certList.length === 0) {
+                    document.getElementById('certificatesContent').innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-certificate fa-3x text-slate-400 mb-3"></i>
+                            <p class="text-slate-400">No certificates earned yet</p>
+                            <p class="text-sm text-slate-500">Attend events to earn certificates</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('certificatesContent').innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${certList.map(cert => `
+                                <div class="bg-slate-700/50 rounded-lg p-4 hover:bg-slate-700/70 transition-colors">
+                                    <div class="flex items-center mb-3">
+                                        <i class="fas fa-certificate text-yellow-400 text-2xl mr-3"></i>
+                                        <div>
+                                            <h4 class="font-semibold text-white">${cert.event_title}</h4>
+                                            <p class="text-sm text-slate-400">Issued: ${new Date(cert.issued_at).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="viewCertificate('${cert.id}')" class="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors">
+                                        <i class="fas fa-eye mr-2"></i>View Certificate
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading certificates:', error);
+            document.getElementById('certificatesContent').innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
+                    <p class="text-red-400">Error loading certificates</p>
+                </div>
+            `;
+        }
+    }
+    
+    async function loadReviews() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/events/my-reviews/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const reviews = await response.json();
+                const reviewsList = reviews.results || reviews || [];
+                
+                if (reviewsList.length === 0) {
+                    document.getElementById('reviewsContent').innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-star fa-3x text-slate-400 mb-3"></i>
+                            <p class="text-slate-400">No reviews submitted yet</p>
+                            <p class="text-sm text-slate-500">Attend events and leave reviews</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('reviewsContent').innerHTML = `
+                        <div class="space-y-4">
+                            ${reviewsList.map(review => `
+                                <div class="bg-slate-700/50 rounded-lg p-4">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <h4 class="font-semibold text-white">${review.event_title}</h4>
+                                        <div class="flex items-center">
+                                            ${Array.from({length: 5}, (_, i) => `
+                                                <i class="fas fa-star ${i < review.rating ? 'text-yellow-400' : 'text-slate-600'}"></i>
+                                            `).join('')}
+                                            <span class="ml-2 text-sm text-slate-400">${review.rating}/5</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-slate-300 mb-2">${review.review}</p>
+                                    <p class="text-sm text-slate-500">Reviewed on: ${new Date(review.created_at).toLocaleDateString()}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+            document.getElementById('reviewsContent').innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
+                    <p class="text-red-400">Error loading reviews</p>
+                </div>
+            `;
+        }
+    }
+    
+    function viewCertificate(certId) {
+        window.open(`/api/events/certificate/${certId}/view/`, '_blank');
+    }
+</script>
+{% endblock %}

@@ -46,6 +46,10 @@ class UserNotification(models.Model):
         ('task_assigned', 'Task Assigned'),
         ('task_submitted', 'Task Submitted'),
         ('task_reviewed', 'Task Reviewed'),
+        ('event_applied', 'Event Application Submitted'),
+        ('event_approved', 'Event Application Approved'),
+        ('event_rejected', 'Event Application Rejected'),
+        ('event_attended', 'Event Attendance Marked'),
         ('general', 'General'),
     )
 

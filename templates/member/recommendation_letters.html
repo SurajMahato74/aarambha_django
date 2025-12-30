@@ -1,0 +1,342 @@
+{% extends 'member/base.html' %}
+
+{% block title %}Recommendation Letters{% endblock %}
+{% block page_title %}Recommendation Letters{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-xl font-semibold text-white">Recommendation Letters</h2>
+            <p class="text-slate-400">Request recommendation letters for various purposes</p>
+        </div>
+        <button onclick="openRequestModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-plus"></i> Request Letter
+        </button>
+    </div>
+
+    <!-- Letters Table -->
+    <div class="card rounded-lg p-6">
+        <table id="lettersTable" class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-slate-700">
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Purpose</th>
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Status</th>
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Requested</th>
+                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for letter in letters %}
+                <tr class="border-b border-slate-700 hover:bg-slate-700/30">
+                    <td class="py-3 px-4">
+                        <div class="text-white font-medium">{{ letter.purpose }}</div>
+                        <div class="text-slate-400 text-xs mt-1">{{ letter.description|safe|truncatechars:100 }}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        {% if letter.status == 'pending' %}
+                            <span class="badge bg-yellow-900 text-yellow-300">Pending</span>
+                        {% elif letter.status == 'approved' %}
+                            <span class="badge bg-green-900 text-green-300">Approved</span>
+                        {% elif letter.status == 'rejected' %}
+                            <span class="badge bg-red-900 text-red-300">Rejected</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 px-4 text-slate-400">
+                        <div>{{ letter.created_at|date:"M d, Y" }}</div>
+                        <div class="text-xs">{{ letter.created_at|time:"H:i" }}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        {% if letter.status == 'approved' and letter.signed_letter %}
+                            <a href="{{ letter.signed_letter.url }}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs mr-2">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        {% endif %}
+                        <button onclick="viewDetails({{ letter.id }}, '{{ letter.purpose|escapejs }}', '{{ letter.description|escapejs }}', '{{ letter.admin_notes|escapejs }}', '{{ letter.status }}', '{{ letter.created_at|date:"M d, Y H:i" }}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="py-8 text-center text-slate-400">
+                        <i class="fas fa-file-alt text-2xl mb-2"></i>
+                        <div>No recommendation letters found</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Request Modal -->
+<div id="requestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Request Recommendation Letter</h3>
+            <button onclick="closeRequestModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Purpose *</label>
+                <input type="text" name="purpose" required placeholder="e.g., Job Application, University Admission" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Description *</label>
+                <div id="quillEditor" style="height: 150px; background: #334155; color: white;"></div>
+                <input type="hidden" name="description" id="descriptionInput" required>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeRequestModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg">
+                    Submit Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Letter View Modal -->
+<div id="letterModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="letterTitle" class="text-lg font-semibold text-gray-800">Recommendation Letter</h3>
+            <div class="flex gap-2">
+                <button onclick="printLetter()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button onclick="closeLetter()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="letterContent" class="text-gray-800">
+            <!-- Letter content will be inserted here -->
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="detailsTitle" class="text-lg font-semibold text-white">Letter Details</h3>
+            <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">User Details</label>
+                    <div class="p-3 bg-slate-700 rounded-lg text-slate-300 space-y-1">
+                        <div><strong>Name:</strong> <span id="detailsUserName"></span></div>
+                        <div><strong>Type:</strong> <span id="detailsUserType"></span></div>
+                        <div><strong>Joined:</strong> <span id="detailsDateJoined"></span></div>
+                        <div><strong>Events Attended:</strong> <span id="detailsEventsAttended"></span></div>
+                        <div><strong>Tasks Submitted:</strong> <span id="detailsTasksSubmitted"></span></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Request Details</label>
+                    <div class="p-3 bg-slate-700 rounded-lg text-slate-300 space-y-1">
+                        <div><strong>Purpose:</strong> <span id="detailsPurpose"></span></div>
+                        <div><strong>Status:</strong> <span id="detailsStatus"></span></div>
+                        <div><strong>Requested:</strong> <span id="detailsRequested"></span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Description</label>
+                <div id="detailsDescription" class="p-3 bg-slate-700 rounded-lg text-slate-300"></div>
+            </div>
+            
+            <div id="adminNotesSection" class="hidden">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Admin Notes</label>
+                <div id="detailsAdminNotes" class="p-3 bg-slate-700 rounded-lg text-slate-300"></div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end mt-6">
+            <button onclick="closeDetailsModal()" class="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+.ql-editor { color: white !important; }
+.ql-toolbar { border-top: 1px solid #475569 !important; border-left: 1px solid #475569 !important; border-right: 1px solid #475569 !important; background: #475569 !important; }
+.ql-container { border-bottom: 1px solid #475569 !important; border-left: 1px solid #475569 !important; border-right: 1px solid #475569 !important; }
+</style>
+<script>
+let quill;
+
+function openRequestModal() {
+    document.getElementById('requestModal').classList.remove('hidden');
+    
+    // Initialize Quill editor with delay to ensure DOM is ready
+    setTimeout(() => {
+        if (!quill) {
+            const editorElement = document.getElementById('quillEditor');
+            if (editorElement) {
+                quill = new Quill('#quillEditor', {
+                    theme: 'snow',
+                    placeholder: 'Please provide details about why you need this recommendation letter...',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline'],
+                            [{'list': 'ordered'}, {'list': 'bullet'}],
+                            ['clean']
+                        ]
+                    }
+                });
+                console.log('Quill editor initialized');
+            } else {
+                console.error('Quill editor element not found!');
+            }
+        }
+    }, 100);
+}
+
+function viewLetter(id, purpose, letterContent) {
+    document.getElementById('letterTitle').textContent = `Recommendation Letter - ${purpose}`;
+    document.getElementById('letterContent').innerHTML = letterContent;
+    document.getElementById('letterModal').classList.remove('hidden');
+}
+
+function closeLetter() {
+    document.getElementById('letterModal').classList.add('hidden');
+}
+
+function printLetter() {
+    const letterContent = document.getElementById('letterContent').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Recommendation Letter</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                    @media print { body { margin: 0; } }
+                </style>
+            </head>
+            <body>
+                ${letterContent}
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function closeRequestModal() {
+    document.getElementById('requestModal').classList.add('hidden');
+    document.querySelector('form').reset();
+    if (quill) {
+        quill.setContents([]);
+    }
+}
+
+function viewDetails(id, purpose, description, adminNotes, status, requested) {
+    document.getElementById('detailsTitle').textContent = `Letter Details: ${purpose}`;
+    document.getElementById('detailsDescription').innerHTML = description;
+    
+    // User details
+    document.getElementById('detailsUserName').textContent = '{{ user.get_full_name|default:user.email }}';
+    document.getElementById('detailsUserType').textContent = '{{ user_stats.user_type|title }}';
+    document.getElementById('detailsDateJoined').textContent = '{{ user_stats.date_joined|date:"M d, Y" }}';
+    document.getElementById('detailsEventsAttended').textContent = '{{ user_stats.events_attended }}';
+    document.getElementById('detailsTasksSubmitted').textContent = '{{ user_stats.tasks_submitted }}';
+    
+    // Request details
+    document.getElementById('detailsPurpose').textContent = purpose;
+    document.getElementById('detailsStatus').textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    document.getElementById('detailsRequested').textContent = requested;
+    
+    const adminNotesSection = document.getElementById('adminNotesSection');
+    const adminNotesDiv = document.getElementById('detailsAdminNotes');
+    
+    if (adminNotes && adminNotes.trim()) {
+        adminNotesDiv.textContent = adminNotes;
+        adminNotesSection.classList.remove('hidden');
+    } else {
+        adminNotesSection.classList.add('hidden');
+    }
+    
+    document.getElementById('detailsModal').classList.remove('hidden');
+}
+
+function closeDetailsModal() {
+    document.getElementById('detailsModal').classList.add('hidden');
+}
+
+// Handle form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#requestModal form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (quill) {
+                const description = quill.root.innerHTML;
+                const textContent = quill.getText().trim();
+                
+                console.log('Quill content:', description);
+                console.log('Quill text length:', textContent.length);
+                
+                if (textContent.length === 0) {
+                    e.preventDefault();
+                    alert('Please provide a description.');
+                    return false;
+                }
+                
+                const hiddenInput = document.getElementById('descriptionInput');
+                if (hiddenInput) {
+                    hiddenInput.value = description;
+                    console.log('Hidden input value set:', hiddenInput.value);
+                } else {
+                    console.error('Hidden input not found!');
+                }
+            } else {
+                console.error('Quill editor not initialized!');
+                e.preventDefault();
+                alert('Editor not ready. Please try again.');
+                return false;
+            }
+        });
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('requestModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRequestModal();
+    }
+});
+
+document.getElementById('detailsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDetailsModal();
+    }
+});
+
+document.getElementById('letterModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeLetter();
+    }
+});
+</script>
+{% endblock %}

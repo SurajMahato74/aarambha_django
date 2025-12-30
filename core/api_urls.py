@@ -46,15 +46,6 @@ urlpatterns = [
     path('statistics/delete/<int:pk>/', api_views.statistics_delete, name='statistics_delete'),
     path('statistics/toggle-active/<int:pk>/', api_views.statistics_toggle_active, name='statistics_toggle_active'),
 
-    # Event endpoints
-    path('events/', api_views.event_list, name='event_list'),
-    path('events/admin/', api_views.event_list_admin, name='event_list_admin'),
-    path('events/detail/<int:pk>/', api_views.event_detail, name='event_detail'),
-    path('events/create/', api_views.event_create, name='event_create'),
-    path('events/update/<int:pk>/', api_views.event_update, name='event_update'),
-    path('events/delete/<int:pk>/', api_views.event_delete, name='event_delete'),
-    path('events/toggle-active/<int:pk>/', api_views.event_toggle_active, name='event_toggle_active'),
-
     # Partner endpoints
     path('partners/', api_views.partner_list, name='partner_list'),
     path('partners/admin/', api_views.partner_list_admin, name='partner_list_admin'),

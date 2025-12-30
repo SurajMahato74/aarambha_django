@@ -1,0 +1,445 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Event Management{% endblock %}
+{% block page_title %}Event Management{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header with Create Button -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-xl font-semibold text-white">Events</h2>
+            <p class="text-slate-400">Manage events, meetings, and workshops</p>
+        </div>
+        <button onclick="openCreateModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <i class="fas fa-plus"></i> Create Event
+        </button>
+    </div>
+
+    <!-- Events List -->
+    <div class="card rounded-lg p-6">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-slate-700">
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Event</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Type</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Venue</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Date & Time</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Participants</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Status</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+                        <td class="py-3 px-4">
+                            <div>
+                                <div class="font-medium text-white">{{ event.title }}</div>
+                                <div class="text-sm text-slate-400">{{ event.description|truncatechars:50 }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="badge bg-blue-900 text-blue-300">{{ event.get_event_type_display }}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="text-sm">
+                                <span class="badge bg-purple-900 text-purple-300">{{ event.get_venue_type_display }}</span>
+                                {% if event.venue_type == 'physical' and event.venue_name %}
+                                    <div class="text-slate-400 mt-1">{{ event.venue_name }}</div>
+                                {% elif event.venue_type == 'online' and event.meeting_link %}
+                                    <div class="text-slate-400 mt-1">Online Meeting</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="text-sm">
+                                <div class="text-white">{{ event.start_datetime|date:"M d, Y" }}</div>
+                                <div class="text-slate-400">{{ event.start_datetime|time:"H:i" }} - {{ event.end_datetime|time:"H:i" }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="text-sm">
+                                <div class="text-white">{{ event.participations.count }} applied</div>
+                                <div class="text-slate-400">{{ event.participations.filter.attended=True.count }} attended</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if event.is_active %}
+                                <span class="badge bg-green-900 text-green-300">Active</span>
+                            {% else %}
+                                <span class="badge bg-red-900 text-red-300">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2">
+                                <button onclick="editEvent({{ event.id }})" class="text-indigo-400 hover:text-indigo-300" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <a href="{% url 'admin_event_participations' event.id %}" class="text-green-400 hover:text-green-300" title="Manage Participants">
+                                    <i class="fas fa-users"></i>
+                                </a>
+                                <button onclick="deleteEvent({{ event.id }})" class="text-red-400 hover:text-red-300" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400">
+                            <i class="fas fa-calendar-times text-4xl mb-4"></i>
+                            <div>No events found</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Event Modal -->
+<div id="eventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h3 id="modalTitle" class="text-xl font-semibold text-white">Create Event</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="eventForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" id="formAction" value="create_event">
+            <input type="hidden" name="event_id" id="eventId">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Basic Information -->
+                <div class="space-y-4">
+                    <h4 class="font-medium text-white border-b border-slate-700 pb-2">Basic Information</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Title *</label>
+                        <input type="text" name="title" id="title" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Description *</label>
+                        <textarea name="description" id="description" required rows="3" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Event Type *</label>
+                        <select name="event_type" id="event_type" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                            <option value="meeting">Meeting</option>
+                            <option value="training">Training</option>
+                            <option value="workshop">Workshop</option>
+                            <option value="conference">Conference</option>
+                            <option value="social">Social Event</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Venue Information -->
+                <div class="space-y-4">
+                    <h4 class="font-medium text-white border-b border-slate-700 pb-2">Venue Information</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Venue Type *</label>
+                        <select name="venue_type" id="venue_type" required onchange="toggleVenueFields()" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                            <option value="physical">Physical Location</option>
+                            <option value="online">Online (Zoom/Meet)</option>
+                            <option value="hybrid">Hybrid</option>
+                        </select>
+                    </div>
+
+                    <div id="physicalVenue" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Venue Name</label>
+                            <input type="text" name="venue_name" id="venue_name" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Venue Address</label>
+                            <textarea name="venue_address" id="venue_address" rows="2" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"></textarea>
+                        </div>
+                    </div>
+
+                    <div id="onlineVenue" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Meeting Link</label>
+                            <input type="url" name="meeting_link" id="meeting_link" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Meeting ID</label>
+                            <input type="text" name="meeting_id" id="meeting_id" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Meeting Password</label>
+                            <input type="text" name="meeting_password" id="meeting_password" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="space-y-4">
+                    <h4 class="font-medium text-white border-b border-slate-700 pb-2">Contact Information</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Contact Person</label>
+                        <input type="text" name="contact_person" id="contact_person" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Contact Phone</label>
+                        <input type="tel" name="contact_phone" id="contact_phone" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Contact Email</label>
+                        <input type="email" name="contact_email" id="contact_email" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Timing -->
+                <div class="space-y-4">
+                    <h4 class="font-medium text-white border-b border-slate-700 pb-2">Timing</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Start Date & Time *</label>
+                        <input type="datetime-local" name="start_datetime" id="start_datetime" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">End Date & Time *</label>
+                        <input type="datetime-local" name="end_datetime" id="end_datetime" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Assignment -->
+                <div class="space-y-4">
+                    <h4 class="font-medium text-white border-b border-slate-700 pb-2">Assignment</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">User Type *</label>
+                        <select name="user_type" id="user_type" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                            <option value="both">Members & Volunteers</option>
+                            <option value="member">Members Only</option>
+                            <option value="volunteer">Volunteers Only</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Assignment Mode *</label>
+                        <select name="assignment_mode" id="assignment_mode" required onchange="toggleAssignmentFields()" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                            <option value="all">All Users</option>
+                            <option value="individual">Individual Users</option>
+                            <option value="branch">By Branch</option>
+                            <option value="branch_individual">Branch + Individual</option>
+                        </select>
+                    </div>
+
+                    <div id="branchField" class="hidden">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Branch</label>
+                        <select name="branch" id="branch" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                            <option value="">Select Branch</option>
+                            {% for branch in branches %}
+                            <option value="{{ branch.id }}">{{ branch.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="usersField" class="hidden">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Assign to Users</label>
+                        <select name="assigned_to" id="assigned_to" multiple class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500" size="5">
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.email }} ({{ user.get_user_type_display }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Participation Settings -->
+                <div class="space-y-4 md:col-span-2">
+                    <h4 class="font-medium text-white border-b border-slate-700 pb-2">Participation Settings</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="requires_application" id="requires_application" class="mr-2">
+                                <span class="text-sm text-slate-300">Requires Application</span>
+                            </label>
+                            <p class="text-xs text-slate-400 mt-1">Users need to apply and get approval to participate</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Max Participants</label>
+                            <input type="number" name="max_participants" id="max_participants" min="1" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                            <p class="text-xs text-slate-400 mt-1">Leave empty for unlimited</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status (only for edit) -->
+                <div id="statusField" class="hidden md:col-span-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_active" id="is_active" checked class="mr-2">
+                        <span class="text-sm text-slate-300">Active</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-700">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg">
+                    <span id="submitText">Create Event</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCreateModal() {
+    document.getElementById('modalTitle').textContent = 'Create Event';
+    document.getElementById('formAction').value = 'create_event';
+    document.getElementById('submitText').textContent = 'Create Event';
+    document.getElementById('eventForm').reset();
+    document.getElementById('eventId').value = '';
+    document.getElementById('statusField').classList.add('hidden');
+    toggleVenueFields();
+    toggleAssignmentFields();
+    document.getElementById('eventModal').classList.remove('hidden');
+    
+    // Initialize CKEditor for description
+    if (CKEDITOR.instances.description) {
+        CKEDITOR.instances.description.destroy();
+    }
+    CKEDITOR.replace('description', {
+        height: 200,
+        toolbar: [
+            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline'] },
+            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'] },
+            { name: 'links', items: ['Link', 'Unlink'] },
+            { name: 'insert', items: ['Image', 'Table'] },
+            { name: 'styles', items: ['Format'] },
+            { name: 'tools', items: ['Maximize'] }
+        ]
+    });
+}
+
+function closeModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
+
+function toggleVenueFields() {
+    const venueType = document.getElementById('venue_type').value;
+    const physicalVenue = document.getElementById('physicalVenue');
+    const onlineVenue = document.getElementById('onlineVenue');
+    
+    if (venueType === 'online') {
+        physicalVenue.classList.add('hidden');
+        onlineVenue.classList.remove('hidden');
+    } else if (venueType === 'physical') {
+        physicalVenue.classList.remove('hidden');
+        onlineVenue.classList.add('hidden');
+    } else { // hybrid
+        physicalVenue.classList.remove('hidden');
+        onlineVenue.classList.remove('hidden');
+    }
+}
+
+function toggleAssignmentFields() {
+    const assignmentMode = document.getElementById('assignment_mode').value;
+    const branchField = document.getElementById('branchField');
+    const usersField = document.getElementById('usersField');
+    
+    branchField.classList.add('hidden');
+    usersField.classList.add('hidden');
+    
+    if (assignmentMode === 'branch' || assignmentMode === 'branch_individual') {
+        branchField.classList.remove('hidden');
+    }
+    
+    if (assignmentMode === 'individual' || assignmentMode === 'branch_individual') {
+        usersField.classList.remove('hidden');
+    }
+}
+
+async function editEvent(eventId) {
+    try {
+        const response = await fetch(`/api/events/${eventId}/`);
+        const event = await response.json();
+        
+        document.getElementById('modalTitle').textContent = 'Edit Event';
+        document.getElementById('formAction').value = 'update_event';
+        document.getElementById('submitText').textContent = 'Update Event';
+        document.getElementById('eventId').value = event.id;
+        document.getElementById('statusField').classList.remove('hidden');
+        
+        // Fill form fields
+        document.getElementById('title').value = event.title;
+        document.getElementById('description').value = event.description;
+        document.getElementById('event_type').value = event.event_type;
+        document.getElementById('venue_type').value = event.venue_type;
+        document.getElementById('venue_name').value = event.venue_name;
+        document.getElementById('venue_address').value = event.venue_address;
+        document.getElementById('meeting_link').value = event.meeting_link;
+        document.getElementById('meeting_id').value = event.meeting_id;
+        document.getElementById('meeting_password').value = event.meeting_password;
+        document.getElementById('contact_person').value = event.contact_person;
+        document.getElementById('contact_phone').value = event.contact_phone;
+        document.getElementById('contact_email').value = event.contact_email;
+        document.getElementById('start_datetime').value = event.start_datetime;
+        document.getElementById('end_datetime').value = event.end_datetime;
+        document.getElementById('user_type').value = event.user_type;
+        document.getElementById('assignment_mode').value = event.assignment_mode;
+        document.getElementById('requires_application').checked = event.requires_application;
+        document.getElementById('max_participants').value = event.max_participants;
+        document.getElementById('is_active').checked = event.is_active;
+        document.getElementById('branch').value = event.branch_id;
+        
+        // Set assigned users
+        const assignedSelect = document.getElementById('assigned_to');
+        for (let option of assignedSelect.options) {
+            option.selected = event.assigned_to.includes(parseInt(option.value));
+        }
+        
+        toggleVenueFields();
+        toggleAssignmentFields();
+        document.getElementById('eventModal').classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('Error fetching event details:', error);
+        alert('Error loading event details');
+    }
+}
+
+function deleteEvent(eventId) {
+    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_event">
+            <input type="hidden" name="event_id" value="${eventId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('eventModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

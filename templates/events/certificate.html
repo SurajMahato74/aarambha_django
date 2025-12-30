@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Certificate - {{ event.title }}</title>
+    <style>
+        @page { size: A4 landscape; margin: 0.5in; }
+        body { margin: 0; padding: 0; font-family: Georgia, serif; width: 100%; height: 100vh; }
+        @media print { 
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .certificate-container { width: 100% !important; height: 100vh !important; margin: 0 !important; }
+            .print-button { display: none !important; }
+        }
+        .certificate-container { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .print-button { position: fixed; top: 20px; right: 20px; z-index: 1000; background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .print-button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()">
+        <i class="fas fa-print"></i> Print Certificate
+    </button>
+    
+    <div class="certificate-container">
+        <div style="position: relative; width: 10in; height: 6.5in; background: white; margin: 0; border: 8px solid #2c3e50; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.3); overflow: hidden;">
+            <div style="position: relative; width: 100%; height: 100%; background: linear-gradient(45deg, #f8f9fa 0%, #ffffff 50%, #f8f9fa 100%); border: 3px solid #34495e; border-radius: 8px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+                
+                <!-- Watermark -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(52, 73, 94, 0.03); font-weight: bold; z-index: 1; white-space: nowrap; font-family: Georgia, serif;">AARAMBHA FOUNDATION</div>
+                
+                <!-- Decorative corners -->
+                <div style="position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; border: 3px solid #3498db; border-right: none; border-bottom: none;"></div>
+                <div style="position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border: 3px solid #3498db; border-left: none; border-bottom: none;"></div>
+                <div style="position: absolute; bottom: 20px; left: 20px; width: 40px; height: 40px; border: 3px solid #3498db; border-right: none; border-top: none;"></div>
+                <div style="position: absolute; bottom: 20px; right: 20px; width: 40px; height: 40px; border: 3px solid #3498db; border-left: none; border-top: none;"></div>
+                
+                <!-- Header -->
+                <div style="text-align: center; z-index: 2; position: relative;">
+                    <img src="/static/website/images/logo.png" alt="Aarambha Foundation" style="width: 60px; height: 60px; margin: 0 auto 15px; display: block; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); object-fit: contain;" />
+                    <div style="font-size: 24px; color: #2c3e50; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; font-family: Georgia, serif;">Aarambha Foundation</div>
+                    <div style="font-size: 18px; color: #34495e; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; font-family: Georgia, serif;">Certificate of Participation</div>
+                </div>
+                
+                <!-- Content -->
+                <div style="text-align: center; z-index: 2; position: relative; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; max-width: 100%;">
+                    <div style="font-size: 16px; color: #7f8c8d; margin-bottom: 15px; font-family: Georgia, serif;">This is to certify that</div>
+                    <div style="font-size: 30px; color: #2c3e50; font-weight: bold; margin-bottom: 20px; text-decoration: underline; text-decoration-color: #3498db; text-underline-offset: 8px; font-family: Georgia, serif; word-wrap: break-word; max-width: 100%;">{{ user.get_full_name|default:user.email }}</div>
+                    <div style="font-size: 14px; color: #34495e; line-height: 1.5; margin-bottom: 20px; font-family: Georgia, serif; max-width: 100%; word-wrap: break-word;">
+                        has successfully participated in
+                        <div style="font-size: 18px; color: #2980b9; font-weight: bold; margin: 10px 0; word-wrap: break-word;">{{ event.title }}</div>
+                        held on {{ certificate_date|date:"F d, Y" }}
+                        {% if event.venue_name %}<br/>at {{ event.venue_name }}{% endif %}
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div style="display: flex; justify-content: space-between; align-items: end; z-index: 2; position: relative; margin-top: 20px;">
+                    <div style="text-align: center; flex: 1;">
+                        <div style="width: 150px; height: 60px; margin: 0 auto 5px; background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMTUwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTAgNDBDMjAgMzUgMzAgMzAgNDAgMzVDNTAgNDAgNjAgMzUgNzAgNDBDODAgNDUgOTAgNDAgMTAwIDM1QzExMCAzMCAxMjAgMzUgMTMwIDQwQzE0MCA0NSAxNTAgNDAiIHN0cm9rZT0iIzM0NDk1ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+Cjx0ZXh0IHg9Ijc1IiB5PSIyNSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjMzQ0OTVlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TLiBTaGFybWE8L3RleHQ+CjwvdGV4dD4KPC9zdmc+') no-repeat center; background-size: contain;"></div>
+                        <div style="font-size: 12px; color: #7f8c8d; font-family: Georgia, serif;">Authorized Signature</div>
+                    </div>
+                    
+                    <div style="text-align: right; font-size: 10px; color: #95a5a6; font-family: Georgia, serif; line-height: 1.3; max-width: 200px;">
+                        <div style="font-weight: bold; color: #34495e; margin-bottom: 3px; font-size: 11px;">Certificate ID: {{ participation.certificate_id }}</div>
+                        <div>Issued: {{ certificate_date|date:"F d, Y" }}</div>
+                        <div>Verified by: Aarambha Foundation</div>
+                        <div style="margin-top: 5px; border-top: 1px solid #ecf0f1; padding-top: 3px;">
+                            <div>Basundhara, Kathmandu, Nepal</div>
+                            <div>+977 (984)346-7402</div>
+                            <div>we.aarambha@gmail.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+</body>
+</html>

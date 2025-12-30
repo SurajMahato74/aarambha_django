@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from ckeditor.fields import RichTextField
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class HeroSection(models.Model):
     """
@@ -205,39 +208,6 @@ class Statistics(models.Model):
     def get_active(cls):
         """Get the active Statistics section or None"""
         return cls.objects.filter(is_active=True).first()
-
-
-class Event(models.Model):
-    """
-    Model to store events for the Events section.
-    """
-    title = models.CharField(max_length=200, help_text="Event title")
-    description = models.TextField(help_text="Event description")
-    image = models.ImageField(
-        upload_to='events/',
-        null=True,
-        blank=True,
-        help_text="Upload event image. If not provided, default image will be used."
-    )
-    event_date = models.DateTimeField(null=True, blank=True, help_text="Event date and time (optional)")
-    location = models.CharField(max_length=200, blank=True, help_text="Event location (optional)")
-    order = models.IntegerField(default=0, help_text="Display order (lower numbers appear first)")
-    is_active = models.BooleanField(default=True, help_text="Set to active to display this event")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Event"
-        verbose_name_plural = "Events"
-        ordering = ['order', '-created_at']
-
-    def __str__(self):
-        return f"Event - {self.title}"
-
-    @classmethod
-    def get_active_events(cls):
-        """Get all active events ordered by order field"""
-        return cls.objects.filter(is_active=True).order_by('order')
 
 
 class Partner(models.Model):
@@ -463,3 +433,42 @@ class Donation(models.Model):
     def amount_in_paisa(self):
         """Convert amount to paisa (required by Khalti API)"""
         return int(self.amount * 100)
+
+
+class RecommendationLetter(models.Model):
+    """
+    Model to store recommendation letter requests from members.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recommendation_letters')
+    purpose = models.CharField(max_length=200, help_text="Purpose of the recommendation letter")
+    description = models.TextField(help_text="Detailed description of why the letter is needed")
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Admin fields
+    admin_notes = models.TextField(blank=True, help_text="Admin notes (optional)")
+    letter_content = models.TextField(blank=True, help_text="Generated letter content")
+    signed_letter = models.FileField(
+        upload_to='recommendation_letters/',
+        blank=True,
+        null=True,
+        help_text="Upload signed recommendation letter (PDF format preferred)"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    approved_at = models.DateTimeField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "Recommendation Letter"
+        verbose_name_plural = "Recommendation Letters"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Recommendation Letter - {self.user.get_full_name() or self.user.email} ({self.purpose})"

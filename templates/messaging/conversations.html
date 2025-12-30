@@ -1,0 +1,304 @@
+{% extends 'member/base.html' %}
+
+{% block title %}Messages{% endblock %}
+{% block page_title %}Messages{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h2 class="text-xl font-semibold text-white">Messages</h2>
+        <a href="{% url 'create_group' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-users"></i> Create Group
+        </a>
+    </div>
+
+    <!-- Universal Search -->
+    <div class="bg-slate-800 rounded-lg p-3">
+        <input type="text" id="universalSearch" placeholder="Search conversations, groups, or messages..." 
+               class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="performSearch()">
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex space-x-1 bg-slate-800 p-1 rounded-lg">
+        <button onclick="showTab('direct')" id="directTab" class="flex-1 py-2 px-4 rounded text-sm font-medium transition-colors bg-blue-600 text-white">
+            <i class="fas fa-comment mr-2"></i>Direct Messages
+        </button>
+        <button onclick="showTab('groups')" id="groupsTab" class="flex-1 py-2 px-4 rounded text-sm font-medium transition-colors text-slate-400 hover:text-white">
+            <i class="fas fa-users mr-2"></i>Groups
+        </button>
+        <button onclick="showTab('requests')" id="requestsTab" class="flex-1 py-2 px-4 rounded text-sm font-medium transition-colors text-slate-400 hover:text-white">
+            <i class="fas fa-inbox mr-2"></i>Requests {% if message_requests %}({{ message_requests|length }}){% endif %}
+        </button>
+    </div>
+
+    <!-- Direct Messages Tab -->
+    <div id="directContent" class="space-y-3">
+        {% for item in conversations %}
+        <a href="{% url 'chat' 'conversation' item.conversation.id %}" class="block bg-slate-800 hover:bg-slate-700 rounded-lg p-4 transition-colors conversation-item" 
+           data-username="{{ item.other_user.get_full_name|default:item.other_user.email|lower }}" 
+           data-lastmessage="{% with last_message=item.conversation.messages.last %}{% if last_message %}{{ last_message.content|lower }}{% endif %}{% endwith %}">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center overflow-hidden cursor-pointer" onclick="showUserProfile({{ item.other_user.id }})">
+                    {% if item.other_user.applications.first.photo %}
+                        <img src="{{ item.other_user.applications.first.photo.url }}" alt="{{ item.other_user.get_full_name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <i class="fas fa-user text-white"></i>
+                    {% endif %}
+                </div>
+                <div class="flex-1">
+                    <div class="text-white font-medium cursor-pointer hover:text-blue-400" onclick="showUserProfile({{ item.other_user.id }})">{{ item.other_user.get_full_name|default:item.other_user.email }}</div>
+                    <div class="text-slate-400 text-sm">
+                        {% with last_message=item.conversation.messages.last %}
+                        {% if last_message %}
+                            {{ last_message.content|truncatechars:40 }}
+                        {% else %}
+                            No messages yet
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="text-slate-400 text-xs">
+                    {{ item.conversation.updated_at|timesince }} ago
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-8 text-slate-400">
+            <i class="fas fa-comment text-4xl mb-4"></i>
+            <p>No conversations yet</p>
+            <a href="{% url 'member_list' %}" class="text-blue-400 hover:text-blue-300 text-sm">Start a conversation</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Groups Tab -->
+    <div id="groupsContent" class="space-y-3 hidden">
+        {% for group in groups %}
+        <a href="{% url 'chat' 'group' group.id %}" class="block bg-slate-800 hover:bg-slate-700 rounded-lg p-4 transition-colors group-item" 
+           data-groupname="{{ group.name|lower }}" 
+           data-lastmessage="{% with last_message=group.messages.last %}{% if last_message %}{{ last_message.content|lower }}{% endif %}{% endwith %}">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                    <i class="fas fa-users text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="text-white font-medium">{{ group.name }}</div>
+                    <div class="text-slate-400 text-sm">
+                        {{ group.members.count }} members
+                        {% with last_message=group.messages.last %}
+                        {% if last_message %}
+                            • {{ last_message.content|truncatechars:30 }}
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="text-slate-400 text-xs">
+                    {{ group.updated_at|timesince }} ago
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-8 text-slate-400">
+            <i class="fas fa-users text-4xl mb-4"></i>
+            <p>No groups yet</p>
+            <a href="{% url 'create_group' %}" class="text-green-400 hover:text-green-300 text-sm">Create your first group</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Message Requests Tab -->
+    <div id="requestsContent" class="space-y-3 hidden">
+        {% for request in message_requests %}
+        <div class="bg-slate-800 rounded-lg p-4 request-item" 
+             data-username="{{ request.from_user.get_full_name|default:request.from_user.email|lower }}" 
+             data-message="{{ request.message|lower }}">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-yellow-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-white font-medium">{{ request.from_user.get_full_name|default:request.from_user.email }}</div>
+                        <div class="text-slate-300 text-sm">{{ request.message|truncatechars:50 }}</div>
+                        <div class="text-slate-400 text-xs">{{ request.created_at|timesince }} ago</div>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <form method="POST" action="{% url 'handle_message_request' %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="request_id" value="{{ request.id }}">
+                        <input type="hidden" name="action" value="accept">
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                            Accept
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'handle_message_request' %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="request_id" value="{{ request.id }}">
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
+                            Decline
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-8 text-slate-400">
+            <i class="fas fa-inbox text-4xl mb-4"></i>
+            <p>No message requests</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function showTab(tab) {
+    // Hide all content
+    document.getElementById('directContent').classList.add('hidden');
+    document.getElementById('groupsContent').classList.add('hidden');
+    document.getElementById('requestsContent').classList.add('hidden');
+    
+    // Reset all tabs
+    document.getElementById('directTab').classList.remove('bg-blue-600', 'text-white');
+    document.getElementById('directTab').classList.add('text-slate-400', 'hover:text-white');
+    document.getElementById('groupsTab').classList.remove('bg-blue-600', 'text-white');
+    document.getElementById('groupsTab').classList.add('text-slate-400', 'hover:text-white');
+    document.getElementById('requestsTab').classList.remove('bg-blue-600', 'text-white');
+    document.getElementById('requestsTab').classList.add('text-slate-400', 'hover:text-white');
+    
+    // Show selected content and activate tab
+    if (tab === 'direct') {
+        document.getElementById('directContent').classList.remove('hidden');
+        document.getElementById('directTab').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('directTab').classList.remove('text-slate-400', 'hover:text-white');
+    } else if (tab === 'groups') {
+        document.getElementById('groupsContent').classList.remove('hidden');
+        document.getElementById('groupsTab').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('groupsTab').classList.remove('text-slate-400', 'hover:text-white');
+    } else if (tab === 'requests') {
+        document.getElementById('requestsContent').classList.remove('hidden');
+        document.getElementById('requestsTab').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('requestsTab').classList.remove('text-slate-400', 'hover:text-white');
+    }
+}
+</script>
+{% endblock %}
+
+<!-- User Profile Modal -->
+<div id="userProfileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white">User Profile</h3>
+                <button onclick="closeUserProfile()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="profileContent" class="text-center">
+                <!-- Profile content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showUserProfile(userId) {
+    fetch(`/messaging/user-profile/${userId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const profileContent = document.getElementById('profileContent');
+                profileContent.innerHTML = `
+                    <div class="text-center mb-4">
+                        <div class="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden bg-blue-600 flex items-center justify-center">
+                            ${data.user.photo ? 
+                                `<img src="${data.user.photo}" alt="${data.user.name}" class="w-full h-full object-cover">` :
+                                `<span class="text-white text-lg font-medium">${data.user.name.charAt(0).toUpperCase()}</span>`
+                            }
+                        </div>
+                        <h4 class="text-white font-semibold text-lg">${data.user.name}</h4>
+                        <p class="text-slate-400">${data.user.user_type}</p>
+                        ${data.user.branch ? `<p class="text-slate-400 text-sm">${data.user.branch}</p>` : ''}
+                    </div>
+                    <div class="space-y-2 text-left">
+                        <div><span class="text-slate-400">Email:</span> <span class="text-white">${data.user.email}</span></div>
+                        ${data.user.phone ? `<div><span class="text-slate-400">Phone:</span> <span class="text-white">${data.user.phone}</span></div>` : ''}
+                        ${data.user.address ? `<div><span class="text-slate-400">Address:</span> <span class="text-white">${data.user.address}</span></div>` : ''}
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="startDirectChat(${userId}, '${data.user.name.replace(/'/g, "\\'")}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+                            Message
+                        </button>
+                        <button onclick="closeUserProfile()" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-2 rounded">
+                            Close
+                        </button>
+                    </div>
+                `;
+                document.getElementById('userProfileModal').classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading user profile:', error);
+        });
+}
+
+function closeUserProfile() {
+    document.getElementById('userProfileModal').classList.add('hidden');
+}
+
+function startDirectChat(userId, userName) {
+    window.location.href = `/messaging/chat/user/${userId}/`;
+}
+
+function performSearch() {
+    const searchTerm = document.getElementById('universalSearch').value.toLowerCase();
+    console.log('Searching for:', searchTerm);
+    
+    // Search in direct messages
+    const conversationItems = document.querySelectorAll('.conversation-item');
+    console.log('Found conversation items:', conversationItems.length);
+    conversationItems.forEach(item => {
+        const username = item.dataset.username || '';
+        const lastMessage = item.dataset.lastmessage || '';
+        console.log('Checking:', username, lastMessage);
+        
+        if (searchTerm === '' || username.includes(searchTerm) || lastMessage.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Search in groups
+    const groupItems = document.querySelectorAll('.group-item');
+    console.log('Found group items:', groupItems.length);
+    groupItems.forEach(item => {
+        const groupName = item.dataset.groupname || '';
+        const lastMessage = item.dataset.lastmessage || '';
+        console.log('Checking group:', groupName, lastMessage);
+        
+        if (searchTerm === '' || groupName.includes(searchTerm) || lastMessage.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Search in message requests
+    const requestItems = document.querySelectorAll('.request-item');
+    console.log('Found request items:', requestItems.length);
+    requestItems.forEach(item => {
+        const username = item.dataset.username || '';
+        const message = item.dataset.message || '';
+        console.log('Checking request:', username, message);
+        
+        if (searchTerm === '' || username.includes(searchTerm) || message.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+</script>

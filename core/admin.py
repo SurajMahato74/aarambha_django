@@ -1,7 +1,30 @@
 from django.contrib import admin
-from .models import HeroSection, WhoWeAre, GrowingOurImpact, Statistics, OurWork, SchoolDropoutReport, Donation
+from .models import HeroSection, WhoWeAre, GrowingOurImpact, Statistics, SupportCard, Partner, ContactInfo, Award, OurWork, SchoolDropoutReport, Donation, RecommendationLetter
 from ckeditor.widgets import CKEditorWidget
 from ckeditor.fields import RichTextField
+
+@admin.register(SupportCard)
+class SupportCardAdmin(admin.ModelAdmin):
+    list_display = ['title', 'button_text', 'order', 'is_active']
+    list_filter = ['is_active']
+    ordering = ['order']
+
+@admin.register(Partner)
+class PartnerAdmin(admin.ModelAdmin):
+    list_display = ['name', 'order', 'is_active']
+    list_filter = ['is_active']
+    ordering = ['order']
+
+@admin.register(ContactInfo)
+class ContactInfoAdmin(admin.ModelAdmin):
+    list_display = ['email', 'phone', 'is_active']
+    list_filter = ['is_active']
+
+@admin.register(Award)
+class AwardAdmin(admin.ModelAdmin):
+    list_display = ['title', 'year', 'order', 'is_active']
+    list_filter = ['is_active', 'year']
+    ordering = ['order']
 
 @admin.register(HeroSection)
 class HeroSectionAdmin(admin.ModelAdmin):
@@ -207,3 +230,30 @@ class DonationAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # Disable manual creation of donations (should be created via API)
         return False
+
+
+@admin.register(RecommendationLetter)
+class RecommendationLetterAdmin(admin.ModelAdmin):
+    list_display = ['user', 'purpose', 'status', 'created_at', 'has_signed_letter']
+    list_filter = ['status', 'created_at']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'purpose']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Request Information', {
+            'fields': ('user', 'purpose', 'description')
+        }),
+        ('Admin Action', {
+            'fields': ('status', 'admin_notes', 'signed_letter')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'approved_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_signed_letter(self, obj):
+        return bool(obj.signed_letter)
+    has_signed_letter.boolean = True
+    has_signed_letter.short_description = 'Letter Uploaded'

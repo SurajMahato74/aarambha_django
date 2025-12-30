@@ -1,0 +1,234 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Event Participations{% endblock %}
+{% block page_title %}Event Participations - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header with Back Button -->
+    <div class="flex items-center gap-4">
+        <a href="{% url 'admin_events' %}" class="text-indigo-400 hover:text-indigo-300">
+            <i class="fas fa-arrow-left"></i> Back to Events
+        </a>
+        <div>
+            <h2 class="text-xl font-semibold text-white">{{ event.title }}</h2>
+            <p class="text-slate-400">{{ event.get_event_type_display }} • {{ event.start_datetime|date:"M d, Y H:i" }}</p>
+        </div>
+    </div>
+
+    <!-- Event Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card rounded-lg p-4">
+            <div class="text-2xl font-bold text-indigo-400">{{ participations.count }}</div>
+            <div class="text-sm text-slate-400">Total Applications</div>
+        </div>
+        <div class="card rounded-lg p-4">
+            <div class="text-2xl font-bold text-green-400">{{ participations|length|add:0 }}</div>
+            <div class="text-sm text-slate-400">Approved</div>
+        </div>
+        <div class="card rounded-lg p-4">
+            <div class="text-2xl font-bold text-blue-400">{{ participations|length|add:0 }}</div>
+            <div class="text-sm text-slate-400">Attended</div>
+        </div>
+        <div class="card rounded-lg p-4">
+            <div class="text-2xl font-bold text-yellow-400">{{ participations|length|add:0 }}</div>
+            <div class="text-sm text-slate-400">Pending</div>
+        </div>
+    </div>
+
+    <!-- Participations Management -->
+    <div class="card rounded-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-white">Participants</h3>
+            <button onclick="openAttendanceModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-check-circle"></i> Mark Attendance
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-slate-700">
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Participant</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Type</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Status</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Applied</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Attendance</th>
+                        <th class="text-left py-3 px-4 font-medium text-slate-300">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for participation in participations %}
+                    <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+                        <td class="py-3 px-4">
+                            <div>
+                                <div class="font-medium text-white">{{ participation.user.get_full_name|default:participation.user.email }}</div>
+                                <div class="text-sm text-slate-400">{{ participation.user.email }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="badge bg-blue-900 text-blue-300">{{ participation.user.get_user_type_display }}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if participation.status == 'applied' %}
+                                <span class="badge bg-yellow-900 text-yellow-300">Applied</span>
+                            {% elif participation.status == 'approved' %}
+                                <span class="badge bg-green-900 text-green-300">Approved</span>
+                            {% elif participation.status == 'rejected' %}
+                                <span class="badge bg-red-900 text-red-300">Rejected</span>
+                            {% elif participation.status == 'attended' %}
+                                <span class="badge bg-blue-900 text-blue-300">Attended</span>
+                            {% elif participation.status == 'absent' %}
+                                <span class="badge bg-gray-900 text-gray-300">Absent</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="text-sm text-slate-400">{{ participation.applied_at|date:"M d, Y H:i" }}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if participation.attended %}
+                                <span class="text-green-400"><i class="fas fa-check-circle"></i> Present</span>
+                            {% else %}
+                                <span class="text-slate-500"><i class="fas fa-times-circle"></i> Not Marked</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            <button onclick="editParticipation({{ participation.id }}, '{{ participation.user.get_full_name|default:participation.user.email|escapejs }}', '{{ participation.status }}', '{{ participation.admin_notes|escapejs }}')" class="text-indigo-400 hover:text-indigo-300 mr-2" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">
+                            <i class="fas fa-users text-4xl mb-4"></i>
+                            <div>No participants yet</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Participation Modal -->
+<div id="participationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="participationModalTitle" class="text-lg font-semibold text-white">Edit Participation</h3>
+            <button onclick="closeParticipationModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="participationForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_participation">
+            <input type="hidden" name="participation_id" id="participationId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Status</label>
+                    <select name="status" id="participationStatus" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                        <option value="applied">Applied</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="attended">Attended</option>
+                        <option value="absent">Absent</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Admin Notes</label>
+                    <textarea name="admin_notes" id="adminNotes" rows="3" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500" placeholder="Add notes about this participation..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeParticipationModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg">
+                    Update
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Attendance Modal -->
+<div id="attendanceModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Mark Attendance</h3>
+            <button onclick="closeAttendanceModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="attendanceForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_attendance">
+
+            <div class="space-y-3">
+                {% for participation in participations %}
+                <div class="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+                    <div>
+                        <div class="font-medium text-white">{{ participation.user.get_full_name|default:participation.user.email }}</div>
+                        <div class="text-sm text-slate-400">{{ participation.user.get_user_type_display }}</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="hidden" name="participation_ids" value="{{ participation.id }}">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="attended" value="{{ participation.id }}" {% if participation.attended %}checked{% endif %} class="mr-2">
+                            <span class="text-sm text-slate-300">Present</span>
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeAttendanceModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                    Save Attendance
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editParticipation(id, userName, status, adminNotes) {
+    document.getElementById('participationModalTitle').textContent = `Edit: ${userName}`;
+    document.getElementById('participationId').value = id;
+    document.getElementById('participationStatus').value = status;
+    document.getElementById('adminNotes').value = adminNotes;
+    document.getElementById('participationModal').classList.remove('hidden');
+}
+
+function closeParticipationModal() {
+    document.getElementById('participationModal').classList.add('hidden');
+}
+
+function openAttendanceModal() {
+    document.getElementById('attendanceModal').classList.remove('hidden');
+}
+
+function closeAttendanceModal() {
+    document.getElementById('attendanceModal').classList.add('hidden');
+}
+
+// Close modals when clicking outside
+document.getElementById('participationModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeParticipationModal();
+    }
+});
+
+document.getElementById('attendanceModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAttendanceModal();
+    }
+});
+</script>
+{% endblock %}
