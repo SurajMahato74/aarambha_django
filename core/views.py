@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .districts import NEPAL_DISTRICTS
-from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Partner, ContactInfo, Award, OurWork, RecommendationLetter
+from .models import HeroSection, SupportCard, WhoWeAre, GrowingOurImpact, Statistics, Partner, ContactInfo, Award, OurWork, RecommendationLetter, IndexEvent
 from decimal import Decimal
 
 def website_home(request):
@@ -13,6 +13,10 @@ def website_home(request):
     contact_info = ContactInfo.get_active()
     awards = Award.get_active_awards()
     our_work_items = OurWork.get_active_works()
+    
+    # Get events for the index page from IndexEvent model
+    events = IndexEvent.get_active_events()[:6]  # Show latest 6 events
+    
     context = {
         'hero_section': hero_section,
         'support_cards': support_cards,
@@ -22,7 +26,8 @@ def website_home(request):
         'partners': partners,
         'contact_info': contact_info,
         'awards': awards,
-        'our_work_items': our_work_items
+        'our_work_items': our_work_items,
+        'events': events
     }
     return render(request, 'website/index.html', context)
 
@@ -56,7 +61,30 @@ def website_sponsor_child_form(request):
     return render(request, 'website/sponsor_child_form.html', {'districts': NEPAL_DISTRICTS})
 
 def website_events(request):
-    return render(request, 'website/events.html', {'districts': NEPAL_DISTRICTS})
+    # Get all active IndexEvents for the events page
+    events = IndexEvent.get_active_events()
+    contact_info = ContactInfo.get_active()
+    awards = Award.get_active_awards()
+    
+    context = {
+        'events': events,
+        'contact_info': contact_info,
+        'awards': awards,
+    }
+    return render(request, 'website/events.html', context)
+
+def website_event_detail(request, event_id):
+    """Display event detail page"""
+    event = get_object_or_404(IndexEvent, id=event_id, is_active=True)
+    contact_info = ContactInfo.get_active()
+    awards = Award.get_active_awards()
+    
+    context = {
+        'event': event,
+        'contact_info': contact_info,
+        'awards': awards,
+    }
+    return render(request, 'website/event_detail.html', context)
 
 
 def get_involved(request):
@@ -394,45 +422,79 @@ def admin_partners(request):
     return render(request, 'admin/partners.html', context)
 
 def admin_events(request):
-    """Event management admin page"""
-    from events.models import Event, EventParticipation
-    from django.db.models import Avg, Count
+    """Content management for events displayed on index page"""
     import json
+    from django.contrib import messages
     
-    events = Event.objects.all().order_by('-start_datetime')
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'create':
+            try:
+                event = IndexEvent.objects.create(
+                    title=request.POST.get('title'),
+                    description=request.POST.get('description'),
+                    location=request.POST.get('location', ''),
+                    event_date=request.POST.get('event_date') or None,
+                    order=int(request.POST.get('order', 0)),
+                    is_active=request.POST.get('is_active') == 'on'
+                )
+                
+                if request.FILES.get('image'):
+                    event.image = request.FILES['image']
+                    event.save()
+                
+                messages.success(request, 'Event created successfully!')
+            except Exception as e:
+                messages.error(request, f'Error creating event: {str(e)}')
+        
+        elif action == 'update':
+            try:
+                event_id = request.POST.get('event_id')
+                event = get_object_or_404(IndexEvent, id=event_id)
+                
+                event.title = request.POST.get('title')
+                event.description = request.POST.get('description')
+                event.location = request.POST.get('location', '')
+                event.event_date = request.POST.get('event_date') or None
+                event.order = int(request.POST.get('order', 0))
+                event.is_active = request.POST.get('is_active') == 'on'
+                
+                if request.FILES.get('image'):
+                    event.image = request.FILES['image']
+                
+                event.save()
+                messages.success(request, 'Event updated successfully!')
+            except Exception as e:
+                messages.error(request, f'Error updating event: {str(e)}')
+        
+        elif action == 'delete':
+            try:
+                event_id = request.POST.get('event_id')
+                event = get_object_or_404(IndexEvent, id=event_id)
+                event.delete()
+                messages.success(request, 'Event deleted successfully!')
+            except Exception as e:
+                messages.error(request, f'Error deleting event: {str(e)}')
+        
+        return redirect('admin_events')
+    
+    # Get IndexEvents for the index page content management
+    events = IndexEvent.objects.all().order_by('order', '-event_date')
     
     # Serialize events to JSON for JavaScript
     events_json = []
     for event in events:
-        # Calculate review statistics
-        reviews = EventParticipation.objects.filter(event=event, review__isnull=False).exclude(review='')
-        avg_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
-        review_count = reviews.count()
-        
         events_json.append({
             'id': event.id,
             'title': event.title,
             'description': event.description,
             'image': event.image.url if event.image else None,
-            'event_type': event.event_type,
-            'venue_type': event.venue_type,
-            'venue_name': event.venue_name,
-            'venue_address': event.venue_address,
-            'meeting_link': event.meeting_link,
-            'meeting_id': event.meeting_id,
-            'meeting_password': event.meeting_password,
-            'contact_person': event.contact_person,
-            'contact_phone': event.contact_phone,
-            'contact_email': event.contact_email,
-            'start_datetime': event.start_datetime.isoformat() if event.start_datetime else None,
-            'end_datetime': event.end_datetime.isoformat() if event.end_datetime else None,
-            'user_type': event.user_type,
-            'max_participants': event.max_participants,
-            'requires_application': event.requires_application,
+            'location': event.location,
+            'event_date': event.event_date.isoformat() if event.event_date else None,
+            'order': event.order,
             'is_active': event.is_active,
             'created_at': event.created_at.isoformat(),
-            'avg_rating': round(avg_rating, 1) if avg_rating else None,
-            'review_count': review_count,
         })
     
     context = {

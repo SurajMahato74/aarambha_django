@@ -472,3 +472,37 @@ class RecommendationLetter(models.Model):
     
     def __str__(self):
         return f"Recommendation Letter - {self.user.get_full_name() or self.user.email} ({self.purpose})"
+
+
+class IndexEvent(models.Model):
+    """
+    Model to store events displayed on the index page.
+    This is separate from the main Event model used for event management.
+    """
+    title = models.CharField(max_length=300, help_text="Event title")
+    description = models.TextField(help_text="Event description")
+    image = models.ImageField(
+        upload_to='index_events/',
+        blank=True,
+        null=True,
+        help_text="Event image for display on index page"
+    )
+    location = models.CharField(max_length=200, blank=True, help_text="Event location")
+    event_date = models.DateTimeField(blank=True, null=True, help_text="Event date and time")
+    order = models.IntegerField(default=0, help_text="Display order (lower numbers appear first)")
+    is_active = models.BooleanField(default=True, help_text="Set to active to display this event on index page")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Index Page Event"
+        verbose_name_plural = "Index Page Events"
+        ordering = ['order', '-event_date']
+    
+    def __str__(self):
+        return f"Index Event - {self.title}"
+    
+    @classmethod
+    def get_active_events(cls):
+        """Get all active events for index page display"""
+        return cls.objects.filter(is_active=True).order_by('order', '-event_date')

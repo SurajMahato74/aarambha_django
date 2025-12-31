@@ -10,6 +10,7 @@ urlpatterns = [
     path('volunteer-form/', views.website_volunteer_form, name='website_volunteer_form'),
     path('sponsor-child-form/', views.website_sponsor_child_form, name='website_sponsor_child_form'),
     path('events/', views.website_events, name='website_events'),
+    path('events/<int:event_id>/', views.website_event_detail, name='website_event_detail'),
     path('get-involved/', views.get_involved, name='get_involved'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

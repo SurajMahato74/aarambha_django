@@ -1,50 +1,15 @@
 {% extends 'admin/base.html' %}
 
-{% block title %}Events Management{% endblock %}
-{% block page_title %}Events Management{% endblock %}
+{% block title %}Index Page Events{% endblock %}
+{% block page_title %}Index Page Events{% endblock %}
 
 {% block content %}
 <div class="flex justify-between items-center mb-6">
-    <p class="text-slate-400">Manage events for the website</p>
+    <p class="text-slate-400">Manage events displayed on the website index page</p>
     <button onclick="openCreateModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
         <i class="fas fa-plus"></i> Add Event
     </button>
 </div>
-
-<!-- Filters and Search -->
-<div class="card rounded-lg p-4 mb-6">
-    <div class="grid grid-cols-4 gap-4">
-        <div>
-            <input type="text" id="searchInput" placeholder="Search events..." 
-                   class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-        </div>
-        <div>
-            <select id="eventTypeFilter" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                <option value="">All Event Types</option>
-                <option value="meeting">Meeting</option>
-                <option value="training">Training</option>
-                <option value="workshop">Workshop</option>
-                <option value="conference">Conference</option>
-                <option value="social">Social Event</option>
-                <option value="other">Other</option>
-            </select>
-        </div>
-        <div>
-            <select id="statusFilter" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-        </div>
-        <div>
-            <button onclick="clearFilters()" class="w-full px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg">
-                Clear Filters
-            </button>
-        </div>
-    </div>
-</div>
-
-<hr class="border-slate-700 mb-6">
 
 <!-- Events Table -->
 <div class="card rounded-lg overflow-hidden">
@@ -54,10 +19,9 @@
                 <tr>
                     <th class="text-left p-4">Image</th>
                     <th class="text-left p-4">Title</th>
-                    <th class="text-left p-4">Venue</th>
-                    <th class="text-left p-4">Start Date</th>
-                    <th class="text-left p-4">Type</th>
-                    <th class="text-left p-4">Reviews</th>
+                    <th class="text-left p-4">Location</th>
+                    <th class="text-left p-4">Date</th>
+                    <th class="text-left p-4">Order</th>
                     <th class="text-left p-4">Status</th>
                     <th class="text-left p-4">Actions</th>
                 </tr>
@@ -80,26 +44,15 @@
         </div>
         
         <form id="eventForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="eventId" name="event_id">
+            <input type="hidden" name="action" id="formAction" value="create">
+            
             <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Title *</label>
-                        <input type="text" id="title" name="title" required 
-                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Event Type *</label>
-                        <select id="event_type" name="event_type" required
-                                class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                            <option value="meeting">Meeting</option>
-                            <option value="training">Training</option>
-                            <option value="workshop">Workshop</option>
-                            <option value="conference">Conference</option>
-                            <option value="social">Social Event</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Title *</label>
+                    <input type="text" id="title" name="title" required 
+                           class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 
                 <div>
@@ -116,110 +69,27 @@
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Start Date & Time *</label>
-                        <input type="datetime-local" id="start_datetime" name="start_datetime" required
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Location</label>
+                        <input type="text" id="location" name="location"
                                class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">End Date & Time *</label>
-                        <input type="datetime-local" id="end_datetime" name="end_datetime" required
-                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Venue Type *</label>
-                    <select id="venue_type" name="venue_type" required onchange="toggleVenueFields()"
-                            class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                        <option value="physical">Physical Location</option>
-                        <option value="online">Online (Zoom/Meet)</option>
-                        <option value="hybrid">Hybrid</option>
-                    </select>
-                </div>
-                
-                <div id="physicalVenue" class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Venue Name</label>
-                        <input type="text" id="venue_name" name="venue_name"
-                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Venue Address</label>
-                        <textarea id="venue_address" name="venue_address" rows="2"
-                                  class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"></textarea>
-                    </div>
-                </div>
-                
-                <div id="onlineVenue" class="hidden space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Meeting Link</label>
-                        <input type="url" id="meeting_link" name="meeting_link"
-                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Meeting ID</label>
-                            <input type="text" id="meeting_id" name="meeting_id"
-                                   class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Meeting Password</label>
-                            <input type="text" id="meeting_password" name="meeting_password"
-                                   class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Contact Person</label>
-                        <input type="text" id="contact_person" name="contact_person"
-                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Contact Phone</label>
-                        <input type="tel" id="contact_phone" name="contact_phone"
-                               class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Contact Email</label>
-                        <input type="email" id="contact_email" name="contact_email"
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Event Date</label>
+                        <input type="datetime-local" id="event_date" name="event_date"
                                class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">User Type</label>
-                        <select id="user_type" name="user_type"
-                                class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                            <option value="both">Members & Volunteers</option>
-                            <option value="member">Members Only</option>
-                            <option value="volunteer">Volunteers Only</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Max Participants</label>
-                        <input type="number" id="max_participants" name="max_participants" min="1"
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Display Order</label>
+                        <input type="number" id="order" name="order" value="0"
                                class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center">
-                        <input type="checkbox" id="requires_application" name="requires_application"
-                               class="w-4 h-4 text-indigo-600 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500">
-                        <label for="requires_application" class="ml-2 text-sm text-slate-300">Requires Application</label>
+                        <p class="text-xs text-slate-400 mt-1">Lower numbers appear first</p>
                     </div>
                     
-                    <div class="flex items-center">
+                    <div class="flex items-center pt-6">
                         <input type="checkbox" id="is_active" name="is_active" checked
                                class="w-4 h-4 text-indigo-600 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500">
                         <label for="is_active" class="ml-2 text-sm text-slate-300">Active</label>
@@ -239,209 +109,31 @@
     </div>
 </div>
 
-<!-- Event Detail Modal -->
-<div id="eventDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-white">Event Details</h3>
-            <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-6">
-            <!-- Left Column -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">Title</label>
-                    <p id="detail-title" class="text-white font-medium"></p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">Description</label>
-                    <p id="detail-description" class="text-slate-300"></p>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Event Type</label>
-                        <p id="detail-event-type" class="text-slate-300 capitalize"></p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Venue Type</label>
-                        <p id="detail-venue-type" class="text-slate-300 capitalize"></p>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Start Date & Time</label>
-                        <p id="detail-start-datetime" class="text-slate-300"></p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">End Date & Time</label>
-                        <p id="detail-end-datetime" class="text-slate-300"></p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Right Column -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">Contact Information</label>
-                    <div class="bg-slate-700/50 rounded-lg p-3 space-y-2">
-                        <div>
-                            <span class="text-xs text-slate-400">Contact Person:</span>
-                            <p id="detail-contact-person" class="text-slate-300"></p>
-                        </div>
-                        <div>
-                            <span class="text-xs text-slate-400">Phone:</span>
-                            <p id="detail-contact-phone" class="text-slate-300"></p>
-                        </div>
-                        <div>
-                            <span class="text-xs text-slate-400">Email:</span>
-                            <p id="detail-contact-email" class="text-blue-400"></p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">User Type</label>
-                        <p id="detail-user-type" class="text-slate-300 capitalize"></p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Max Participants</label>
-                        <p id="detail-max-participants" class="text-slate-300"></p>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Status</label>
-                        <span id="detail-status" class="inline-flex items-center px-2 py-1 rounded text-xs font-medium"></span>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Requires Application</label>
-                        <span id="detail-requires-application" class="inline-flex items-center px-2 py-1 rounded text-xs font-medium"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="flex justify-end mt-6">
-            <button onclick="closeDetailModal()" class="px-4 py-2 text-slate-400 hover:text-white">
-                Close
-            </button>
-        </div>
-    </div>
-</div>
-
 <script>
 let events = {{ events|safe }};
-let filteredEvents = [...events];
 let editingEventId = null;
 
-// Utility functions
-function getToken() {
-    return localStorage.getItem('access_token') || '';
-}
-
-function showLoader() {
-    // Add loader implementation if needed
-}
-
-function hideLoader() {
-    // Add loader implementation if needed
-}
-
-function toggleVenueFields() {
-    const venueType = document.getElementById('venue_type').value;
-    const physicalVenue = document.getElementById('physicalVenue');
-    const onlineVenue = document.getElementById('onlineVenue');
-    
-    if (venueType === 'online') {
-        physicalVenue.classList.add('hidden');
-        onlineVenue.classList.remove('hidden');
-    } else if (venueType === 'physical') {
-        physicalVenue.classList.remove('hidden');
-        onlineVenue.classList.add('hidden');
-    } else { // hybrid
-        physicalVenue.classList.remove('hidden');
-        onlineVenue.classList.remove('hidden');
-    }
-}
-
-async function fetchAPI(url, options = {}) {
-    const token = getToken();
-    const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-    
-    return fetch(url, {
-        ...options,
-        headers
-    });
-}
-
-// Load events on page load
 document.addEventListener('DOMContentLoaded', function() {
-    filteredEvents = [...events];
     loadEvents();
-    
-    // Add event listeners for filters
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
-    document.getElementById('eventTypeFilter').addEventListener('change', applyFilters);
-    document.getElementById('statusFilter').addEventListener('change', applyFilters);
 });
-
-// Filter and search functions
-function applyFilters() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const eventType = document.getElementById('eventTypeFilter').value;
-    const status = document.getElementById('statusFilter').value;
-    
-    filteredEvents = events.filter(event => {
-        const matchesSearch = event.title.toLowerCase().includes(searchTerm) || 
-                            event.description.toLowerCase().includes(searchTerm);
-        const matchesType = !eventType || event.event_type === eventType;
-        const matchesStatus = !status || 
-                             (status === 'active' && event.is_active) || 
-                             (status === 'inactive' && !event.is_active);
-        
-        return matchesSearch && matchesType && matchesStatus;
-    });
-    
-    loadEvents();
-}
-
-function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('eventTypeFilter').value = '';
-    document.getElementById('statusFilter').value = '';
-    filteredEvents = [...events];
-    loadEvents();
-}
 
 function loadEvents() {
     const tbody = document.getElementById('eventsTableBody');
     tbody.innerHTML = '';
     
-    if (filteredEvents.length === 0) {
+    if (events.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="p-8 text-center text-slate-400">
+                <td colspan="7" class="p-8 text-center text-slate-400">
                     <i class="fas fa-calendar-alt text-4xl mb-4"></i>
-                    <p>No events found. ${events.length === 0 ? 'Click "Add Event" to create your first event.' : 'Try adjusting your filters.'}</p>
+                    <p>No events found. Click "Add Event" to create your first event.</p>
                 </td>
             </tr>
         `;
         return;
     }
     
-    filteredEvents.forEach(event => {
+    events.forEach(event => {
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-800/30 transition';
         
@@ -452,24 +144,10 @@ function loadEvents() {
                     '<div class="w-12 h-12 bg-slate-600 rounded flex items-center justify-center"><i class="fas fa-image text-slate-400"></i></div>'
                 }
             </td>
-            <td class="p-4 font-medium text-white">
-                <a href="/admin/events/${event.id}/participants/" class="text-indigo-400 hover:text-indigo-300 hover:underline">
-                    ${event.title}
-                </a>
-            </td>
-            <td class="p-4 text-slate-300">${event.venue_name || event.meeting_link || 'Online/Physical'}</td>
-            <td class="p-4 text-slate-300">${event.start_datetime ? new Date(event.start_datetime).toLocaleDateString() : 'Not set'}</td>
-            <td class="p-4 text-slate-300">${event.event_type || 'meeting'}</td>
-            <td class="p-4">
-                ${event.review_count > 0 ? `
-                    <a href="/admin/events/${event.id}/reviews/" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 hover:underline">
-                        <div class="flex text-yellow-400">
-                            ${'★'.repeat(Math.round(event.avg_rating))}<span class="text-slate-600">${'★'.repeat(5 - Math.round(event.avg_rating))}</span>
-                        </div>
-                        <span class="text-sm">${event.avg_rating}/5 (${event.review_count})</span>
-                    </a>
-                ` : '<span class="text-slate-500 text-sm">No reviews</span>'}
-            </td>
+            <td class="p-4 font-medium text-white">${event.title}</td>
+            <td class="p-4 text-slate-300">${event.location || 'Not specified'}</td>
+            <td class="p-4 text-slate-300">${event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Not set'}</td>
+            <td class="p-4 text-slate-300">${event.order}</td>
             <td class="p-4">
                 <span class="badge ${event.is_active ? 'bg-emerald-900/30 text-emerald-300' : 'bg-slate-700 text-slate-400'}">
                     ${event.is_active ? 'Active' : 'Inactive'}
@@ -477,14 +155,8 @@ function loadEvents() {
             </td>
             <td class="p-4">
                 <div class="flex gap-2">
-                    <button onclick="viewEvent(${event.id})" class="text-blue-400 hover:text-blue-300" title="View Details">
-                        <i class="fas fa-eye"></i>
-                    </button>
                     <button onclick="editEvent(${event.id})" class="text-indigo-400 hover:text-indigo-300" title="Edit">
                         <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="toggleEventStatus(${event.id})" class="text-amber-400 hover:text-amber-300" title="Toggle Status">
-                        <i class="fas fa-toggle-${event.is_active ? 'on' : 'off'}"></i>
                     </button>
                     <button onclick="deleteEvent(${event.id})" class="text-red-400 hover:text-red-300" title="Delete">
                         <i class="fas fa-trash"></i>
@@ -501,12 +173,10 @@ function openCreateModal() {
     editingEventId = null;
     document.getElementById('modalTitle').textContent = 'Add Event';
     document.getElementById('submitText').textContent = 'Create Event';
+    document.getElementById('formAction').value = 'create';
     document.getElementById('eventForm').reset();
     document.getElementById('is_active').checked = true;
-    document.getElementById('venue_type').value = 'physical';
-    document.getElementById('event_type').value = 'meeting';
-    document.getElementById('user_type').value = 'both';
-    toggleVenueFields();
+    document.getElementById('order').value = 0;
     document.getElementById('eventModal').classList.remove('hidden');
 }
 
@@ -517,43 +187,19 @@ function editEvent(id) {
     editingEventId = id;
     document.getElementById('modalTitle').textContent = 'Edit Event';
     document.getElementById('submitText').textContent = 'Update Event';
+    document.getElementById('formAction').value = 'update';
+    document.getElementById('eventId').value = id;
     
-    // Basic fields
     document.getElementById('title').value = event.title || '';
     document.getElementById('description').value = event.description || '';
-    document.getElementById('event_type').value = event.event_type || 'meeting';
-    
-    // Date fields
-    if (event.start_datetime) {
-        const startDate = new Date(event.start_datetime);
-        document.getElementById('start_datetime').value = startDate.toISOString().slice(0, 16);
-    }
-    if (event.end_datetime) {
-        const endDate = new Date(event.end_datetime);
-        document.getElementById('end_datetime').value = endDate.toISOString().slice(0, 16);
-    }
-    
-    // Venue fields
-    document.getElementById('venue_type').value = event.venue_type || 'physical';
-    document.getElementById('venue_name').value = event.venue_name || '';
-    document.getElementById('venue_address').value = event.venue_address || '';
-    document.getElementById('meeting_link').value = event.meeting_link || '';
-    document.getElementById('meeting_id').value = event.meeting_id || '';
-    document.getElementById('meeting_password').value = event.meeting_password || '';
-    
-    // Contact fields
-    document.getElementById('contact_person').value = event.contact_person || '';
-    document.getElementById('contact_phone').value = event.contact_phone || '';
-    document.getElementById('contact_email').value = event.contact_email || '';
-    
-    // Participation fields
-    document.getElementById('user_type').value = event.user_type || 'both';
-    document.getElementById('max_participants').value = event.max_participants || '';
-    document.getElementById('requires_application').checked = event.requires_application || false;
+    document.getElementById('location').value = event.location || '';
+    document.getElementById('order').value = event.order || 0;
     document.getElementById('is_active').checked = event.is_active;
     
-    // Toggle venue fields based on type
-    toggleVenueFields();
+    if (event.event_date) {
+        const eventDate = new Date(event.event_date);
+        document.getElementById('event_date').value = eventDate.toISOString().slice(0, 16);
+    }
     
     document.getElementById('eventModal').classList.remove('hidden');
 }
@@ -562,162 +208,48 @@ function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
 }
 
-function closeDetailModal() {
-    document.getElementById('eventDetailModal').classList.add('hidden');
-}
-
-function viewEvent(id) {
-    const event = events.find(e => e.id === id);
-    if (!event) return;
-    
-    // Populate detail modal
-    document.getElementById('detail-title').textContent = event.title;
-    document.getElementById('detail-description').textContent = event.description;
-    document.getElementById('detail-event-type').textContent = event.event_type || 'meeting';
-    document.getElementById('detail-venue-type').textContent = event.venue_type || 'physical';
-    
-    // Format dates
-    if (event.start_datetime) {
-        const startDate = new Date(event.start_datetime);
-        document.getElementById('detail-start-datetime').textContent = startDate.toLocaleString();
-    } else {
-        document.getElementById('detail-start-datetime').textContent = 'Not set';
-    }
-    
-    if (event.end_datetime) {
-        const endDate = new Date(event.end_datetime);
-        document.getElementById('detail-end-datetime').textContent = endDate.toLocaleString();
-    } else {
-        document.getElementById('detail-end-datetime').textContent = 'Not set';
-    }
-    
-    // Contact information
-    document.getElementById('detail-contact-person').textContent = event.contact_person || 'Not specified';
-    document.getElementById('detail-contact-phone').textContent = event.contact_phone || 'Not specified';
-    document.getElementById('detail-contact-email').textContent = event.contact_email || 'Not specified';
-    
-    // Participation details
-    document.getElementById('detail-user-type').textContent = event.user_type || 'both';
-    document.getElementById('detail-max-participants').textContent = event.max_participants || 'Unlimited';
-    
-    // Status badges
-    const statusElement = document.getElementById('detail-status');
-    if (event.is_active) {
-        statusElement.textContent = 'Active';
-        statusElement.className = 'inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-900/30 text-emerald-300';
-    } else {
-        statusElement.textContent = 'Inactive';
-        statusElement.className = 'inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-400';
-    }
-    
-    const requiresAppElement = document.getElementById('detail-requires-application');
-    if (event.requires_application) {
-        requiresAppElement.textContent = 'Yes';
-        requiresAppElement.className = 'inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-900/30 text-blue-300';
-    } else {
-        requiresAppElement.textContent = 'No';
-        requiresAppElement.className = 'inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-400';
-    }
-    
-    // Show modal
-    document.getElementById('eventDetailModal').classList.remove('hidden');
-}
-
 // Form submission
 document.getElementById('eventForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    showLoader();
     
     const formData = new FormData(this);
     
-    // Handle checkboxes that might not be in FormData if unchecked
-    if (!document.getElementById('requires_application').checked) {
-        formData.set('requires_application', 'false');
-    }
-    if (!document.getElementById('is_active').checked) {
-        formData.set('is_active', 'false');
-    }
-    
     try {
-        const url = editingEventId ? 
-            `/api/events/${editingEventId}/` : 
-            '/api/events/create/';
-        
-        const response = await fetch(url, {
-            method: editingEventId ? 'PATCH' : 'POST',
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-                // Don't set Content-Type for FormData, let browser set it
-            },
+        const response = await fetch('', {
+            method: 'POST',
             body: formData
         });
         
         if (response.ok) {
-            const eventData = await response.json();
-            
-            if (editingEventId) {
-                const index = events.findIndex(e => e.id === editingEventId);
-                events[index] = eventData;
-            } else {
-                events.unshift(eventData);
-                filteredEvents = [...events];
-            }
-            
-            loadEvents();
-            closeModal();
-            alert('Event saved successfully!');
+            location.reload();
         } else {
-            const error = await response.json();
-            alert('Error: ' + (error.detail || JSON.stringify(error)));
+            alert('Error saving event');
         }
     } catch (error) {
         alert('Network error: ' + error.message);
-    } finally {
-        hideLoader();
     }
 });
-
-async function toggleEventStatus(id) {
-    showLoader();
-    
-    try {
-        const response = await fetchAPI(`/api/events/${id}/`, {
-            method: 'PATCH',
-            body: JSON.stringify({ is_active: true }) // This will be toggled in the backend
-        });
-        
-        if (response.ok) {
-            const eventData = await response.json();
-            const index = events.findIndex(e => e.id === id);
-            events[index] = eventData;
-            loadEvents();
-        }
-    } catch (error) {
-        alert('Error toggling status: ' + error.message);
-    } finally {
-        hideLoader();
-    }
-}
 
 async function deleteEvent(id) {
     if (!confirm('Are you sure you want to delete this event?')) return;
     
-    showLoader();
+    const formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('event_id', id);
     
     try {
-        const response = await fetchAPI(`/api/events/${id}/`, {
-            method: 'DELETE'
+        const response = await fetch('', {
+            method: 'POST',
+            body: formData
         });
         
         if (response.ok) {
-            events = events.filter(e => e.id !== id);
-            loadEvents();
-            alert('Event deleted successfully!');
+            location.reload();
+        } else {
+            alert('Error deleting event');
         }
     } catch (error) {
-        alert('Error deleting event: ' + error.message);
-    } finally {
-        hideLoader();
+        alert('Network error: ' + error.message);
     }
 }
 </script>
