@@ -26,8 +26,8 @@
     <title>Guest Welcome • Aarambha Foundation</title>
     <style>
         .sidebar .list-group-item.active {
-            background-color: #d6692a;
-            border-color: #d6692a;
+            background-color: #2D3B5B;
+            border-color: #2D3B5B;
             color: white;
         }
 
@@ -85,7 +85,7 @@
         #applicationDetailModal .modal-header,
         #interviewScheduleModal .modal-header,
         #editApplicationModal .modal-header {
-            background-color: #d6692a;
+            background-color: #2D3B5B;
             color: #fff;
             border-bottom: none;
         }
@@ -95,6 +95,22 @@
         #interviewScheduleModal .modal-footer,
         #editApplicationModal .modal-footer {
             background-color: #f1f1f1;
+        }
+        .profile-section h6{
+            letter-spacing: 1px !important;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        #applicationModalBody h6{
+            letter-spacing: 1px !important;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .profile-section p{
+            font-size: 14px;
+        }
+        #applicationModalBody p{
+            font-size: 12px;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -108,18 +124,18 @@
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <header class="d-flex justify-content-between align-items-center mb-3">
+                    <header class="d-flex justify-content-between align-items-center mb-2">
                         <div class="d-flex align-items-center gap-2">
                         </div>
                     </header>
 
                     <div class="row">
                         <!-- Horizontal Navigation -->
-                        <div class="col-12 mb-3">
-                            <div class="card">
-                                <div class="card-body p-2">
+                        <div class="col-12 mb-2">
+                            <div class="card p-0 ">
+                                <div class="card-body p-0">
                                     <nav class="nav nav-pills nav-justified" id="sidebarNav">
-                                        <a href="#" class="nav-link active" data-target="profile" style="background-color: #E36F1E; border-color: #E36F1E;">
+                                        <a href="#" class="nav-link active" data-target="profile" style="background-color: #2D3B5B; border-color: #2D3B5B;">
                                             <i class="fas fa-user me-1"></i>Profile
                                         </a>
                                         <a href="#" class="nav-link" data-target="notices" style="color: #E36F1E;">
@@ -134,7 +150,7 @@
                         </div>
                         <!-- Main Content -->
                         <div class="col-12">
-                            <div id="profile" class="content-section" style="display: block; min-height: 70vh; max-height: 70vh; overflow-y: auto;">
+                            <div id="profile" class="content-section" style="display: block; ">
                                 <div class="card">
                                     <div class="card-header" style="background-color: #E36F1E; color: white;">
                                         <h5 class="mb-0"><i class="fas fa-user me-2"></i>Profile Information</h5>
@@ -147,18 +163,18 @@
                                     </div>
                                 </div>
                             </div>
-                            <div id="notices" class="content-section" style="display: none; min-height: 70vh; max-height: 70vh; overflow-y: auto;">
+                            <div id="notices" class="content-section" style="display: none; ">
                                 <div id="noticesContainer">
-                                    <div class="text-center py-4">
-                                        <i class="fas fa-spinner fa-spin fa-2x text-muted mb-3"></i>
+                                    <div class="text-center py-2">
+                                        <i class="fas fa-spinner fa-spin fa-2x text-muted mb-2"></i>
                                         <p class="text-muted">Loading notices...</p>
                                     </div>
                                 </div>
                             </div>
-                            <div id="applications" class="content-section" style="display: none; min-height: 70vh;">
+                            <div id="applications" class="content-section" style="display: none; ">
                                 <div class="table-responsive">
-                                    <table class="table table-striped">
-                                        <thead class="table-dark">
+                                    <table class="table table-borderless">
+                                        <thead style="background: #2D3B5B; color: #fff;">
                                             <tr>
                                                 <th>Type</th>
                                                 <th>Status</th>
@@ -304,8 +320,8 @@
         <div class="modal-content" style="background-color: #f8f6f4;">
             <div class="modal-header" style="background-color: #E36F1E; color: white;">
                 <h5 class="modal-title">Application Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                <button type="button" class="close " data-dismiss="modal" aria-label="Close">
+                    <span  aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body" id="applicationModalBody" style="background-color: #f8f6f4;">
@@ -431,10 +447,10 @@
                     document.querySelectorAll('#sidebarNav .nav-link').forEach(item => {
                         item.classList.remove('active');
                         item.style.backgroundColor = '';
-                        item.style.color = '#E36F1E';
+                        item.style.color = '#2D3B5B';
                     });
                     e.target.classList.add('active');
-                    e.target.style.backgroundColor = '#E36F1E';
+                    e.target.style.backgroundColor = '#2D3B5B';
                     e.target.style.color = 'white';
                     document.querySelectorAll('.content-section').forEach(section => section.style.display = 'none');
                     document.getElementById(target).style.display = 'block';
@@ -552,7 +568,7 @@
                         const isUnread = !notification.is_read ? '<span class="badge bg-primary ms-2">New</span>' : '';
 
                         return `
-                            <div class="alert ${alertClass} mb-3 ${!notification.is_read ? 'border-start border-primary border-4' : ''}">
+                            <div class="alert ${alertClass} mb-2 ${!notification.is_read ? 'border-start border-primary border-1' : ''}">
                                 <h6 class="alert-heading">
                                     <i class="${iconClass}"></i> ${notification.title}${isUnread}
                                 </h6>
@@ -569,7 +585,7 @@
             } catch (error) {
                 console.error('Error loading notices:', error);
                 document.getElementById('noticesContainer').innerHTML = `
-                    <div class="text-center py-4">
+                    <div class="text-center py-3">
                         <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
                         <p class="text-muted">Please login to view notices.</p>
                         <a href="/accounts/login/" class="btn btn-primary btn-sm">Login</a>
@@ -635,15 +651,15 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-outline-primary" onclick="showApplicationModal(${app.id})" title="Details">
+                                    <button class="fs-3" onclick="showApplicationModal(${app.id})" title="Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     ${app.status === 'interview_scheduled' ? `
-                                        <button class="btn btn-outline-info" onclick="viewInterviewDetails(${app.id})" title="Interview Details">
+                                        <button class="fs-3" onclick="viewInterviewDetails(${app.id})" title="Interview Details">
                                             <i class="fas fa-calendar"></i>
                                         </button>
                                         ${!app.interview_acknowledged ? `
-                                            <button class="btn btn-outline-success" onclick="acknowledgeInterview(${app.id})" title="Acknowledge Interview">
+                                            <button class="fs-3" onclick="acknowledgeInterview(${app.id})" title="Acknowledge Interview">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         ` : `
@@ -653,7 +669,7 @@
                                         `}
                                     ` : ''}
                                     ${app.status === 'rejected' && app.rejection_type === 'correction' ? `
-                                        <button class="btn btn-outline-warning" onclick="editApplication(${app.id})" title="Edit Application">
+                                        <button class="fs-3" onclick="editApplication(${app.id})" title="Edit Application">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                     ` : ''}
@@ -693,142 +709,130 @@
                 const modalBody = document.getElementById('applicationModalBody');
                 modalBody.innerHTML = `
                     <!-- Profile Header -->
-                    <div class="text-center mb-4">
-                        <div class="d-flex justify-content-center mb-3">
-                            ${app.photo ? `<img src="${app.photo}" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #E36F1E;">` : '<div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; color: white; font-size: 48px;"><i class="fas fa-user"></i></div>'}
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            ${app.photo ? `<img src="${app.photo}" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 1px solid #E36F1E;">` : '<div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; color: white; font-size: 48px;"><i class="fas fa-user"></i></div>'}
                         </div>
-                        <h4 class="mb-1" style="color: #E36F1E;">${app.full_name || 'N/A'}</h4>
-                        <p class="text-muted mb-2">${app.profession || 'N/A'}</p>
-                        <p class="small text-muted"><i class="fas fa-envelope me-1"></i>${app.user_email || 'N/A'} | <i class="fas fa-phone me-1"></i>${app.phone || 'N/A'}</p>
+                       <div class="col-md-8">
+                         <h5 class="mb-0" style="color: #E36F1E;">${app.full_name || 'N/A'}</h5>
+                         <p class="text-muted mb-0">${app.profession || 'N/A'}</p>
+                         <p class="small text-muted"><i class="fas fa-envelope me-1"></i>${app.user_email || 'N/A'} | <i class="fas fa-phone me-1"></i>${app.phone || 'N/A'}</p>
+                         <span class="badge fs-6 px-3 py-2" style="background-color: ${getStatusColor(app.status)}">${app.status.replace('_', ' ').toUpperCase()}</span>
+                         <p class="small text-muted mb-2">Application #${app.id} | ${app.application_type.toUpperCase()}</p>
+                         </div>
+
                     </div>
+                    <hr/>
                     
-                    <!-- Application Status -->
-                    <div class="text-center mb-4">
-                        <span class="badge fs-6 px-3 py-2" style="background-color: ${getStatusColor(app.status)}">${app.status.replace('_', ' ').toUpperCase()}</span>
-                        <p class="small text-muted mt-2">Application #${app.id} | ${app.application_type.toUpperCase()}</p>
-                    </div>
-                    
-                    <hr>
                     
                     <!-- Personal Information -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Personal Information</h6>
-                        </div>
-                        <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <h6 class="text-primary "><i class="fas fa-user me-2"></i>Personal Information</h6>
                             <p><strong>Date of Birth:</strong> ${app.date_of_birth || 'N/A'}</p>
                             <p><strong>Country:</strong> ${app.country || 'N/A'}</p>
                             <p><strong>District:</strong> ${app.district || 'N/A'}</p>
-                        </div>
-                        <div class="col-md-6">
                             <p><strong>Temporary Address:</strong> ${app.temporary_address || 'N/A'}</p>
                             <p><strong>Permanent Address:</strong> ${app.permanent_address || 'N/A'}</p>
                         </div>
-                    </div>
-                    
-                    <!-- Professional Information -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-briefcase me-2"></i>Professional Information</h6>
-                        </div>
-                        <div class="col-md-6">
+                       
+                        <div class="col-md-4">
+                            <h6 class="text-primary "><i class="fas fa-briefcase me-2"></i>Professional Information</h6>
                             <p><strong>Time Commitment:</strong> ${app.time_commitment || 'N/A'}</p>
                             <p><strong>Other Organizations:</strong> ${app.other_organizations || 'None'}</p>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             ${app.social_link ? `<p><strong>Social Link:</strong> <a href="${app.social_link}" target="_blank" class="text-decoration-none"><i class="fas fa-link me-1"></i>View Profile</a></p>` : ''}
                         </div>
-                    </div>
+                   
                     
                     ${app.skills && app.skills.length > 0 ? `
                     <!-- Skills -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-star me-2"></i>Skills</h6>
+                        <div class="col-md-4">
+                            <h6 class="text-primary "><i class="fas fa-star me-2"></i>Skills</h6>
                             <div class="d-flex flex-wrap gap-2">
-                                ${app.skills.map(skill => `<span class="badge bg-light text-dark border">${skill}</span>`).join('')}
+                                ${app.skills.map(skill => `<span class="badge bg-primary text-dark border">${skill}</span>`).join('')}
                             </div>
-                        </div>
+                        
                     </div>` : ''}
                     
                     ${app.why_join ? `
                     <!-- Why Join -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-heart me-2"></i>Why Join</h6>
-                            <p class="text-muted bg-light p-3 rounded">${app.why_join}</p>
-                        </div>
-                    </div>` : ''}
+                        <div class="col-md-4">
+                            <h6 class="text-primary"><i class="fas fa-heart me-2"></i>Why Join</h6>
+                            <p class="text-muted bg-light  rounded">${app.why_join}</p>
+                        </div>` : ''}
                     
                     ${app.self_definition ? `
                     <!-- Self Definition -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-quote-left me-2"></i>Self Definition</h6>
-                            <p class="text-muted bg-light p-3 rounded">${app.self_definition}</p>
+                
+                        <div class="col-md-4">
+                            <h6 class="text-primary "><i class="fas fa-quote-left me-2"></i>Self Definition</h6>
+                            <p class="text-muted bg-light  rounded">${app.self_definition}</p>
                         </div>
-                    </div>` : ''}
+                   ` : ''}
                     
                     ${app.ideas ? `
                     <!-- Ideas -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-lightbulb me-2"></i>Ideas</h6>
-                            <p class="text-muted bg-light p-3 rounded">${app.ideas}</p>
+                   
+                        <div class="col-md-4">
+                            <h6 class="text-primary "><i class="fas fa-lightbulb me-2"></i>Ideas</h6>
+                            <p class="text-muted bg-light  rounded">${app.ideas}</p>
                         </div>
-                    </div>` : ''}
+               ` : ''}
                     
                     ${app.hobbies_interests ? `
                     <!-- Hobbies & Interests -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-gamepad me-2"></i>Hobbies & Interests</h6>
-                            <p class="text-muted bg-light p-3 rounded">${app.hobbies_interests}</p>
+                        <div class="col-md-4">
+                            <h6 class="text-primary "><i class="fas fa-gamepad me-2"></i>Hobbies & Interests</h6>
+                            <p class="text-muted bg-light  rounded">${app.hobbies_interests}</p>
                         </div>
-                    </div>` : ''}
+                  ` : ''}
+                    </div>
                     
                     <!-- Documents -->
-                    <div class="row mb-4">
+                    <div class="row mb-2">
                         <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-file-alt me-2"></i>Documents</h6>
+                            <h6 class="text-primary mb-2"><i class="fas fa-file-alt me-2"></i>Documents</h6>
                             <div class="row">
-                                ${app.citizenship_front ? `<div class="col-md-6 mb-2"><a href="${app.citizenship_front}" target="_blank" class="btn btn-outline-primary btn-sm w-100"><i class="fas fa-id-card me-1"></i>Citizenship Front</a></div>` : ''}
-                                ${app.citizenship_back ? `<div class="col-md-6 mb-2"><a href="${app.citizenship_back}" target="_blank" class="btn btn-outline-primary btn-sm w-100"><i class="fas fa-id-card me-1"></i>Citizenship Back</a></div>` : ''}
+                                ${app.citizenship_front ? `<div class="col-md-6 mb-2"><a href="${app.citizenship_front}" target="_blank" class="btn btn-outline-primary btn-sm w-100 py-2" style="font-size:12px"><i class="fas fa-id-card me-1"></i>Citizenship Front</a></div>` : ''}
+                                ${app.citizenship_back ? `<div class="col-md-6 mb-2"><a href="${app.citizenship_back}" target="_blank" class="btn btn-outline-primary btn-sm w-100 py-2" style="font-size:12px"><i class="fas fa-id-card me-1"></i>Citizenship Back</a></div>` : ''}
                             </div>
                         </div>
                     </div>
+                    <div class="row mb-2">
                     
                     ${app.payment_required ? `
                     <!-- Payment Information -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-credit-card me-2"></i>Payment Information</h6>
-                            <div class="bg-light p-3 rounded">
+                        <div class="col-md-4">
+                            <h6 class="text-primary "><i class="fas fa-credit-card me-2"></i>Payment Information</h6>
+                            <div class="bg-light  rounded">
                                 <p class="mb-2"><strong>Amount:</strong> Rs. ${app.payment_amount}</p>
                                 <p class="mb-2"><strong>Status:</strong> <span class="badge ${app.payment_completed ? 'bg-success' : 'bg-warning'}">${app.payment_completed ? 'Completed' : 'Pending'}</span></p>
                                 ${app.payment_date ? `<p class="mb-0"><strong>Date:</strong> ${new Date(app.payment_date).toLocaleDateString()}</p>` : ''}
                             </div>
                         </div>
-                    </div>` : ''}
+                    ` : ''}
                     
                     ${app.rejection_reason ? `
                     <!-- Rejection Reason -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-danger mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Rejection Reason</h6>
+                   
+                        <div class="col-md-4">
+                            <h6 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Rejection Reason</h6>
                             <div class="alert alert-danger">${app.rejection_reason}</div>
                         </div>
-                    </div>` : ''}
+                   ` : ''}
                     
                     <!-- Application Timeline -->
-                    <div class="row">
-                        <div class="col-12">
-                            <h6 class="text-primary mb-3"><i class="fas fa-clock me-2"></i>Timeline</h6>
-                            <div class="bg-light p-3 rounded">
-                                <p class="mb-1"><strong>Applied:</strong> ${new Date(app.applied_at).toLocaleString()}</p>
+                 
+                        <div class="col-md-4">
+                            <h6 class="text-primary"><i class="fas fa-clock me-2"></i>Timeline</h6>
+                            <div class="bg-light  rounded">
+                                <p class="mb-0"><strong>Applied:</strong> ${new Date(app.applied_at).toLocaleString()}</p>
                                 <p class="mb-0"><strong>Last Updated:</strong> ${new Date(app.updated_at).toLocaleString()}</p>
                             </div>
                         </div>
+                 
                     </div>
                 `;
                 
@@ -1122,9 +1126,9 @@
                 
                 container.innerHTML = `
                     <div class="row">
-                        <div class="col-12 text-center mb-4">
-                            <div class="d-flex justify-content-center mb-2">
-                                ${app.photo ? `<img src="${app.photo}" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #E36F1E;">` : '<div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; color: white; font-size: 48px;"><i class="fas fa-user"></i></div>'}
+                        <div class="col-12 text-center mb-2">
+                            <div class="d-flex justify-content-center mb-1">
+                                ${app.photo ? `<img src="${app.photo}" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 1px solid #E36F1E;">` : '<div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; color: white; font-size: 48px;"><i class="fas fa-user"></i></div>'}
                             </div>
                             <h4 style="color: #E36F1E;">${app.full_name || 'N/A'}</h4>
                             <p class="text-muted small">${app.profession || 'N/A'}</p>
@@ -1132,36 +1136,35 @@
                             <span class="badge px-2 py-1" style="background-color: ${getStatusColor(app.status)}; font-size: 12px;">${app.status.replace('_', ' ').toUpperCase()}</span>
                             ${app.status === 'approved' ? `
                                 <div class="mt-2">
-                                    <a href="${app.application_type === 'member' ? '/member/dashboard/' : '/dashboard/volunteer/'}" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-arrow-right me-1"></i>Go to ${app.application_type === 'member' ? 'Member' : 'Volunteer'} Dashboard
+                                    <a href="${app.application_type === 'member' ? '/member/dashboard/' : '/dashboard/volunteer/'}" class="btn btn-primary btn-sm py-2 " style="font-size:12px">
+                                        Go to ${app.application_type === 'member' ? 'Member' : 'Volunteer'} Dashboard
                                     </a>
                                 </div>
                             ` : ''}
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <h6 class="text-primary small"><i class="fas fa-envelope me-2"></i>Contact Information</h6>
                             <p class="mb-1 small"><strong>Email:</strong> ${app.user_email || 'N/A'}</p>
                             <p class="mb-1 small"><strong>Phone:</strong> ${app.phone || 'N/A'}</p>
                             <p class="mb-1 small"><strong>Date of Birth:</strong> ${app.date_of_birth || 'N/A'}</p>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <h6 class="text-primary small"><i class="fas fa-map-marker-alt me-2"></i>Location</h6>
                             <p class="mb-1 small"><strong>Country:</strong> ${app.country || 'N/A'}</p>
                             <p class="mb-1 small"><strong>District:</strong> ${app.district || 'N/A'}</p>
                             <p class="mb-1 small"><strong>Temporary Address:</strong> ${app.temporary_address || 'N/A'}</p>
                             <p class="mb-1 small"><strong>Permanent Address:</strong> ${app.permanent_address || 'N/A'}</p>
                         </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
+                  
+                        <div class="col-md-3">
                             <h6 class="text-primary small"><i class="fas fa-briefcase me-2"></i>Professional</h6>
                             <p class="mb-1 small"><strong>Time Commitment:</strong> ${app.time_commitment || 'N/A'}</p>
                             <p class="mb-1 small"><strong>Other Organizations:</strong> ${app.other_organizations || 'None'}</p>
                             ${app.social_link ? `<p class="mb-1 small"><strong>Social Link:</strong> <a href="${app.social_link}" target="_blank">View Profile</a></p>` : ''}
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <h6 class="text-primary small"><i class="fas fa-star me-2"></i>Skills</h6>
                             ${app.skills && app.skills.length > 0 ? `
                                 <div class="d-flex flex-wrap gap-1">

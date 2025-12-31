@@ -144,21 +144,22 @@
                     <a href="javascript:void(0)" id="navLoginLink" class="navigation__level-one-link" onclick="handleNavLoginClick()">Login</a>
                 {% endif %}
             </li>
+            <li id="navLogoutSection" style="display: inline; margin-right:20px" class="navigation__level-one-link">
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" onclick="clearToken()" class="navigation__level-one-link" style="background: none; border: none; color: #E36F1E; font: inherit; cursor: pointer; " title="Logout">
+                    <i class="fas fa-sign-out-alt fs-4"></i>
+                </button>
+            </form>
+            {% endif %}
+            </li>
 
         </ul>
 
         <button class="btn navigation__donate" onclick="openDonationModal()">Donate</button>
         
-        <div id="navLogoutSection" style="display: inline; margin-left: 1rem;">
-            {% if user.is_authenticated %}
-            <form method="POST" action="{% url 'logout' %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" onclick="clearToken()" class="navigation__level-one-link" style="background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0.5rem;" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </form>
-            {% endif %}
-        </div>
+        
         <button class="navigation__toggle mobile-only--navigation" aria-expanded="false"
             aria-label="Open navigation menu" aria-controls="#navigation__level-one">
             <svg width="22" height="20" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true">

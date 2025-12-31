@@ -55,6 +55,10 @@ def website_volunteer_form(request):
 def website_sponsor_child_form(request):
     return render(request, 'website/sponsor_child_form.html', {'districts': NEPAL_DISTRICTS})
 
+def website_events(request):
+    return render(request, 'website/events.html', {'districts': NEPAL_DISTRICTS})
+
+
 def get_involved(request):
     return render(request, 'website/get_involved.html')
 

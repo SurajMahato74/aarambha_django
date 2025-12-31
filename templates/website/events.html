@@ -1,0 +1,272 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+  <link href="{% static 'website/css/bootstrap.min.css' %}" rel="stylesheet" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="{% static 'website/css/slick.min.css' %}" crossorigin="anonymous"
+    referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="{% static 'website/css/owl.carousel.min.css' %}" />
+  <!-- Link Swiper's CSS -->
+  <link rel="stylesheet" href="{% static 'website/css/swiper-bundle.min.css' %}" />
+  <!-- Link Swiper's CSS end-->
+  <link rel="stylesheet" href="{% static 'website/css/animate.min.css' %}" />
+  <!-- custom-css  -->
+  <link rel="stylesheet" href="{% static 'website/css/index.css' %}" />
+  <link rel="stylesheet" href="{% static 'website/css/style.css' %}" />
+  <!-- custom-css end -->
+  <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
+  <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
+</head>
+
+<body>
+  {% include 'website/includes/navbar.html'%}
+
+  <!-- START Events and Areas of Impact SECTION -->
+  <section class="events mb-4">
+    <div class="vission__content wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+      <div class="d-flex justify-content-center">
+        <h1 class="py-0 my-0"> All Events</h1>
+      </div>
+    </div>
+    <div class="card-group card-group--blue-dark">
+      <div class="container">
+        <ul class="grid--3-col card-group__items">
+          {% for event in events %}
+          <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s"
+            data-wow-delay="{{ forloop.counter0|add:4|floatformat:1|stringformat:'0.%ss' }}">
+            <div>
+              {% if event.image %}
+              <img src="{{ event.image.url }}" alt="{{ event.title }}" loading="lazy" fetchpriority="auto"
+                decoding="async" onerror="this.src='{% static 'website/images/Computer-Lab-1024x683.jpg' %}'" />
+              {% else %}
+              <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="{{ event.title }}" loading="lazy"
+                fetchpriority="auto" decoding="async" />
+              {% endif %}
+              <div class="card__text">
+                <div>
+                  <h3 class="card__title">
+                    <span>{{ event.title }}</span>
+                  </h3>
+                  <div class="card__blurb">
+                    <p>{{ event.description|truncatewords:30 }}</p>
+                    {% if event.location %}
+                    <p><small><i class="fa-solid fa-location-dot"></i> {{ event.location }}</small></p>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+          {% empty %}
+          <!-- Fallback events if no events in database -->
+          <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.4s">
+            <div>
+              <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="" loading="lazy"
+                fetchpriority="auto" decoding="async" />
+              <div class="card__text">
+                <div>
+                  <h3 class="card__title">
+                    <span>Aarambha: A New Beginning</span>
+                  </h3>
+                  <div class="card__blurb">
+                    <p>A movement dedicated to helping motivated children return to school by providing the resources,
+                      support, and educational spaces they deserve.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.5s">
+            <div>
+              <img src="{% static 'website/images/plantation-1024x683.jpg' %}" alt="" loading="lazy"
+                fetchpriority="auto" decoding="async" />
+              <div class="card__text">
+                <div>
+                  <h3 class="card__title">
+                    <span>Bridging Gaps, Building Futures</span>
+                  </h3>
+                  <div class="card__blurb">
+                    <p>Through libraries, digital classrooms, fellowships, and community support, we work to strengthen
+                      public schools.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.6s">
+            <div>
+              <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="" loading="lazy"
+                fetchpriority="auto" decoding="async" />
+              <div class="card__text">
+                <div>
+                  <h3 class="card__title">
+                    <span>One Step at a Time</span>
+                  </h3>
+                  <div class="card__blurb">
+                    <p>Committed to transforming education by understanding student challenges and creating sustainable
+                      solutions.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        
+      </div>
+    </div>
+  </section>
+  <!-- end Events and Areas of Impact SECTION -->
+
+
+
+  {% include "website/includes/login_modal.html" %}
+
+  <footer class="footer__section wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+    <div class="footer_overlay pt-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+            <div class="footer__logo">
+              <img src="{% static 'website/images/logo.png' %}" width="100%" height="100%" alt="" />
+            </div>
+            <div class="footer__description">
+              <p>
+                A youth-driven foundation empowering education, equality, and
+                opportunities across Nepal.
+              </p>
+            </div>
+            <div class="social__media">
+              <ul class="d-flex">
+                <a
+                  href="{% if contact_info.facebook_url %}{{ contact_info.facebook_url }}{% else %}https://www.facebook.com/aarambhafoundation{% endif %}">
+                  <li><i class="fa-brands fa-facebook-f"></i></li>
+                </a>
+                <a
+                  href="{% if contact_info.instagram_url %}{{ contact_info.instagram_url }}{% else %}https://www.instagram.com/aarambhafoundation/{% endif %}">
+                  <li><i class="fa-brands fa-instagram"></i></li>
+                </a>
+                {% if contact_info.whatsapp_url %}
+                <a href="{{ contact_info.whatsapp_url }}">
+                  <li><i class="fa-brands fa-whatsapp"></i></li>
+                </a>
+                {% else %}
+                <a href="">
+                  <li><i class="fa-brands fa-whatsapp"></i></li>
+                </a>
+                {% endif %}
+                <a
+                  href="{% if contact_info.linkedin_url %}{{ contact_info.linkedin_url }}{% else %}https://www.linkedin.com/company/aarambhafoundation/{% endif %}">
+                  <li><i class="fa-brands fa-linkedin"></i></li>
+                </a>
+                <a
+                  href="{% if contact_info.youtube_url %}{{ contact_info.youtube_url }}{% else %}https://www.youtube.com/channel/UCthVlyi3N4EfnGj9-pS-bMA{% endif %}">
+                  <li><i class="fa-brands fa-youtube"></i></li>
+                </a>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 col-6 mb-3">
+            <h2><span>Q</span>uick Links</h2>
+            <ul class="quick-links">
+              <li><a href="#who_we_are">About Us</a></li>
+              <li><a href="{% url 'website_member_form' %}">Be a Member</a></li>
+              <li><a href="{% url 'website_volunteer_form' %}">Be a volunteer</a></li>
+              <li><a href="">Our Work</a></li>
+              <li><a href="">Privacy & Policy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-3 col-md-6 col-6 mb-3">
+            <h2><span>C</span>ontact Us</h2>
+            <div class="contact__details">
+              <ul class="fa-ul">
+                <li>
+                  <h6><i class="fa-solid fa-house"></i> Address</h6>
+                  <span>{{ contact_info.address|default:"Basundhara, Kathmandu, Nepal" }}</span>
+                </li>
+                <li>
+                  <h6><i class="fa-solid fa-phone"></i> Phone No</h6>
+                  <span>{{ contact_info.phone|default:"+977 (984)346-7402" }}</span>
+                </li>
+                <li>
+                  <h6><i class="fa-solid fa-envelope"></i> Email</h6>
+                  <span><a href="mailto:{{ contact_info.email|default:'we.aarambha@gmail.com' }}">{{ contact_info.email|default:"we.aarambha@gmail.com" }}</a></span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+            <h2><span>O</span>ur Awards</h2>
+            <div class="gallery_wrapper">
+              <div class="row flex-wrap">
+                {% for award in awards %}
+                <div class="col-4">
+                  <img src="{{ award.image.url }}" width="100%" height="100%" alt="{{ award.title }}"
+                    title="{{ award.title }}" />
+                </div>
+                {% empty %}
+                <!-- Fallback award if no awards in database -->
+                <div class="col-4">
+                  <img src="{% static 'website/images/Award-1.jpg' %}" width="100%" height="100%" alt="" />
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="copyright">
+      <div class="container">
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="right__wrapper" style="text-align: center">
+            <span style="color: white; text-align: center">
+              &copy;
+              <script>
+                document.write(new Date().getFullYear());
+              </script>
+              Aarambha Foundation. All Rights Reserved.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!-- scripts start -->
+  <!-- jquery  start-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <!-- jquery end -->
+  <!-- bootstrap  start -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
+  <!-- bootstrap end -->
+  <script src="{% static 'website/js/slick.min.js' %}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- Swiper JS -->
+  <script src="{% static 'website/js/swiper-bundle.min.js' %}" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <script src="{% static 'website/js/modernizr.min.js' %}" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+  <script src="{% static 'website/js/owl.carousel.min.js' %}"></script>
+  <script src="{% static 'website/js/api.js' %}"></script>
+  <script src="{% static 'website/js/main.js' %}"></script>
+  <script src="{% static 'website/js/animation.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="{% static 'website/js/general.js' %}"></script>
+  <script src="{% static 'website/js/nav.js' %}"></script>
+  <script src="{% static 'website/js/script.js' %}"></script>
+  <script src="{% static 'website/js/min.js' %}"></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="{% static 'js/navbar.js' %}"></script>
+  <script src="{% static 'js/config.js' %}"></script>
+</body>
+
+</html>

@@ -9,6 +9,7 @@ urlpatterns = [
     path('member-form/', views.website_member_form, name='website_member_form'),
     path('volunteer-form/', views.website_volunteer_form, name='website_volunteer_form'),
     path('sponsor-child-form/', views.website_sponsor_child_form, name='website_sponsor_child_form'),
+    path('events/', views.website_events, name='website_events'),
     path('get-involved/', views.get_involved, name='get_involved'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
