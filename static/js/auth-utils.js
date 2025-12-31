@@ -1,6 +1,16 @@
 /**
  * Authentication utilities for handling client-side auth state
+ * Updated to work consistently with all three login methods
  */
+
+function setToken(access, refresh) {
+    localStorage.setItem('access_token', access);
+    localStorage.setItem('refresh_token', refresh);
+}
+
+function setUser(user) {
+    localStorage.setItem('user', JSON.stringify(user));
+}
 
 function clearToken() {
     // Clear all localStorage data
@@ -13,6 +23,42 @@ function clearToken() {
 function getUser() {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
+}
+
+function getToken() {
+    return localStorage.getItem('access_token');
+}
+
+// Check authentication status with backend
+async function checkAuthStatus() {
+    try {
+        const response = await fetch('/api/users/auth-status/', {
+            method: 'GET',
+            credentials: 'include', // Include session cookies
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken() || ''}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.authenticated) {
+            // Sync localStorage with backend data
+            setUser(data.user);
+            if (data.access) {
+                setToken(data.access, data.refresh);
+            }
+            return data.user;
+        } else {
+            // Clear localStorage if not authenticated
+            clearToken();
+            return null;
+        }
+    } catch (error) {
+        console.error('Auth status check failed:', error);
+        return getUser(); // Fallback to localStorage
+    }
 }
 
 function updateNavbarAuth() {
@@ -49,22 +95,40 @@ function updateNavbarAuth() {
     }
 }
 
-function handleLogout() {
+async function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
+        try {
+            // Call backend logout endpoint
+            const token = getToken();
+            if (token) {
+                await fetch('/api/users/logout/', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Logout API call failed:', error);
+        }
+        
         // Clear all localStorage data
-        localStorage.removeItem('user');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        clearToken();
         
         // Redirect directly to home page
         window.location.href = '/';
     }
 }
 
-
-
 // Initialize auth state on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Don't override navbar auth state - let Django template handle it
-    console.log('Django user:', window.djangoUser);
+document.addEventListener('DOMContentLoaded', async function() {
+    // Check auth status with backend for consistency
+    await checkAuthStatus();
+    
+    // Update navbar
+    updateNavbarAuth();
+    
+    console.log('Auth state initialized');
 });

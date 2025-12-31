@@ -4,8 +4,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Q
+from django.contrib.auth import login as django_login
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from .models import CustomUser
+from .auth_utils import create_unified_auth_response, logout_user_completely
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -90,12 +92,10 @@ def verify_otp(request):
             }
         )
         
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'user': UserSerializer(user).data
-        })
+        # Use unified authentication response
+        auth_response = create_unified_auth_response(request, user)
+        return Response(auth_response)
+        
     except EmailOTP.DoesNotExist:
         return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -105,12 +105,11 @@ def login(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.validated_data
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'user': UserSerializer(user).data
-        })
+        
+        # Use unified authentication response
+        auth_response = create_unified_auth_response(request, user)
+        return Response(auth_response)
+        
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
@@ -201,3 +200,47 @@ def get_user(request, user_id):
         return Response(UserSerializer(user).data)
     except CustomUser.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    """
+    Unified logout that clears both Django session and JWT tokens
+    """
+    logout_user_completely(request)
+    return Response({'message': 'Logged out successfully'})
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def auth_status(request):
+    """
+    Check current authentication status and sync if needed
+    """
+    from .auth_utils import check_auth_consistency, sync_auth_state
+    
+    if request.user.is_authenticated:
+        # User has Django session
+        user_data = UserSerializer(request.user).data
+        
+        # Check if we need to provide JWT tokens for consistency
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        if not auth_header.startswith('Bearer '):
+            # No JWT token, provide one for consistency
+            sync_data = sync_auth_state(request, request.user)
+            return Response({
+                'authenticated': True,
+                'user': user_data,
+                'access': sync_data['access'],
+                'refresh': sync_data['refresh'],
+                'session_active': True
+            })
+        else:
+            return Response({
+                'authenticated': True,
+                'user': user_data,
+                'session_active': True
+            })
+    else:
+        return Response({
+            'authenticated': False,
+            'session_active': False
+        })

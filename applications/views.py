@@ -1,3 +1,5 @@
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -233,6 +235,7 @@ def acknowledge_interview(request, pk):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@csrf_exempt
 def update_application_status(request, pk):
     from django.core.mail import send_mail
     from django.conf import settings

@@ -23,15 +23,33 @@ class GoogleAuthSyncMiddleware:
                 'user_type': getattr(request.user, 'user_type', 'guest'),
                 'first_name': request.user.first_name,
                 'last_name': request.user.last_name,
+                'is_superuser': request.user.is_superuser,
+                'is_approved': getattr(request.user, 'is_approved', False),
+                'branch': request.user.branch.id if hasattr(request.user, 'branch') and request.user.branch else None,
             }
             
-            # Add JavaScript to set localStorage
+            # Add JavaScript to set localStorage and ensure session consistency
             script = f"""
             <script>
+                // Clear any existing auth data first
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user');
+                
+                // Set new auth data
                 localStorage.setItem('access_token', '{str(refresh.access_token)}');
                 localStorage.setItem('refresh_token', '{str(refresh)}');
                 localStorage.setItem('user', '{json.dumps(user_data).replace("'", "\\'")}');
-                console.log('Google auth synced to localStorage');
+                
+                // Update navbar auth state
+                if (typeof updateNavbarAuth === 'function') {{
+                    updateNavbarAuth();
+                }}
+                
+                console.log('Google auth synced to localStorage and session');
+                
+                // Set flag for success message
+                localStorage.setItem('justLoggedIn', 'true');
             </script>
             """
             

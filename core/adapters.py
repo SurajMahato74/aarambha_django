@@ -2,6 +2,7 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.utils import user_email, user_field
 from django.contrib.auth import get_user_model
 from allauth.account.models import EmailAddress
+from django.contrib.auth import login as django_login
 import uuid
 
 User = get_user_model()
@@ -45,3 +46,18 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         user.user_type = 'guest'  # Always set to guest for Google login
         user.save()
         return user
+    
+    def authentication_error(self, request, provider_id, error=None, exception=None, extra_context=None):
+        """
+        Handle authentication errors gracefully
+        """
+        # Log the error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Social auth error for {provider_id}: {error} - {exception}")
+        
+        # Redirect to login page with error message
+        from django.shortcuts import redirect
+        from django.contrib import messages
+        messages.error(request, 'Authentication failed. Please try again.')
+        return redirect('/accounts/login/')

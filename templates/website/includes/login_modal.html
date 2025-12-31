@@ -141,7 +141,11 @@
             // FIX: Use the correct API URL (match your config.js or urls.py)
             const response = await fetch('/api/users/login/', {  // <-- Change 'login/' to this
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include',
                 body: JSON.stringify({ username, password })
             });
             const data = await response.json();
@@ -187,7 +191,7 @@
                     window.location.href = redirectUrl;
                 }
             } else {
-                errorDiv.textContent = data.non_field_errors?.[0] || 'Login failed. Please check credentials.';
+                errorDiv.textContent = data.non_field_errors?.[0] || data.error || 'Login failed. Please check credentials.';
             }
         } catch (error) {
             console.error(error);  // Add this for debugging
@@ -334,5 +338,21 @@
         document.getElementById('modalEmailStep').style.display = 'block';
         document.getElementById('modalOtpStep').style.display = 'none';
         document.getElementById('modalOtpError').textContent = '';
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 </script>
