@@ -89,8 +89,8 @@
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_materials' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-book w-4"></i> Reading Materials
                 </a>
-                <a href="{% url 'admin_events' %}"
-                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_events' or request.resolver_match.url_name == 'admin_event_participations' %}active text-indigo-300 font-medium{% endif %}">
+                <a href="{% url 'admin_event_management' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_event_management' or request.resolver_match.url_name == 'admin_event_participations' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-calendar-alt w-4"></i> Event Management
                 </a>
                 <a href="{% url 'admin_school_dropout_reports' %}"
@@ -140,7 +140,7 @@
                             </a>
                             <a href="{% url 'admin_events' %}"
                                 class="menu-link hover-bg flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 text-sm {% if request.resolver_match.url_name == 'admin_events' %}active text-indigo-300 font-medium{% endif %}">
-                                <i class="fas fa-calendar w-4"></i> Events
+                                <i class="fas fa-calendar w-4"></i> Events (Content)
                             </a>
                             <a href="{% url 'admin_partners' %}"
                                 class="menu-link hover-bg flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 text-sm {% if request.resolver_match.url_name == 'admin_partners' %}active text-indigo-300 font-medium{% endif %}">

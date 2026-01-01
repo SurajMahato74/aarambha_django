@@ -381,28 +381,30 @@
           {% for event in events %}
           <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s"
             data-wow-delay="{{ forloop.counter0|add:4|floatformat:1|stringformat:'0.%ss' }}">
-            <div>
-              {% if event.image %}
-              <img src="{{ event.image.url }}" alt="{{ event.title }}" loading="lazy" fetchpriority="auto"
-                decoding="async" onerror="this.src='{% static 'website/images/Computer-Lab-1024x683.jpg' %}'" />
-              {% else %}
-              <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="{{ event.title }}" loading="lazy"
-                fetchpriority="auto" decoding="async" />
-              {% endif %}
-              <div class="card__text">
-                <div>
-                  <h3 class="card__title">
-                    <span>{{ event.title }}</span>
-                  </h3>
-                  <div class="card__blurb">
-                    <p>{{ event.description|truncatewords:30 }}</p>
-                    {% if event.location %}
-                    <p><small><i class="fa-solid fa-location-dot"></i> {{ event.location }}</small></p>
-                    {% endif %}
+            <a href="{% url 'website_event_detail' event.id %}" class="text-decoration-none">
+              <div>
+                {% if event.image %}
+                <img src="{{ event.image.url }}" alt="{{ event.title }}" loading="lazy" fetchpriority="auto"
+                  decoding="async" onerror="this.src='{% static 'website/images/Computer-Lab-1024x683.jpg' %}'" />
+                {% else %}
+                <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="{{ event.title }}" loading="lazy"
+                  fetchpriority="auto" decoding="async" />
+                {% endif %}
+                <div class="card__text">
+                  <div>
+                    <h3 class="card__title">
+                      <span>{{ event.title }}</span>
+                    </h3>
+                    <div class="card__blurb">
+                      <p>{{ event.description|truncatewords:30 }}</p>
+                      {% if event.location %}
+                      <p><small><i class="fa-solid fa-location-dot"></i> {{ event.location }}</small></p>
+                      {% endif %}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </a>
           </li>
           {% empty %}
           <!-- Fallback events if no events in database -->

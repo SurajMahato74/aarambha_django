@@ -66,7 +66,7 @@
                         <td class="py-3 px-4">
                             <div class="text-sm">
                                 <div class="text-white">{{ event.participations.count }} applied</div>
-                                <div class="text-slate-400">{{ event.participations.filter.attended=True.count }} attended</div>
+                                <div class="text-slate-400">{{ event.attended_count|default:0 }} attended</div>
                             </div>
                         </td>
                         <td class="py-3 px-4">

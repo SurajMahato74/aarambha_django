@@ -19,6 +19,10 @@ def admin_events(request):
     branches = Branch.objects.all()
     users = CustomUser.objects.filter(user_type__in=['member', 'volunteer'])
     
+    # Add attended count to events
+    for event in events:
+        event.attended_count = EventParticipation.objects.filter(event=event, attended=True).count()
+    
     if request.method == 'POST':
         action = request.POST.get('action')
         
