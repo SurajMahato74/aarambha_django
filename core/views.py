@@ -86,6 +86,18 @@ def website_event_detail(request, event_id):
     }
     return render(request, 'website/event_detail.html', context)
 
+def website_blogs(request):
+    return render(request, 'website/blogs.html')
+
+def website_pravicy_policy(request):
+    return render(request, 'website/privacy_policy.html')
+
+def website_enrollDayCamping(request):
+    return render(request, 'website/enrollDayCamping.html')
+
+def website_celebratebirthday(request):
+    return render(request, 'website/celebrateBirthday.html')
+
 
 def get_involved(request):
     return render(request, 'website/get_involved.html')

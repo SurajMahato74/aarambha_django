@@ -37,7 +37,9 @@ body {
 a {
   text-decoration: none;
 }
-
+.text-white{
+  color: #fff !important;
+}
 
 h1,
 h2,
@@ -2938,7 +2940,7 @@ background-color:#b2071d !important ;
   font-weight: 600;
   text-transform: uppercase;
   margin-bottom: 12px;
-  position: relative;
+
 }
 /* .vission__content h1::after {
   content: " ";

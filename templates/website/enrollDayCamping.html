@@ -22,59 +22,50 @@
   <link rel="stylesheet" href="{% static 'website/css/index.css' %}" />
   <link rel="stylesheet" href="{% static 'website/css/style.css' %}" />
   <!-- custom-css end -->
-  <link rel="icon" type="image.png' %}" href="{% static 'website/images/favicon.png' %}" />
-  <title>{{ work.title }} - Aarambha Foundation</title>
+  <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
+  <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
+  <style>
+    .privacy ul {
+      padding-left: 20px;
+
+    }
+
+    .privacy ul li {
+      list-style: dotted;
+      margin: 10px 0;
+    }
+  </style>
+  
 </head>
 
 <body>
- {% include 'website/includes/navbar.html'%}
-
-
-  <!-- START OUR WORK DETAIL SECTION -->
-  <section class="our-work-detail wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
-    <div class="container-fluid p-0">
-      <!-- Image Section -->
-      <div class="row no-gutters">
-        <div class="col-12">
-          {% if work.main_image %}
-          <img src="{{ work.main_image.url }}" alt="{{ work.title }}" style="width: 100%; height: 400px; object-fit: cover;" />
-          {% else %}
-          <img src="{% static 'website/images/logo.png' %}" alt="{{ work.title }}" style="width: 100%; height: 400px; object-fit: cover;" />
-          {% endif %}
-        </div>
-      </div>
-      <!-- Content Section with Background -->
-      <div class="row no-gutters" style="background-color: #f8f9fa; min-height: 400px;">
-        <div class="col-12">
-          <div class="container py-5">
-            <div class="row">
-              <div class="col-lg-10 mx-auto">
-                <div class="work-content text-left">
-                  <h2 class="work-title mb-4" style="color: #333; font-weight: bold;">{{ work.title }}</h2>
-                  <div class="work-description mb-4">
-                    <div class="rich-text" style="line-height: 1.8; color: #555;">
-                      {{ work.description|linebreaks|safe }}
-                    </div>
-                  </div>
-                  {% if work.external_link %}
-                  <div class="work-button">
-                    <a href="{{ work.external_link }}" target="_blank" class="btn btn--orange-white btn-lg px-4 py-2">Learn More</a>
-                  </div>
-                  {% endif %}
+  {% include 'website/includes/navbar.html'%}
+ <section id="one-rupee-campaign" class="py-3 campaign-bg-1">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h3 class=" fw-bold text-primary">Enroll in One Rupee a Day Campaign</h3>
+                    <p class=" mt-4">Your small daily contribution of just <strong>Rs 1 per day</strong> (Rs 365 per year) can transform a child's life by providing access to quality education, school supplies, and support to prevent dropouts.</p>
+                    <p>At Aarambha Foundation, we believe that every child deserves the light of education. With your support through the One Rupee a Day Campaign, we can clear school fees, distribute stationery, and empower children in rural Nepal to stay in school and dream big.</p>
+                    <ul class="list-unstyled mt-4">
+                        <li class="mb-3"><strong>Impact:</strong> Sponsor education for underprivileged children in Nepal.</li>
+                        <li class="mb-3"><strong>Easy Recurring Donation:</strong> Set up automatic daily/monthly contributions.</li>
+                        <li class="mb-3"><strong>Transparent:</strong> Regular updates on how your contribution is making a difference.</li>
+                    </ul>
+                     <div><a href="javascript:void(0)" onclick="openDonationModal()"
+                      class="btn py-2" style="font-size:14px">Enroll Now & Donate</a></div>
                 </div>
-              </div>
+                <div class="col-lg-6 text-center">
+                    <img src="{% static 'website/images/mission.png' %}" alt="Children learning in school" class="img-fluid rounded shadow-sm">
+                    <p class="mt-3 text-muted">Children supported by Aarambha Foundation's education programs</p>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-    </div>
-  </section>
-  <!-- END OUR WORK DETAIL SECTION -->
+    </section>
 
-  <a href="" class="floating-icon"><span><i class="bi bi-heart-fill"></i></span> DONATE</a>
+  {% include "website/includes/login_modal.html" %}
 
   {% include "website/includes/footer.html" %}
-
   <!-- scripts start -->
   <!-- jquery  start-->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"
@@ -100,6 +91,8 @@
   <script src="{% static 'website/js/script.js' %}"></script>
   <script src="{% static 'website/js/min.js' %}"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="{% static 'js/navbar.js' %}"></script>
+  <script src="{% static 'js/config.js' %}"></script>
 </body>
 
 </html>

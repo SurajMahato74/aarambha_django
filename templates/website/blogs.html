@@ -22,59 +22,70 @@
   <link rel="stylesheet" href="{% static 'website/css/index.css' %}" />
   <link rel="stylesheet" href="{% static 'website/css/style.css' %}" />
   <!-- custom-css end -->
-  <link rel="icon" type="image.png' %}" href="{% static 'website/images/favicon.png' %}" />
-  <title>{{ work.title }} - Aarambha Foundation</title>
+  <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
+  <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
+  <style>
+    .image-box{
+      width: 100%;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    .image-box img{
+      object-fit: cover;
+    }
+    .image-box:hover{
+      transform: scale(1.02);
+      transition: all 0.5s ease;
+    }
+  </style>
 </head>
 
 <body>
- {% include 'website/includes/navbar.html'%}
+  {% include 'website/includes/navbar.html'%}
 
-
-  <!-- START OUR WORK DETAIL SECTION -->
-  <section class="our-work-detail wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
-    <div class="container-fluid p-0">
-      <!-- Image Section -->
-      <div class="row no-gutters">
-        <div class="col-12">
-          {% if work.main_image %}
-          <img src="{{ work.main_image.url }}" alt="{{ work.title }}" style="width: 100%; height: 400px; object-fit: cover;" />
-          {% else %}
-          <img src="{% static 'website/images/logo.png' %}" alt="{{ work.title }}" style="width: 100%; height: 400px; object-fit: cover;" />
-          {% endif %}
+  <!-- START blogs and Areas of Impact SECTION -->
+  <section class="pb-3">
+    <div class="bg-blue py-5">
+     <h3 class="text-center text-white">Blogs</h3>
+    </div>
+    <div class="container ">
+      <div class="row my-3 py-2">
+        <div class="col-md-6">
+          <div class="image-box">
+            <img src="{% static 'website/images/health.jpg' %}" width="100%" height="100%" alt="Blog Image" />
+          </div>
+        </div>
+        <div class="col-md-6  ">
+          <h3 class="mb-3 mt-2">Health and Well-being</h3>
+          <p>
+            Promoting physical and mental health involves creating awareness about healthy lifestyles, preventing diseases, and encouraging early medical care. This is achieved through awareness campaigns that educate people about nutrition, exercise, stress management, and mental well-being. Health camps play a vital role by providing free or affordable health check-ups, screenings, and consultations, especially in underserved communities. Additionally, ensuring access to medical services helps individuals receive timely diagnosis and treatment, improving overall health outcomes and enhancing quality of life.
+          </p>
         </div>
       </div>
-      <!-- Content Section with Background -->
-      <div class="row no-gutters" style="background-color: #f8f9fa; min-height: 400px;">
-        <div class="col-12">
-          <div class="container py-5">
-            <div class="row">
-              <div class="col-lg-10 mx-auto">
-                <div class="work-content text-left">
-                  <h2 class="work-title mb-4" style="color: #333; font-weight: bold;">{{ work.title }}</h2>
-                  <div class="work-description mb-4">
-                    <div class="rich-text" style="line-height: 1.8; color: #555;">
-                      {{ work.description|linebreaks|safe }}
-                    </div>
-                  </div>
-                  {% if work.external_link %}
-                  <div class="work-button">
-                    <a href="{{ work.external_link }}" target="_blank" class="btn btn--orange-white btn-lg px-4 py-2">Learn More</a>
-                  </div>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
+
+       <div class="row ">
+        <div class="col-md-6 d-flex flex-column justify-content-start">
+          <h3 class="mb-3">Health Awareness and Support</h3>
+          <p>
+            Health Awareness and Support focuses on educating individuals and communities about physical and mental well-being while ensuring access to essential health services. It includes awareness campaigns on healthy lifestyles, disease prevention, and mental health, along with health camps that provide check-ups, screenings, and medical consultations. Through timely support and improved access to healthcare services, this initiative helps promote early treatment, better health outcomes, and an improved quality of life.
+          </p>
+        </div>
+        <div class="col-md-6">
+          <div class="image-box">
+            <img src="{% static 'website/images/help.jpg' %}" width="100%" height="100%" alt="Blog Image" />
           </div>
         </div>
       </div>
     </div>
+    
+
   </section>
-  <!-- END OUR WORK DETAIL SECTION -->
+  <!-- end blogs and Areas of Impact SECTION -->
 
-  <a href="" class="floating-icon"><span><i class="bi bi-heart-fill"></i></span> DONATE</a>
 
+
+  {% include "website/includes/login_modal.html" %}
   {% include "website/includes/footer.html" %}
-
   <!-- scripts start -->
   <!-- jquery  start-->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"
@@ -100,6 +111,8 @@
   <script src="{% static 'website/js/script.js' %}"></script>
   <script src="{% static 'website/js/min.js' %}"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="{% static 'js/navbar.js' %}"></script>
+  <script src="{% static 'js/config.js' %}"></script>
 </body>
 
 </html>
