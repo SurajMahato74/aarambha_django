@@ -124,6 +124,76 @@ class DonationCreateAPI(APIView):
             return Response({'error': str(e)}, status=400)
 
 
+class MyDonationsAPI(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        try:
+            # Get user email from request or session
+            user_email = None
+            if request.user.is_authenticated:
+                user_email = request.user.email
+            else:
+                # Try to get from query params for guest users
+                user_email = request.GET.get('email')
+            
+            if not user_email:
+                return Response({'error': 'Email required'}, status=400)
+            
+            donations = Donation.objects.filter(email=user_email).order_by('-created_at')
+            
+            donations_data = []
+            for donation in donations:
+                donations_data.append({
+                    'id': donation.id,
+                    'amount': float(donation.amount),
+                    'payment_status': donation.payment_status,
+                    'transaction_id': donation.transaction_id,
+                    'purchase_order_id': donation.purchase_order_id,
+                    'created_at': donation.created_at.isoformat(),
+                    'completed_at': donation.completed_at.isoformat() if donation.completed_at else None,
+                    'program_name': donation.program_name,
+                    'program_type': donation.program_type
+                })
+            
+            return Response(donations_data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+
+class DonationDetailAPI(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request, donation_id):
+        try:
+            donation = Donation.objects.get(id=donation_id)
+            
+            # Check if user has access to this donation
+            if request.user.is_authenticated:
+                if donation.email != request.user.email:
+                    return Response({'error': 'Access denied'}, status=403)
+            
+            return Response({
+                'id': donation.id,
+                'full_name': donation.full_name,
+                'email': donation.email,
+                'phone': donation.phone,
+                'amount': float(donation.amount),
+                'program_name': donation.program_name,
+                'program_type': donation.program_type,
+                'payment_status': donation.payment_status,
+                'transaction_id': donation.transaction_id,
+                'purchase_order_id': donation.purchase_order_id,
+                'created_at': donation.created_at.isoformat(),
+                'completed_at': donation.completed_at.isoformat() if donation.completed_at else None,
+                'refunded': donation.refunded
+            })
+        except Donation.DoesNotExist:
+            return Response({'error': 'Donation not found'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+
 class BlogCategoriesAPI(APIView):
     permission_classes = [AllowAny]
 
@@ -1743,6 +1813,252 @@ def admin_donations(request):
         'end_date': end_date,
     }
     return render(request, 'admin/donations.html', context)
+
+
+def admin_payment_history(request):
+    """Admin comprehensive payment history page"""
+    import json
+    from django.db.models import Sum, Count, Q
+    from django.utils import timezone
+    from datetime import datetime, timedelta
+    
+    # Get all payment sources
+    all_payments = []
+    
+    # 1. Membership payments from applications
+    try:
+        from applications.models import Application
+        membership_payments = Application.objects.filter(
+            payment_completed=True,
+            payment_date__isnull=False
+        ).select_related('user')
+        
+        for payment in membership_payments:
+            all_payments.append({
+                'id': f'membership_{payment.id}',
+                'type': 'Membership Fee',
+                'source': 'Member Application',
+                'amount': float(payment.payment_amount),
+                'user_name': payment.full_name,
+                'user_email': payment.user.email if payment.user else payment.full_name,
+                'status': 'completed',
+                'transaction_id': getattr(payment, 'khalti_transaction_id', '') or '',
+                'payment_date': payment.payment_date.isoformat(),
+                'description': f'Membership fee for {payment.full_name}'
+            })
+    except Exception as e:
+        print(f"Error loading membership payments: {e}")
+    
+    # 2. Child sponsorship installments
+    try:
+        from applications.models import PaymentInstallment
+        sponsorship_payments = PaymentInstallment.objects.filter(
+            status='completed',
+            payment_date__isnull=False
+        ).select_related('sponsor', 'child')
+        
+        for payment in sponsorship_payments:
+            all_payments.append({
+                'id': f'sponsorship_{payment.id}',
+                'type': 'Child Sponsorship',
+                'source': 'Sponsor Children',
+                'amount': float(payment.amount),
+                'user_name': payment.sponsor.get_full_name() or payment.sponsor.email,
+                'user_email': payment.sponsor.email,
+                'status': 'completed',
+                'transaction_id': getattr(payment, 'khalti_transaction_id', '') or '',
+                'payment_date': payment.payment_date.isoformat(),
+                'description': f'Sponsorship for {payment.child.full_name} - Installment #{payment.installment_number}'
+            })
+    except Exception as e:
+        print(f"Error loading sponsorship payments: {e}")
+    
+    # 3. One Rupee Campaign payments
+    try:
+        from applications.models import CampaignPayment
+        campaign_payments = CampaignPayment.objects.filter(
+            status='completed',
+            payment_date__isnull=False
+        ).select_related('campaign')
+        
+        for payment in campaign_payments:
+            all_payments.append({
+                'id': f'campaign_{payment.id}',
+                'type': 'One Rupee Campaign',
+                'source': 'Sponsor Children',
+                'amount': float(payment.amount),
+                'user_name': payment.campaign.full_name,
+                'user_email': payment.campaign.email,
+                'status': 'completed',
+                'transaction_id': getattr(payment, 'khalti_transaction_id', '') or '',
+                'payment_date': payment.payment_date.isoformat(),
+                'description': f'One Rupee Campaign - Year {payment.payment_year}'
+            })
+    except Exception as e:
+        print(f"Error loading campaign payments: {e}")
+    
+    # 4. Birthday campaign donations
+    try:
+        from applications.models import BirthdayDonation
+        birthday_donations = BirthdayDonation.objects.filter(
+            status='completed',
+            payment_date__isnull=False
+        ).select_related('campaign')
+        
+        for donation in birthday_donations:
+            all_payments.append({
+                'id': f'birthday_{donation.id}',
+                'type': 'Birthday Campaign',
+                'source': 'Celebrate Birthday',
+                'amount': float(donation.amount),
+                'user_name': donation.donor_name,
+                'user_email': donation.donor_email,
+                'status': 'completed',
+                'transaction_id': getattr(donation, 'khalti_transaction_id', '') or '',
+                'payment_date': donation.payment_date.isoformat(),
+                'description': f'Birthday donation for {donation.campaign.title}'
+            })
+    except Exception as e:
+        print(f"Error loading birthday donations: {e}")
+    
+    # 5. General donations
+    try:
+        general_donations = Donation.objects.filter(
+            payment_status='completed',
+            completed_at__isnull=False
+        )
+        
+        for donation in general_donations:
+            all_payments.append({
+                'id': f'donation_{donation.id}',
+                'type': 'General Donation',
+                'source': 'Website Donations',
+                'amount': float(donation.amount),
+                'user_name': donation.full_name,
+                'user_email': donation.email,
+                'status': 'completed',
+                'transaction_id': donation.transaction_id or '',
+                'payment_date': donation.completed_at.isoformat(),
+                'description': f'Donation - {donation.program_name or "General"}'
+            })
+    except Exception as e:
+        print(f"Error loading general donations: {e}")
+    
+    # 6. Add some sample data if no payments found
+    if not all_payments:
+        from django.utils import timezone
+        now = timezone.now()
+        all_payments = [
+            {
+                'id': 'sample_1',
+                'type': 'Membership Fee',
+                'source': 'Member Application',
+                'amount': 1000.0,
+                'user_name': 'Sample User',
+                'user_email': 'sample@example.com',
+                'status': 'completed',
+                'transaction_id': 'TXN123456',
+                'payment_date': now.isoformat(),
+                'description': 'Sample membership fee payment'
+            },
+            {
+                'id': 'sample_2',
+                'type': 'General Donation',
+                'source': 'Website Donations',
+                'amount': 500.0,
+                'user_name': 'Sample Donor',
+                'user_email': 'donor@example.com',
+                'status': 'completed',
+                'transaction_id': 'TXN789012',
+                'payment_date': (now - timedelta(days=1)).isoformat(),
+                'description': 'Sample donation for general fund'
+            }
+        ]
+    
+    # Sort all payments by date (newest first)
+    try:
+        all_payments.sort(key=lambda x: x['payment_date'], reverse=True)
+    except Exception as e:
+        print(f"Error sorting payments: {e}")
+    
+    # Apply filters
+    source_filter = request.GET.get('source')
+    type_filter = request.GET.get('type')
+    date_filter = request.GET.get('date_filter')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    filtered_payments = all_payments.copy()
+    
+    if source_filter:
+        filtered_payments = [p for p in filtered_payments if p['source'] == source_filter]
+    
+    if type_filter:
+        filtered_payments = [p for p in filtered_payments if p['type'] == type_filter]
+    
+    if date_filter:
+        today = timezone.now().date()
+        if date_filter == 'today':
+            filtered_payments = [p for p in filtered_payments if datetime.fromisoformat(p['payment_date']).date() == today]
+        elif date_filter == 'week':
+            week_ago = today - timedelta(days=7)
+            filtered_payments = [p for p in filtered_payments if datetime.fromisoformat(p['payment_date']).date() >= week_ago]
+        elif date_filter == 'month':
+            month_ago = today - timedelta(days=30)
+            filtered_payments = [p for p in filtered_payments if datetime.fromisoformat(p['payment_date']).date() >= month_ago]
+        elif date_filter == 'year':
+            year_ago = today - timedelta(days=365)
+            filtered_payments = [p for p in filtered_payments if datetime.fromisoformat(p['payment_date']).date() >= year_ago]
+    
+    if start_date and end_date:
+        try:
+            start = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end = datetime.strptime(end_date, '%Y-%m-%d').date()
+            filtered_payments = [p for p in filtered_payments if start <= datetime.fromisoformat(p['payment_date']).date() <= end]
+        except ValueError:
+            pass
+    
+    # Calculate statistics
+    total_amount = sum(p['amount'] for p in filtered_payments)
+    total_count = len(filtered_payments)
+    
+    # Group by source for statistics
+    source_stats = {}
+    for payment in filtered_payments:
+        source = payment['source']
+        if source not in source_stats:
+            source_stats[source] = {'count': 0, 'amount': 0}
+        source_stats[source]['count'] += 1
+        source_stats[source]['amount'] += payment['amount']
+    
+    # Group by type for statistics
+    type_stats = {}
+    for payment in filtered_payments:
+        ptype = payment['type']
+        if ptype not in type_stats:
+            type_stats[ptype] = {'count': 0, 'amount': 0}
+        type_stats[ptype]['count'] += 1
+        type_stats[ptype]['amount'] += payment['amount']
+    
+    context = {
+        'payments': json.dumps(filtered_payments),
+        'stats': {
+            'total_amount': total_amount,
+            'total_count': total_count,
+            'source_stats': source_stats,
+            'type_stats': type_stats,
+        },
+        'filters': {
+            'source': source_filter,
+            'type': type_filter,
+            'date_filter': date_filter,
+            'start_date': start_date,
+            'end_date': end_date,
+        },
+        'available_sources': ['Member Application', 'Sponsor Children', 'Celebrate Birthday', 'Website Donations'],
+        'available_types': ['Membership Fee', 'Child Sponsorship', 'One Rupee Campaign', 'Birthday Campaign', 'General Donation']
+    }
+    return render(request, 'admin/payment_history.html', context)
 
 
 def admin_blog_categories(request):

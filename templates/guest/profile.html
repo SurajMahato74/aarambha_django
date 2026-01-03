@@ -207,6 +207,7 @@
                                                 <th>Transaction ID</th>
                                                 <th>Date</th>
                                                 <th>Receipt ID</th>
+                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="donationsTableBody">
@@ -1607,7 +1608,17 @@
         
         async function loadDonations() {
             try {
-                const response = await fetchAPI('/api/core/donations/my/');
+                let apiUrl = '/api/core/donations/my/';
+                
+                // Add email parameter if user is not authenticated but we have email
+                if (!localStorage.getItem('access_token')) {
+                    const user = getUser();
+                    if (user && user.email) {
+                        apiUrl += `?email=${encodeURIComponent(user.email)}`;
+                    }
+                }
+                
+                const response = await fetchAPI(apiUrl);
                 const donations = await response.json();
                 
                 const tbody = document.getElementById('donationsTableBody');
@@ -1615,7 +1626,7 @@
                 if (donations.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="text-center py-4">
+                            <td colspan="6" class="text-center py-4">
                                 <i class="fas fa-heart fa-3x text-muted mb-3"></i>
                                 <p class="text-muted mb-4">No donations found.</p>
                                 <p class="text-muted small">Your donations will appear here after you make a contribution.</p>
@@ -1654,6 +1665,16 @@
                                     ${donation.purchase_order_id}
                                 </div>
                             </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="printReceipt(${donation.id})" title="Print Receipt">
+                                        <i class="fas fa-receipt"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" onclick="printCertificate(${donation.id})" title="Print Certificate">
+                                        <i class="fas fa-certificate"></i>
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                     `).join('');
                 }
@@ -1661,7 +1682,7 @@
                 console.error('Error loading donations:', error);
                 document.getElementById('donationsTableBody').innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-danger">
+                        <td colspan="6" class="text-center py-4 text-danger">
                             <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
                             <p>Error loading donations.</p>
                         </td>
@@ -1680,6 +1701,131 @@
                 canceled: '#6c757d'
             };
             return colors[status] || '#6c757d';
+        }
+        
+        async function printReceipt(donationId) {
+            try {
+                const response = await fetchAPI(`/api/core/donations/${donationId}/`);
+                const donation = await response.json();
+                
+                const receiptWindow = window.open('', '_blank', 'width=800,height=600');
+                receiptWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Donation Receipt</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            .header { text-align: center; border-bottom: 2px solid #E36F1E; padding-bottom: 20px; margin-bottom: 20px; }
+                            .logo { font-size: 24px; font-weight: bold; color: #E36F1E; }
+                            .receipt-title { font-size: 20px; margin: 10px 0; }
+                            .details { margin: 20px 0; }
+                            .row { display: flex; justify-content: space-between; margin: 10px 0; }
+                            .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+                            @media print { .no-print { display: none; } }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <div class="logo">Aarambha Foundation</div>
+                            <div class="receipt-title">Donation Receipt</div>
+                        </div>
+                        
+                        <div class="details">
+                            <div class="row"><strong>Receipt ID:</strong> <span>${donation.purchase_order_id}</span></div>
+                            <div class="row"><strong>Donor Name:</strong> <span>${donation.full_name}</span></div>
+                            <div class="row"><strong>Email:</strong> <span>${donation.email}</span></div>
+                            <div class="row"><strong>Phone:</strong> <span>${donation.phone || 'N/A'}</span></div>
+                            <div class="row"><strong>Amount:</strong> <span>Rs. ${donation.amount}</span></div>
+                            <div class="row"><strong>Program:</strong> <span>${donation.program_name || 'General Donation'}</span></div>
+                            <div class="row"><strong>Transaction ID:</strong> <span>${donation.transaction_id || 'N/A'}</span></div>
+                            <div class="row"><strong>Date:</strong> <span>${new Date(donation.created_at).toLocaleDateString()}</span></div>
+                            <div class="row"><strong>Status:</strong> <span>${donation.payment_status.toUpperCase()}</span></div>
+                        </div>
+                        
+                        <div class="footer">
+                            <p>Thank you for your generous donation to Aarambha Foundation!</p>
+                            <p>This receipt serves as proof of your donation for tax purposes.</p>
+                            <p>Contact: we.aarambha@gmail.com | +977 (984)346-7402</p>
+                        </div>
+                        
+                        <div class="no-print" style="text-align: center; margin-top: 20px;">
+                            <button onclick="window.print()" style="padding: 10px 20px; background: #E36F1E; color: white; border: none; border-radius: 5px;">Print Receipt</button>
+                            <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; margin-left: 10px;">Close</button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                receiptWindow.document.close();
+            } catch (error) {
+                console.error('Error generating receipt:', error);
+                alert('Error generating receipt. Please try again.');
+            }
+        }
+        
+        async function printCertificate(donationId) {
+            try {
+                const response = await fetchAPI(`/api/core/donations/${donationId}/`);
+                const donation = await response.json();
+                
+                const certificateWindow = window.open('', '_blank', 'width=800,height=600');
+                certificateWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Donation Certificate</title>
+                        <style>
+                            body { font-family: 'Times New Roman', serif; margin: 0; padding: 40px; background: #f9f9f9; }
+                            .certificate { background: white; border: 10px solid #E36F1E; padding: 40px; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+                            .header { font-size: 32px; font-weight: bold; color: #E36F1E; margin-bottom: 20px; }
+                            .title { font-size: 28px; font-weight: bold; margin: 20px 0; text-decoration: underline; }
+                            .content { font-size: 18px; line-height: 1.6; margin: 30px 0; }
+                            .donor-name { font-size: 24px; font-weight: bold; color: #2D3B5B; margin: 20px 0; }
+                            .amount { font-size: 22px; font-weight: bold; color: #E36F1E; }
+                            .footer { margin-top: 40px; font-size: 14px; }
+                            .signature { margin-top: 50px; display: flex; justify-content: space-between; }
+                            .sig-line { border-top: 1px solid #000; width: 200px; text-align: center; padding-top: 5px; }
+                            @media print { .no-print { display: none; } body { background: white; } }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="certificate">
+                            <div class="header">AARAMBHA FOUNDATION</div>
+                            <div class="title">CERTIFICATE OF APPRECIATION</div>
+                            
+                            <div class="content">
+                                <p>This is to certify that</p>
+                                <div class="donor-name">${donation.full_name}</div>
+                                <p>has generously contributed</p>
+                                <div class="amount">Rs. ${donation.amount}</div>
+                                <p>to support our mission of providing education, healthcare, and community development programs.</p>
+                                ${donation.program_name ? `<p>This donation was made specifically for: <strong>${donation.program_name}</strong></p>` : ''}
+                                <p>Your contribution helps us make a lasting impact in our communities and brings hope to those in need.</p>
+                            </div>
+                            
+                            <div class="footer">
+                                <p><strong>Date:</strong> ${new Date(donation.created_at).toLocaleDateString()}</p>
+                                <p><strong>Certificate ID:</strong> ${donation.purchase_order_id}</p>
+                            </div>
+                            
+                            <div class="signature">
+                                <div class="sig-line">Authorized Signature</div>
+                                <div class="sig-line">Foundation Seal</div>
+                            </div>
+                        </div>
+                        
+                        <div class="no-print" style="text-align: center; margin-top: 20px;">
+                            <button onclick="window.print()" style="padding: 10px 20px; background: #E36F1E; color: white; border: none; border-radius: 5px;">Print Certificate</button>
+                            <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; margin-left: 10px;">Close</button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                certificateWindow.document.close();
+            } catch (error) {
+                console.error('Error generating certificate:', error);
+                alert('Error generating certificate. Please try again.');
+            }
         }
     </script>
 </body>

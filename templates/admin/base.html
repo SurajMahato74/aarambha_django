@@ -97,6 +97,10 @@
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_donations' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-donate w-4"></i> Donations
                 </a>
+                <a href="{% url 'admin_payment_history' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_payment_history' %}active text-indigo-300 font-medium{% endif %}">
+                    <i class="fas fa-history w-4"></i> Payment History
+                </a>
                 <a href="{% url 'admin_children' %}"
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_children' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-child w-4"></i> Children Database
