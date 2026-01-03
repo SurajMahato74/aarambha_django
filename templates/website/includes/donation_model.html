@@ -1,3 +1,4 @@
+{% load static %}
 <style>
     .donation-container {
         display: flex;
@@ -20,7 +21,9 @@
     .image-header img {
         width: 100%;
         height: 160px;
-        object-fit: cover;
+        object-fit: contain;
+        background: #f8f9fa;
+        padding: 20px;
     }
 
     .info-content {
@@ -206,13 +209,10 @@
 <div class="donation-container">
     <div class="info-panel">
         <div class="image-header">
-            <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=800&q=80" alt="Support">
+            <img src="{% static 'website/images/logo.png' %}" alt="Aarambha Foundation">
         </div>
         <div class="info-content">
-            <img src="https://dummyimage.com/80x30/d6692a/ffffff&text=CARE" alt="Logo" class="logo">
-            <h2>Help Defeat Poverty</h2>
-            <p>Your support provides life-saving aid to women and girls in crisis. Join us in making a lasting impact
-                today.</p>
+            <p>Your support helps us provide education, healthcare, and community development programs. Join us in making a lasting impact today.</p>
             <div class="footer-links">
                 <a href="#">Privacy</a> • <a href="#">Usage</a> • <a href="#">Contact</a>
             </div>
@@ -339,6 +339,15 @@
     }
 
     async function finish() {
+        // Check if user is logged in first
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!user) {
+            alert('Please login first to make a donation.');
+            // Show login modal or redirect
+            $('#loginModal').modal('show');
+            return;
+        }
+
         // Collect donation data
         const title = document.getElementById('title').value;
         const fullName = document.getElementById('fullname').value;
@@ -350,10 +359,6 @@
         // Validate
         if (!fullName || !email || !amount || amount < 10) {
             alert("Please fill in all required fields");
-            return;
-        }
-        if (amount > 200) {
-            alert("Maximum donation amount is Rs. 200. For larger donations, please contact us directly.");
             return;
         }
 
@@ -369,6 +374,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
                 body: JSON.stringify({
                     title: title,
@@ -381,7 +387,7 @@
 
             const data = await response.json();
 
-            if (data.success && data.payment_url) {
+            if (response.ok && data.success && data.payment_url) {
                 // Redirect to Khalti payment page
                 window.location.href = data.payment_url;
             } else {

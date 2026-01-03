@@ -109,36 +109,45 @@
             </li>
 
             <li class="navigation__level-one-item" tabindex="0">
-                <a href="" class="navigation__level-one-link desktop-only--navigation">
+                <a href="{% url 'website_blogs' %}" class="navigation__level-one-link desktop-only--navigation">
                     Blogs
-                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
+                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000/svg' %}" aria-hidden="true"
                         class="arrow--down">
                         <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
                     </svg>
                 </a>
-                <button class="navigation__submenu-open-button mobile-only--navigation" aria-controls="#News_+_Stories"
-                    aria-label="Open News + Stories menu">
+                <button class="navigation__submenu-open-button mobile-only--navigation" aria-controls="#Blogs"
+                    aria-label="Open Blogs menu">
                     Blogs 
-                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}" aria-hidden="true"
+                    <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000/svg' %}" aria-hidden="true"
                         class="arrow--down">
                         <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
                     </svg>
                 </button>
-                <div class="navigation__level-two navigation__submenu" id="News_+_Stories">
-                    <div
-                        class="contained-width navigation__level-two-content navigation__level-two-content--with-highlight">
-                        <ul>
-                            <li>
-                                <p class="fw-bold pb-2">Aapghari: Beginning point for Aarambha</p>
-                                <a href="{% url 'website_blogs' %}" class="navigation__level-two-link reverse-underline" style="padding-left:8px">
-                                    Test1
-                                </a> <br>
-                                 <a href="{% url 'website_blogs' %}" class="navigation__level-two-link reverse-underline" style="padding-left:8px">
-                                    Test2
-                                </a>
-                            </li>
+                <div class="navigation__level-two navigation__submenu" id="Blogs">
+                    <div class="navigation__level-two-content contained-width">
+                        <header class="navigation__level-two-header">
+                            <button class="navigation__submenu-close-button mobile-only--navigation"
+                                aria-controls="#Blogs" aria-label="Close Blogs menu">
+                                <svg width="7" height="5" fill="none" xmlns="http://www.w3.org/2000.svg' %}"
+                                    aria-hidden="true" class="arrow--down">
+                                    <path d="M6.364.682 3.682 3.364 1 .682" stroke="#E36F1E" stroke-width="1.5"></path>
+                                </svg>
+                                Back
+                            </button>
+                            <h2 class="navigation__level-two-title">
+                                <a href="{% url 'website_blogs' %}" class="reverse-underline">Blogs</a>
+                            </h2>
+                        </header>
 
-                            
+                        <ul>
+                            <li class="navigation__level-two-item">
+                                <a href="{% url 'website_blogs' %}" class="navigation__level-two-link">All Blogs</a>
+                            </li>
+                            <!-- Dynamic categories will be loaded here -->
+                            <div id="blog-categories-list">
+                                <!-- Categories will be loaded via JS or server-side -->
+                            </div>
                         </ul>
                     </div>
                 </div>
@@ -203,7 +212,8 @@
     window.updateNavbarAuthState = updateNavbarAuthState;
 
     document.addEventListener('DOMContentLoaded', function () {
-        fetch('/api/our-work/')  // Your API URL
+        // Load Our Work items
+        fetch('/api/our-work/')
             .then(response => response.json())
             .then(data => {
                 const list = document.getElementById('our-work-list');
@@ -219,6 +229,22 @@
                 }
             })
             .catch(error => console.error('Error fetching Our Work:', error));
+
+        // Load Blog Categories
+        fetch('/api/blog-categories/')
+            .then(response => response.json())
+            .then(data => {
+                const categoriesList = document.getElementById('blog-categories-list');
+                if (data.length > 0) {
+                    data.forEach(category => {
+                        const li = document.createElement('li');
+                        li.className = 'navigation__level-two-item';
+                        li.innerHTML = `<a href="${category.url}" class="navigation__level-two-link">${category.name}</a>`;
+                        categoriesList.appendChild(li);
+                    });
+                }
+            })
+            .catch(error => console.error('Error fetching Blog Categories:', error));
     });
 
     function openDonationModal() {

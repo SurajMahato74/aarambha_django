@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from ckeditor.fields import RichTextField
 from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 
 User = get_user_model()
 
@@ -369,6 +370,8 @@ class SchoolDropoutReport(models.Model):
     # Meta
     is_anonymous = models.BooleanField(default=False, help_text="Whether the report is anonymous")
     status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('investigated', 'Investigated'), ('resolved', 'Resolved')], default='pending')
+    admin_notes = models.TextField(blank=True, help_text="Admin notes for this report")
+    added_to_child_database = models.BooleanField(default=False, help_text="Whether this dropout has been added to child database")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -390,6 +393,14 @@ class Donation(models.Model):
     full_name = models.CharField(max_length=200, help_text="Full name of the donor")
     email = models.EmailField(help_text="Email address of the donor")
     phone = models.CharField(max_length=15, blank=True, help_text="Phone number of the donor (optional)")
+    
+    # Program Information
+    program_name = models.CharField(max_length=300, blank=True, help_text="Name of the program being supported")
+    program_type = models.CharField(max_length=50, choices=[
+        ('database', 'Database Program'),
+        ('fallback', 'Fallback Program'),
+        ('general', 'General Donation')
+    ], default='general', help_text="Type of program")
     
     # Donation Details
     amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Donation amount in NPR")
@@ -506,3 +517,136 @@ class IndexEvent(models.Model):
     def get_active_events(cls):
         """Get all active events for index page display"""
         return cls.objects.filter(is_active=True).order_by('order', '-event_date')
+
+
+class BlogPost(models.Model):
+    """
+    Model to store blog posts with dynamic content management.
+    """
+    title = models.CharField(max_length=300, help_text="Blog post title")
+    slug = models.SlugField(unique=True, blank=True, help_text="URL slug (auto-generated from title)")
+    excerpt = models.TextField(max_length=500, help_text="Short description/excerpt for the blog post")
+    featured_image = models.ImageField(
+        upload_to='blog_posts/',
+        help_text="Main featured image for the blog post"
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_posts')
+    
+    # SEO fields
+    meta_description = models.CharField(max_length=160, blank=True, help_text="Meta description for SEO")
+    
+    # Status and visibility
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('published', 'Published'),
+        ('archived', 'Archived'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    is_featured = models.BooleanField(default=False, help_text="Feature this post on homepage")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    published_at = models.DateTimeField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "Blog Post"
+        verbose_name_plural = "Blog Posts"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
+    @property
+    def get_absolute_url(self):
+        return f"/blogs/{self.slug}/"
+    
+    @classmethod
+    def get_published_posts(cls):
+        """Get all published blog posts"""
+        return cls.objects.filter(status='published').order_by('-published_at')
+    
+    @classmethod
+    def get_featured_posts(cls):
+        """Get featured published blog posts"""
+        return cls.objects.filter(status='published', is_featured=True).order_by('-published_at')
+
+
+class BlogParagraph(models.Model):
+    """
+    Model to store individual paragraphs for blog posts with rich content.
+    """
+    blog_post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='paragraphs')
+    order = models.PositiveIntegerField(help_text="Order of this paragraph in the blog post")
+    
+    # Content types
+    PARAGRAPH_TYPES = [
+        ('text', 'Text Content'),
+        ('image', 'Image with Caption'),
+        ('quote', 'Quote/Blockquote'),
+        ('list', 'Bullet/Numbered List'),
+    ]
+    paragraph_type = models.CharField(max_length=20, choices=PARAGRAPH_TYPES, default='text')
+    
+    # Text content
+    content = RichTextField(blank=True, help_text="Rich text content for this paragraph")
+    
+    # Image content
+    image = models.ImageField(
+        upload_to='blog_paragraphs/',
+        blank=True,
+        null=True,
+        help_text="Image for this paragraph (if paragraph type is image)"
+    )
+    image_caption = models.CharField(max_length=200, blank=True, help_text="Caption for the image")
+    image_alt_text = models.CharField(max_length=200, blank=True, help_text="Alt text for accessibility")
+    
+    # Quote content
+    quote_text = models.TextField(blank=True, help_text="Quote text (if paragraph type is quote)")
+    quote_author = models.CharField(max_length=100, blank=True, help_text="Quote author (optional)")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Blog Paragraph"
+        verbose_name_plural = "Blog Paragraphs"
+        ordering = ['blog_post', 'order']
+        unique_together = ['blog_post', 'order']
+    
+    def __str__(self):
+        return f"{self.blog_post.title} - Paragraph {self.order} ({self.paragraph_type})"
+
+
+class BlogCategory(models.Model):
+    """
+    Model to categorize blog posts.
+    """
+    name = models.CharField(max_length=100, unique=True, help_text="Category name")
+    slug = models.SlugField(unique=True, blank=True, help_text="URL slug (auto-generated from name)")
+    description = models.TextField(blank=True, help_text="Category description")
+    color = models.CharField(max_length=7, default='#007bff', help_text="Hex color code for category badge")
+    is_active = models.BooleanField(default=True, help_text="Set to active to display this category")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Blog Category"
+        verbose_name_plural = "Blog Categories"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
+# Add many-to-many relationship to BlogPost
+BlogPost.add_to_class('categories', models.ManyToManyField(BlogCategory, blank=True, related_name='blog_posts'))

@@ -70,7 +70,7 @@
           </a>
         </div>
         <div class="text-center d-none d-md-block">
-          <a href="javascript:void(0)" onclick="openDonationModal()" class="btn navigation__donate py-4"
+          <a href="javascript:void(0)" onclick="openDonationModal('General Donation', 'Support Aarambha Foundation in our mission to provide education, healthcare, and community development programs.', '', 'general')" class="btn navigation__donate py-4"
             style="padding: 10px 90px">
             Donate
           </a>
@@ -104,10 +104,8 @@
                 </h3>
                 <div class="card__blurb">
                   {{ card.description|safe }}
-                  <div>
-                    <a href="{% if card.button_url %}{{ card.button_url }}{% else %}#{% endif %}"
-                      class="btn btn--orange-white">{{ card.button_text }}</a>
-                  </div>
+                  <div><a href="javascript:void(0)" onclick="openDonationModal('{{ card.title|escapejs }}', '{{ card.description|striptags|truncatewords:20|escapejs }}', '{{ card.image.url|default:''|escapejs }}', 'database')"
+                      class="btn btn--orange-white">{{ card.button_text }}</a></div>
                 </div>
               </div>
             </div>
@@ -129,7 +127,7 @@
                   <p>A movement dedicated to helping motivated children return to school by providing the resources,
                     support, and educational spaces they deserve, ensuring no child is left behind in their learning
                     journey.</p>
-                 <div><a href="javascript:void(0)" onclick="openDonationModal()"
+                 <div><a href="javascript:void(0)" onclick="openDonationModal('Aarambha: A New Beginning', 'A movement dedicated to helping motivated children return to school by providing the resources, support, and educational spaces they deserve, ensuring no child is left behind in their learning journey.', '{% static 'website/images/Computer-Lab-1024x683.jpg' %}', 'fallback')"
                       class="btn btn--orange-white">Donate</a></div>
                 </div>
               </div>
@@ -149,7 +147,7 @@
                   <p>Through libraries, digital classrooms, fellowships, and community support, we work to strengthen
                     public schools and empower students with opportunities that inspire confidence, curiosity, and
                     lifelong learning.</p>
-                  <div><a href="javascript:void(0)" onclick="openDonationModal()"
+                  <div><a href="javascript:void(0)" onclick="openDonationModal('Bridging Gaps, Building Futures', 'Through libraries, digital classrooms, fellowships, and community support, we work to strengthen public schools and empower students with opportunities that inspire confidence, curiosity, and lifelong learning.', '{% static 'website/images/plantation-1024x683.jpg' %}', 'fallback')"
                       class="btn btn--orange-white">Donate</a></div>
                 </div>
               </div>
@@ -169,7 +167,7 @@
                   <p>Committed to transforming education by understanding student challenges, engaging communities, and
                     creating sustainable solutions that help every child access quality learning and explore their
                     fullest potential.</p>
-                  <div><a href="javascript:void(0)" onclick="openDonationModal()"
+                  <div><a href="javascript:void(0)" onclick="openDonationModal('One Step at a Time', 'Committed to transforming education by understanding student challenges, engaging communities, and creating sustainable solutions that help every child access quality learning and explore their fullest potential.', '{% static 'website/images/Computer-Lab-1024x683.jpg' %}', 'fallback')"
                       class="btn btn--orange-white">Donate</a></div>
                 </div>
               </div>
@@ -530,6 +528,7 @@
   <!-- END PARTNER SECTION -->
 
   {% include "website/includes/login_modal.html" %}
+  {% include "website/includes/donation_modal.html" %}
   {% include "website/includes/footer.html" %}
 
  

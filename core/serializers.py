@@ -169,6 +169,6 @@ class SchoolDropoutReportSerializer(serializers.ModelSerializer):
             'id', 'reporter_name', 'reporter_email', 'reporter_phone',
             'dropout_name', 'dropout_age', 'dropout_gender', 'school_name',
             'school_location', 'district', 'reason_for_dropout', 'additional_notes',
-            'is_anonymous', 'status', 'created_at', 'updated_at'
+            'is_anonymous', 'status', 'admin_notes', 'added_to_child_database', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']

@@ -1,85 +1,198 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link href="{% static 'website/css/bootstrap.min.css' %}" rel="stylesheet" crossorigin="anonymous" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="{% static 'website/css/slick.min.css' %}" crossorigin="anonymous"
-    referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="{% static 'website/css/slick.min.css' %}" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="{% static 'website/css/owl.carousel.min.css' %}" />
-  <!-- Link Swiper's CSS -->
   <link rel="stylesheet" href="{% static 'website/css/swiper-bundle.min.css' %}" />
-  <!-- Link Swiper's CSS end-->
   <link rel="stylesheet" href="{% static 'website/css/animate.min.css' %}" />
-  <!-- custom-css  -->
   <link rel="stylesheet" href="{% static 'website/css/index.css' %}" />
   <link rel="stylesheet" href="{% static 'website/css/style.css' %}" />
-  <!-- custom-css end -->
   <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
-  <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
+  <title>Celebrate Your Birthday - Aarambha Foundation</title>
   <style>
-    .privacy ul {
-      padding-left: 20px;
-
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 100010;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: rgba(0,0,0,0.5);
     }
-
-    .privacy ul li {
-      list-style: dotted;
-      margin: 10px 0;
+    .modal.show {
+      display: block !important;
+    }
+    .modal-dialog {
+      position: relative;
+      width: auto;
+      margin: 1.75rem;
+      pointer-events: none;
+    }
+    .modal-content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      pointer-events: auto;
+      background-color: #fff;
+      border: 1px solid rgba(0,0,0,.2);
+      border-radius: 0.3rem;
+      box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,.5);
+    }
+    @media (min-width: 576px) {
+      .modal-dialog {
+        max-width: 500px;
+        margin: 1.75rem auto;
+      }
+    }
+    @media (min-width: 992px) {
+      .modal-lg {
+        max-width: 800px;
+      }
+    }
+    .modal-backdrop {
+      z-index: 100009;
+    }
+    .modal-body {
+      max-height: 70vh;
+      overflow-y: auto;
     }
   </style>
-  
 </head>
 
 <body>
-  {% include 'website/includes/navbar.html'%}
+  {% include 'website/includes/navbar.html' %}
 
-  <section id="birthday-campaign" class="py-3 campaign-bg-2">
-        <div class="container">
-            <div class="row align-items-center flex-lg-row-reverse">
-                <div class="col-lg-6">
-                    <h3 class=" fw-bold text-orange">Celebrate Your Birthday Sponsoring a Big Dream</h3>
-                    <p class="my-2">Make your birthday meaningful by sponsoring a child's education instead of receiving gifts. Turn your special day into a big dream for a needy child in Nepal!</p>
-                    <p>Invite your friends and family to contribute to Aarambha Foundation in your honor. Your birthday fund can cover school fees, build libraries, provide stationery, or support health camps creating lasting impact on children's lives.</p>
-                    <ul class="list-unstyled mt-3">
-                        <li class="mb-2"><strong>How it Works:</strong> Create a birthday fundraiser and share with loved ones.</li>
-                        <li class="mb-2"><strong>Personal Touch:</strong> Receive updates and photos from the children you help.</li>
-                        <li class="mb-2"><strong>Joy Multiplied:</strong> Celebrate while spreading smiles and education.</li>
-                    </ul>
-                    <a href="" class="btn  text-white py-2 mt-2" style="font-size:14px">Start Your Birthday Fundraiser</a>
-                </div>
-                <div class="col-lg-6 text-center">
-                    <img src="{% static 'website/images/health.jpg' %}" alt="Happy children celebrating" class="img-fluid rounded shadow-sm">
-                    <p class="mt-3 text-muted">Bringing smiles to children through community events</p>
-                </div>
+  <!-- Hero Section -->
+  <section class="split-banner">
+    <div class="full-width">
+      <div class="split-banner__content split-banner__content--image-on-left theme--orange">
+        <div class="split-banner__text">
+          <h2 class="split-banner__title">🎉 Celebrate Your Birthday with Purpose</h2>
+          <div class="max-text-width">
+            <div class="rich-text">
+              <p>Turn your special day into a life-changing moment for children in need. Create a birthday fundraiser and invite friends to donate instead of giving gifts!</p>
             </div>
+          </div>
+          <div class="d-flex gap-3 flex-wrap">
+            <a href="javascript:void(0)" onclick="showCreateCampaignModal()" class="btn btn--orange-white">
+              <i class="fas fa-gift me-2"></i>Start Your Campaign
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToActiveCampaigns()" class="btn btn--white-blue">
+              <i class="fas fa-heart me-2"></i>Support Others
+            </a>
+          </div>
         </div>
-    </section>
+        <div class="split-banner__image">
+          <img src="{% static 'website/images/health.jpg' %}" alt="Birthday Celebration" loading="lazy" fetchpriority="auto" decoding="async" />
+        </div>
+      </div>
+    </div>
+  </section>
 
+
+
+  <!-- Active Campaigns -->
+  <section id="active-campaigns" class="events">
+    <div class="vission__content wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+      <div class="d-flex justify-content-center">
+        <h1 class="py-0 my-0">ACTIVE BIRTHDAY CAMPAIGNS</h1>
+      </div>
+    </div>
+    <div class="card-group card-group--blue-dark">
+      <div class="container">
+        <ul id="campaigns-container" class="grid--3-col card-group__items">
+          <!-- Campaigns will be loaded here -->
+        </ul>
+        <div id="no-campaigns" class="text-center py-5" style="display: none;">
+          <i class="fas fa-birthday-cake fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">No active campaigns yet</h4>
+          <p class="text-muted">Be the first to create a birthday campaign!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Create Campaign Modal -->
+  <div class="modal fade" id="createCampaignModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">🎂 Create Your Birthday Campaign</h5>
+          <button type="button" class="close" onclick="hideCreateCampaignModal()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="campaignForm">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Full Name *</label>
+                <input type="text" class="form-control" name="full_name" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-control" name="email" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Phone *</label>
+                <input type="tel" class="form-control" name="phone" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Birthday Date *</label>
+                <input type="date" class="form-control" name="birthday_date" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Campaign Title *</label>
+              <input type="text" class="form-control" name="title" placeholder="e.g., Help me celebrate by supporting education" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Target Amount (NPR) *</label>
+              <input type="number" class="form-control" name="target_amount" min="1000" step="100" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Campaign Description *</label>
+              <textarea class="form-control" name="description" rows="4" placeholder="Tell your story and why this cause matters to you..." required></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Profile Photo (Optional)</label>
+              <input type="file" class="form-control" name="profile_photo" accept="image/*">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Campaign Photo (Optional)</label>
+              <input type="file" class="form-control" name="photo" accept="image/*">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="hideCreateCampaignModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="createCampaign()">
+            <i class="fas fa-rocket me-2"></i>Launch Campaign
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   {% include "website/includes/login_modal.html" %}
-
   {% include "website/includes/footer.html" %}
-  <!-- scripts start -->
-  <!-- jquery  start-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
-  <!-- jquery end -->
-  <!-- bootstrap  start -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
-    crossorigin="anonymous"></script>
-  <!-- bootstrap end -->
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <script src="{% static 'website/js/slick.min.js' %}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <!-- Swiper JS -->
-  <script src="{% static 'website/js/swiper-bundle.min.js' %}" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
+  <script src="{% static 'website/js/swiper-bundle.min.js' %}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="{% static 'website/js/modernizr.min.js' %}" type="text/javascript"></script>
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
   <script src="{% static 'website/js/owl.carousel.min.js' %}"></script>
@@ -94,6 +207,195 @@
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="{% static 'js/navbar.js' %}"></script>
   <script src="{% static 'js/config.js' %}"></script>
-</body>
 
+  <script>
+    let activeCampaigns = [];
+
+    $(document).ready(function() {
+      loadActiveCampaigns();
+    });
+
+    function showCreateCampaignModal() {
+      // Check if user is logged in
+      if (!window.djangoUser || !window.djangoUser.isAuthenticated) {
+        // Show login modal instead
+        const loginModal = document.getElementById('loginModal');
+        if (loginModal) {
+          loginModal.style.display = 'flex';
+          document.body.classList.add('modal-open');
+          return;
+        }
+      }
+
+      const modal = document.getElementById('createCampaignModal');
+      modal.style.display = 'block';
+      modal.classList.add('show');
+      document.body.classList.add('modal-open');
+
+      // Add backdrop
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop fade show';
+      backdrop.id = 'modal-backdrop';
+      document.body.appendChild(backdrop);
+    }
+    
+    function hideCreateCampaignModal() {
+      const modal = document.getElementById('createCampaignModal');
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.classList.remove('modal-open');
+      
+      // Remove backdrop
+      const backdrop = document.getElementById('modal-backdrop');
+      if (backdrop) {
+        backdrop.remove();
+      }
+    }
+
+    function scrollToActiveCampaigns() {
+      document.getElementById('active-campaigns').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function loadActiveCampaigns() {
+      try {
+        const response = await fetch('/api/applications/birthday-campaign/list/');
+        const campaigns = await response.json();
+
+        if (response.ok) {
+          displayCampaigns(campaigns);
+        } else {
+          throw new Error('Failed to load campaigns');
+        }
+      } catch (error) {
+        console.error('Error loading campaigns:', error);
+        $('#no-campaigns').show();
+      }
+    }
+
+    function displayCampaigns(campaigns) {
+      const container = $('#campaigns-container');
+      container.empty();
+
+      if (campaigns.length === 0) {
+        $('#no-campaigns').show();
+        return;
+      }
+
+      campaigns.forEach(campaign => {
+        const campaignCard = `
+          <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+            <div>
+              <div class="event-image">
+                ${campaign.photo ? `<img src="${campaign.photo}" alt="${campaign.title}" loading="lazy" fetchpriority="auto" decoding="async" />` : `<img src="{% static 'website/images/health.jpg' %}" alt="${campaign.title}" loading="lazy" fetchpriority="auto" decoding="async" />`}
+              </div>
+              <div class="card__text">
+                <div>
+                  <h3 class="card__title"><span>${campaign.title}</span></h3>
+                  <div class="card__blurb">
+                    <p class="text-muted mb-2">by ${campaign.full_name}</p>
+                    <p>${campaign.description.substring(0, 100)}...</p>
+                    <div class="mb-3">
+                      <div class="d-flex justify-content-between mb-1">
+                        <small>Progress</small>
+                        <small>Rs. ${parseInt(campaign.current_amount).toLocaleString()} / Rs. ${parseInt(campaign.target_amount).toLocaleString()}</small>
+                      </div>
+                      <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: ${campaign.progress_percentage}%"></div>
+                      </div>
+                      <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">${campaign.donors_count} donors</small>
+                        <small class="text-muted">${Math.round(campaign.progress_percentage)}%</small>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <small class="text-muted">
+                        <i class="fas fa-birthday-cake me-1"></i>
+                        ${new Date(campaign.birthday_date).toLocaleDateString()}
+                      </small>
+                      <a href="javascript:void(0)" onclick="donateToCampaign(${campaign.id})" class="btn btn--orange-white btn-sm">
+                        <i class="fas fa-heart me-1"></i>Donate
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+        `;
+        container.append(campaignCard);
+      });
+    }
+
+    async function createCampaign() {
+      const form = document.getElementById('campaignForm');
+      const submitButton = form.querySelector('button[type="submit"]') || document.querySelector('.modal-footer .btn-primary');
+      const formData = new FormData(form);
+
+      // Disable form and show loading
+      const originalButtonText = submitButton.innerHTML;
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+
+      // Disable all form inputs
+      const inputs = form.querySelectorAll('input, textarea, select');
+      inputs.forEach(input => input.disabled = true);
+
+      try {
+        const response = await fetch('/api/applications/birthday-campaign/create/', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          hideCreateCampaignModal();
+          Swal.fire({
+            icon: 'success',
+            title: 'Campaign Created!',
+            text: data.message || 'Your birthday campaign has been created successfully!',
+            confirmButtonText: 'View Campaign'
+          }).then(() => {
+            window.location.href = `/birthday-campaign/${data.campaign_id}/`;
+          });
+        } else {
+          throw new Error(data.error || 'Failed to create campaign');
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message || 'Failed to create campaign. Please try again.'
+        });
+      } finally {
+        // Re-enable form
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
+        inputs.forEach(input => input.disabled = false);
+      }
+    }
+
+    function donateToCampaign(campaignId) {
+      window.location.href = `/birthday-campaign/${campaignId}/`;
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script>
+</body>
 </html>

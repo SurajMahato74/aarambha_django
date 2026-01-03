@@ -1,0 +1,96 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Birthday Campaigns Management{% endblock %}
+
+{% block content %}
+<div class="bg-slate-800 rounded-lg p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+      <i class="fas fa-birthday-cake"></i>Birthday Campaigns Management
+    </h2>
+    <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg" onclick="location.reload()">
+      <i class="fas fa-sync-alt mr-2"></i>Refresh
+    </button>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg p-4 text-white text-center">
+      <i class="fas fa-gift text-2xl mb-2"></i>
+      <h3 class="text-2xl font-bold">{{ stats.total_campaigns }}</h3>
+      <p class="text-sm opacity-90">Total Campaigns</p>
+    </div>
+    <div class="bg-gradient-to-r from-green-500 to-teal-600 rounded-lg p-4 text-white text-center">
+      <i class="fas fa-play-circle text-2xl mb-2"></i>
+      <h3 class="text-2xl font-bold">{{ stats.active_campaigns }}</h3>
+      <p class="text-sm opacity-90">Active Campaigns</p>
+    </div>
+    <div class="bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg p-4 text-white text-center">
+      <i class="fas fa-money-bill-wave text-2xl mb-2"></i>
+      <h3 class="text-2xl font-bold">Rs. {{ stats.total_raised|floatformat:0 }}</h3>
+      <p class="text-sm opacity-90">Total Raised</p>
+    </div>
+    <div class="bg-gradient-to-r from-pink-500 to-red-600 rounded-lg p-4 text-white text-center">
+      <i class="fas fa-users text-2xl mb-2"></i>
+      <h3 class="text-2xl font-bold">{{ stats.total_donors }}</h3>
+      <p class="text-sm opacity-90">Total Donors</p>
+    </div>
+  </div>
+
+  <!-- Campaigns List -->
+  <div class="bg-slate-700 rounded-lg">
+    <div class="p-4 border-b border-slate-600">
+      <h5 class="text-lg font-medium text-white">Birthday Campaigns</h5>
+    </div>
+    <div class="p-4">
+      {% if campaigns %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for campaign in campaigns %}
+            <div class="bg-slate-600 rounded-lg p-4 hover:bg-slate-500 transition-colors">
+              <div class="flex justify-between items-start mb-2">
+                <h6 class="text-white font-medium">{{ campaign.title }}</h6>
+                <span class="bg-{% if campaign.status == 'active' %}green{% elif campaign.status == 'completed' %}blue{% else %}red{% endif %}-500 text-white px-2 py-1 rounded text-xs">
+                  {{ campaign.status|title }}
+                </span>
+              </div>
+              <p class="text-slate-300 text-sm mb-2">by {{ campaign.full_name }}</p>
+              <p class="text-slate-400 text-xs mb-3">{{ campaign.description|truncatechars:80 }}</p>
+              
+              <div class="mb-3">
+                <div class="flex justify-between text-xs text-slate-300 mb-1">
+                  <span>Progress</span>
+                  <span>Rs. {{ campaign.current_amount|floatformat:0 }} / Rs. {{ campaign.target_amount|floatformat:0 }}</span>
+                </div>
+                <div class="w-full bg-slate-700 rounded-full h-2">
+                  <div class="{% if campaign.progress_percentage >= 100 %}bg-green-500{% elif campaign.progress_percentage >= 50 %}bg-yellow-500{% else %}bg-blue-500{% endif %} h-2 rounded-full" style="width: {{ campaign.progress_percentage }}%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400 mt-1">
+                  <span>{{ campaign.donors_count }} donors</span>
+                  <span>{{ campaign.progress_percentage|floatformat:0 }}%</span>
+                </div>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <small class="text-slate-400">
+                  <i class="fas fa-calendar mr-1"></i>
+                  {{ campaign.birthday_date }}
+                </small>
+                <a href="/birthday-campaign/{{ campaign.id }}/" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
+                  <i class="fas fa-eye mr-1"></i>View
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-8">
+          <i class="fas fa-birthday-cake text-3xl text-slate-500 mb-3"></i>
+          <h5 class="text-lg text-slate-400">No campaigns found</h5>
+          <p class="text-slate-500">No birthday campaigns have been created yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

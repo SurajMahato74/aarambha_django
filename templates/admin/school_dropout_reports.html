@@ -10,6 +10,13 @@
     .material-symbols-outlined {
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
 </style>
 {% endblock %}
 
@@ -103,6 +110,11 @@
                     <option value="resolved">Resolved</option>
                 </select>
             </div>
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Admin Notes</label>
+                <textarea id="adminNotes" rows="3" placeholder="Add notes about this status update..."
+                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white resize-none"></textarea>
+            </div>
             <div class="flex gap-2">
                 <button onclick="updateStatus()"
                     class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Update</button>
@@ -113,7 +125,127 @@
     </div>
 </div>
 
+<!-- Add to Child Database Modal -->
+<div id="addToChildModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Add to Child Database</h2>
+        <form id="addToChildForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Date of Birth *</label>
+                    <input type="date" id="dateOfBirth" required
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Village</label>
+                    <input type="text" id="village" placeholder="Village name"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Father's Name</label>
+                    <input type="text" id="fatherName" placeholder="Father's name"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Father's Occupation</label>
+                    <input type="text" id="fatherOccupation" placeholder="Father's occupation"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Mother's Name</label>
+                    <input type="text" id="motherName" placeholder="Mother's name"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Mother's Occupation</label>
+                    <input type="text" id="motherOccupation" placeholder="Mother's occupation"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Guardian Name</label>
+                    <input type="text" id="guardianName" placeholder="Guardian name (if applicable)"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Guardian Relationship</label>
+                    <input type="text" id="guardianRelationship" placeholder="Relationship to child"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Family Income (Monthly)</label>
+                    <input type="number" id="familyIncome" placeholder="Family income in NPR"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Grade Level</label>
+                    <input type="text" id="gradeLevel" placeholder="Current/last grade level"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Monthly Sponsorship Amount</label>
+                    <input type="number" id="sponsorshipAmount" placeholder="Required monthly amount"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Family Situation</label>
+                    <textarea id="familySituation" rows="3" placeholder="Describe family situation..."
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Educational Needs</label>
+                    <textarea id="educationalNeeds" rows="3" placeholder="Describe educational needs..."
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Health Status</label>
+                    <textarea id="healthStatus" rows="2" placeholder="Describe health status..."
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Interests & Hobbies</label>
+                    <textarea id="interestsHobbies" rows="2" placeholder="Child's interests and hobbies..."
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Dreams & Aspirations</label>
+                    <textarea id="dreamsAspirations" rows="2" placeholder="Child's dreams and aspirations..."
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Urgent Needs</label>
+                    <textarea id="urgentNeeds" rows="2" placeholder="Any urgent needs..."
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white resize-none"></textarea>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 pt-4">
+                <button type="submit"
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Add to Database</button>
+                <button type="button" onclick="closeAddToChildModal()"
+                    class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    // Add fetchAPI function for admin template
+    async function fetchAPI(url, options = {}) {
+        const token = localStorage.getItem('access_token');
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` }),
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}'
+            },
+            credentials: 'include'
+        };
+        return fetch(url, { ...defaultOptions, ...options });
+    }
+
     let currentPage = 1;
     let currentReportId = null;
 
@@ -140,6 +272,7 @@
                 <td class="px-4 py-3">${report.is_anonymous ? 'Anonymous' : report.reporter_name}</td>
                 <td class="px-4 py-3">
                     <span class="px-2 py-1 rounded text-xs ${getStatusColor(report.status)}">${report.status}</span>
+                    ${report.added_to_child_database ? '<span class="ml-2 px-2 py-1 rounded text-xs bg-purple-600">In Database</span>' : ''}
                 </td>
                 <td class="px-4 py-3">${new Date(report.created_at).toLocaleDateString()}</td>
                 <td class="px-4 py-3">
@@ -150,6 +283,11 @@
                         <button onclick="openStatusModal(${report.id})" class="text-yellow-400 hover:text-yellow-300" title="Update Status">
                             <span class="material-symbols-outlined" style="font-size:20px">edit</span>
                         </button>
+                        ${report.status === 'investigated' && !report.added_to_child_database ? `
+                            <button onclick="openAddToChildModal(${report.id})" class="text-green-400 hover:text-green-300" title="Add to Child Database">
+                                <span class="material-symbols-outlined" style="font-size:20px">person_add</span>
+                            </button>
+                        ` : ''}
                     </div>
                 </td>
             </tr>
@@ -243,6 +381,17 @@
             <div class="text-center text-slate-400 text-xs pt-4 border-t border-slate-700">
                 Reported on ${new Date(report.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
+            
+            ${report.admin_notes ? `
+                <!-- Admin Notes -->
+                <div class="bg-slate-700/50 p-4 rounded-lg mt-4">
+                    <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-red-400" style="font-size:20px">admin_panel_settings</span>
+                        Admin Notes
+                    </h4>
+                    <p class="text-slate-200 text-sm leading-relaxed">${report.admin_notes}</p>
+                </div>
+            ` : ''}
         </div>
     `;
         document.getElementById('viewModal').classList.remove('hidden');
@@ -263,21 +412,106 @@
         currentReportId = null;
     }
 
+    function openAddToChildModal(id) {
+        currentReportId = id;
+        document.getElementById('addToChildModal').classList.remove('hidden');
+    }
+
+    function closeAddToChildModal() {
+        document.getElementById('addToChildModal').classList.add('hidden');
+        document.getElementById('addToChildForm').reset();
+        currentReportId = null;
+    }
+
+    // Handle Add to Child Database form submission
+    document.getElementById('addToChildForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.querySelector('#addToChildForm button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loader
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin" style="font-size:16px">refresh</span> Adding...';
+        
+        try {
+            const formData = {
+                date_of_birth: document.getElementById('dateOfBirth').value,
+                village: document.getElementById('village').value,
+                father_name: document.getElementById('fatherName').value,
+                father_occupation: document.getElementById('fatherOccupation').value,
+                mother_name: document.getElementById('motherName').value,
+                mother_occupation: document.getElementById('motherOccupation').value,
+                guardian_name: document.getElementById('guardianName').value,
+                guardian_relationship: document.getElementById('guardianRelationship').value,
+                family_income: document.getElementById('familyIncome').value,
+                grade_level: document.getElementById('gradeLevel').value,
+                monthly_sponsorship_amount: document.getElementById('sponsorshipAmount').value,
+                family_situation: document.getElementById('familySituation').value,
+                educational_needs: document.getElementById('educationalNeeds').value,
+                health_status: document.getElementById('healthStatus').value,
+                interests_hobbies: document.getElementById('interestsHobbies').value,
+                dreams_aspirations: document.getElementById('dreamsAspirations').value,
+                urgent_needs: document.getElementById('urgentNeeds').value
+            };
+            
+            const response = await fetchAPI(`/api/core/reports/school-dropout/admin/${currentReportId}/add-to-child-database/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                alert(`Success! ${result.message}`);
+                closeAddToChildModal();
+                loadReports(); // Refresh the reports list
+            } else {
+                const error = await response.json();
+                alert(`Error: ${error.error || 'Failed to add to child database'}`);
+            }
+        } catch (error) {
+            alert('Error adding to child database');
+        } finally {
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    });
+
     async function updateStatus() {
         const newStatus = document.getElementById('newStatus').value;
+        const adminNotes = document.getElementById('adminNotes').value;
+        const updateBtn = document.querySelector('#statusModal button[onclick="updateStatus()"]');
+        const originalText = updateBtn.innerHTML;
+        
+        // Show loader
+        updateBtn.disabled = true;
+        updateBtn.innerHTML = '<span class="material-symbols-outlined animate-spin" style="font-size:16px">refresh</span> Updating...';
 
-        const response = await fetchAPI(`/api/core/reports/school-dropout/admin/${currentReportId}/update-status/`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
+        try {
+            const response = await fetchAPI(`/api/core/reports/school-dropout/admin/${currentReportId}/update-status/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    status: newStatus,
+                    admin_notes: adminNotes
+                })
+            });
 
-        if (response.ok) {
-            alert('Status updated successfully!');
-            closeStatusModal();
-            loadReports();
-        } else {
-            alert('Failed to update status');
+            if (response.ok) {
+                alert('Status updated successfully! Notification sent to reporter.');
+                closeStatusModal();
+                loadReports();
+            } else {
+                alert('Failed to update status');
+            }
+        } catch (error) {
+            alert('Error updating status');
+        } finally {
+            // Reset button
+            updateBtn.disabled = false;
+            updateBtn.innerHTML = originalText;
         }
     }
 

@@ -279,7 +279,43 @@
     <!-- jquery  start-->
     <!-- Hidden Config for JS -->
     <script src="{% static 'js/config.js' %}"></script>
+    <script src="{% static 'js/auth-utils.js' %}"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if django_authenticated %}
+            // Sync Django auth to localStorage
+            localStorage.setItem('access_token', '{{ access_token }}');
+            localStorage.setItem('refresh_token', '{{ refresh_token }}');
+            localStorage.setItem('user', '{{ user_data|escapejs }}');
+            
+            const userData = JSON.parse('{{ user_data|escapejs }}');
+            
+            // Auto-fill email field
+            const emailField = document.getElementById('reporter_email');
+            if (emailField && userData.email) {
+                emailField.value = userData.email;
+            }
+            
+            // Auto-fill name field if available
+            const nameField = document.getElementById('reporter_name');
+            if (nameField && (userData.first_name || userData.last_name)) {
+                const fullName = [userData.first_name, userData.last_name].filter(Boolean).join(' ');
+                if (fullName) {
+                    nameField.value = fullName;
+                }
+            }
+            {% else %}
+            // For non-Django authenticated users, check localStorage
+            const user = getUser();
+            if (user) {
+                const emailField = document.getElementById('reporter_email');
+                if (emailField && user.email) {
+                    emailField.value = user.email;
+                }
+            }
+            {% endif %}
+        });
+        
         document.getElementById("dropoutReportForm").addEventListener("submit", async function (e) {
             e.preventDefault();
 
@@ -287,7 +323,7 @@
 
             const submitBtn = e.submitter || document.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = 'Submitting...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
             submitBtn.disabled = true;
 
             try {

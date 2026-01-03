@@ -339,3 +339,58 @@ class CampaignPayment(models.Model):
     
     def __str__(self):
         return f"{self.campaign.full_name} - Year {self.payment_year} - Rs. {self.amount}"
+
+class BirthdayCampaign(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='birthday_campaigns')
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    birthday_date = models.DateField()
+    target_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    current_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    profile_photo = models.ImageField(upload_to='birthday_campaigns/profiles/', blank=True, null=True)
+    photo = models.ImageField(upload_to='birthday_campaigns/', blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    donors_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.full_name}'s Birthday Campaign - {self.title}"
+    
+    def get_progress_percentage(self):
+        if self.target_amount > 0:
+            return min(100, (float(self.current_amount) / float(self.target_amount)) * 100)
+        return 0
+
+class BirthdayDonation(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    
+    campaign = models.ForeignKey(BirthdayCampaign, on_delete=models.CASCADE, related_name='donations')
+    donor_name = models.CharField(max_length=255)
+    donor_email = models.EmailField()
+    donor_phone = models.CharField(max_length=20, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    message = models.TextField(blank=True)
+    is_anonymous = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    khalti_payment_token = models.CharField(max_length=255, blank=True, null=True)
+    khalti_transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    payment_date = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.donor_name} - Rs. {self.amount} to {self.campaign.title}"

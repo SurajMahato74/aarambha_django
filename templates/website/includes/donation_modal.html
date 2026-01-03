@@ -1,0 +1,257 @@
+<!-- Donation Modal -->
+<div id="donationModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="donationModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+  <div class="modal-dialog modal-lg" role="document" style="margin: 0; max-width: 900px; width: 90%;">
+    <div class="modal-content" style="background: #1e293b; color: white; border: none; border-radius: 8px;">
+      <div class="modal-header" style="border-bottom: 1px solid #334155; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h5 class="modal-title" id="donationModalLabel" style="margin: 0;">
+          <i class="fas fa-heart" style="color: #ef4444; margin-right: 8px;"></i>
+          Make a Donation
+        </h5>
+        <button type="button" class="close text-white" onclick="closeDonationModal()" aria-label="Close" style="background: none; border: none; font-size: 24px; cursor: pointer; color: white;">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div class="row">
+          <!-- Program Information -->
+          <div class="col-md-5">
+            <div class="card" style="background: #334155; border: none; height: 100%; border-radius: 8px;">
+              <div id="programImage" class="card-img-top" style="height: 200px; background-size: cover; background-position: center; border-radius: 8px 8px 0 0;"></div>
+              <div class="card-body" style="padding: 15px;">
+                <h6 id="programTitle" class="card-title font-weight-bold" style="margin-bottom: 10px; color: white !important; font-size: 16px;">Loading...</h6>
+                <p id="programDescription" class="card-text small" style="margin: 0; line-height: 1.4; color: #d1d5db !important; font-size: 14px;">Loading program details...</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Donation Form -->
+          <div class="col-md-7">
+            <form id="donationForm">
+              <div class="form-group">
+                <label style="color: #d1d5db;">Title</label>
+                <select class="form-control" id="donorTitle" style="background: #334155; border: 1px solid #475569; color: white;">
+                  <option value="Mr.">Mr.</option>
+                  <option value="Mrs.">Mrs.</option>
+                  <option value="Ms.">Ms.</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label style="color: #d1d5db;">Full Name *</label>
+                <input type="text" class="form-control" id="donorName" required 
+                       style="background: #334155; border: 1px solid #475569; color: white;">
+              </div>
+              
+              <div class="form-group">
+                <label style="color: #d1d5db;">Email *</label>
+                <input type="email" class="form-control" id="donorEmail" required 
+                       style="background: #334155; border: 1px solid #475569; color: white;">
+              </div>
+              
+              <div class="form-group">
+                <label style="color: #d1d5db;">Phone (Optional)</label>
+                <input type="tel" class="form-control" id="donorPhone" 
+                       style="background: #334155; border: 1px solid #475569; color: white;">
+              </div>
+              
+              <div class="form-group">
+                <label style="color: #d1d5db;">Donation Amount (NPR) *</label>
+                <div class="row">
+                  <div class="col-6">
+                    <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" onclick="setAmount(500)">Rs. 500</button>
+                  </div>
+                  <div class="col-6">
+                    <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" onclick="setAmount(1000)">Rs. 1,000</button>
+                  </div>
+                  <div class="col-6">
+                    <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" onclick="setAmount(2000)">Rs. 2,000</button>
+                  </div>
+                  <div class="col-6">
+                    <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" onclick="setAmount(5000)">Rs. 5,000</button>
+                  </div>
+                </div>
+                <input type="number" class="form-control mt-2" id="donationAmount" min="10" required 
+                       placeholder="Enter custom amount" 
+                       style="background: #334155; border: 1px solid #475569; color: white;">
+              </div>
+              
+              <input type="hidden" id="programName" />
+              <input type="hidden" id="programType" />
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #334155; padding: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeDonationModal()">Cancel</button>
+        <button type="button" class="btn btn-success" onclick="processDonation()">
+          <i class="fas fa-credit-card" style="margin-right: 8px;"></i>
+          Donate with Khalti
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentProgram = {};
+
+function openDonationModal(title = 'General Donation', description = 'Support our mission', image = '', type = 'general') {
+  console.log('Opening modal with:', { title, description, image, type });
+  
+  // Show modal first
+  const modal = document.getElementById('donationModal');
+  modal.style.display = 'flex';
+  
+  // Force immediate update
+  updateModalContent(title, description, image, type);
+  
+  // Also update after a short delay to ensure DOM is ready
+  setTimeout(() => {
+    updateModalContent(title, description, image, type);
+  }, 50);
+}
+
+function updateModalContent(title, description, image, type) {
+  currentProgram = { title, description, image, type };
+  
+  const titleElement = document.getElementById('programTitle');
+  const descriptionElement = document.getElementById('programDescription');
+  const imageElement = document.getElementById('programImage');
+  const programNameInput = document.getElementById('programName');
+  const programTypeInput = document.getElementById('programType');
+  
+  console.log('Updating elements:', {
+    title: !!titleElement,
+    description: !!descriptionElement,
+    image: !!imageElement
+  });
+  
+  if (titleElement) {
+    titleElement.textContent = title;
+    titleElement.style.color = 'white';
+    titleElement.style.fontSize = '16px';
+    console.log('Title set to:', title);
+  }
+  if (descriptionElement) {
+    descriptionElement.textContent = description;
+    descriptionElement.style.color = '#d1d5db';
+    descriptionElement.style.fontSize = '14px';
+    console.log('Description set to:', description.substring(0, 50) + '...');
+  }
+  if (programNameInput) programNameInput.value = title;
+  if (programTypeInput) programTypeInput.value = type;
+  
+  // Set program image
+  if (imageElement) {
+    if (image && image.trim() !== '') {
+      imageElement.style.backgroundImage = `url('${image}')`;
+      console.log('Image set to:', image);
+    } else {
+      imageElement.style.backgroundImage = `url('/static/website/images/logo.png')`;
+      console.log('Using default logo');
+    }
+  }
+  
+  // Clear and reset form
+  const form = document.getElementById('donationForm');
+  if (form) {
+    form.reset();
+    // Re-set hidden fields after reset
+    if (programNameInput) programNameInput.value = title;
+    if (programTypeInput) programTypeInput.value = type;
+  }
+}
+
+function closeDonationModal() {
+  const modal = document.getElementById('donationModal');
+  modal.style.display = 'none';
+  
+  // Reset modal content
+  const titleElement = document.getElementById('programTitle');
+  const descriptionElement = document.getElementById('programDescription');
+  const imageElement = document.getElementById('programImage');
+  
+  if (titleElement) titleElement.textContent = '';
+  if (descriptionElement) descriptionElement.textContent = '';
+  if (imageElement) imageElement.style.backgroundImage = '';
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('donationModal');
+  if (e.target === modal) {
+    closeDonationModal();
+  }
+});
+
+function setAmount(amount) {
+  document.getElementById('donationAmount').value = amount;
+}
+
+async function processDonation() {
+  const form = document.getElementById('donationForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  
+  const donationData = {
+    title: document.getElementById('donorTitle').value,
+    full_name: document.getElementById('donorName').value,
+    email: document.getElementById('donorEmail').value,
+    phone: document.getElementById('donorPhone').value,
+    amount: document.getElementById('donationAmount').value,
+    program_name: document.getElementById('programName').value,
+    program_type: document.getElementById('programType').value
+  };
+  
+  try {
+    // Show loading
+    const submitBtn = document.querySelector('#donationModal .btn-success');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+    submitBtn.disabled = true;
+    
+    const response = await fetch('/api/donations/create/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(donationData)
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.payment_url) {
+      // Redirect to Khalti payment
+      window.location.href = result.payment_url;
+    } else {
+      throw new Error(result.error || 'Failed to process donation');
+    }
+  } catch (error) {
+    console.error('Donation error:', error);
+    alert('Error processing donation: ' + error.message);
+    
+    // Reset button
+    const submitBtn = document.querySelector('#donationModal .btn-success');
+    submitBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Donate with Khalti';
+    submitBtn.disabled = false;
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>

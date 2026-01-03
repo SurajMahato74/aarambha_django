@@ -1,8 +1,9 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
@@ -273,11 +274,15 @@ def update_application_status(request, pk):
                 message=f'Congratulations! Your {application.application_type} application has been approved.',
                 related_application=application
             )
-            
+
             # Update user
             user = application.user
             user.user_type = application.application_type
             user.is_approved = True
+
+            # Sync name and phone from application to user model
+            user.sync_name_and_phone_from_application()
+
             user.save()
 
         # Send email notifications
@@ -1405,13 +1410,16 @@ def update_sponsorship_status(request, pk):
         # Handle approval - create sponsor account
         if new_status == 'approved':
             user = sponsorship.user
-            
+
             # Generate login credentials
             password = ''.join(secrets.choice(string.ascii_letters + string.digits + '!@#$%^&*') for _ in range(12))
             user.set_password(password)
             user.user_type = 'sponsor'
             user.is_approved = True
-            
+
+            # Sync name and phone from sponsorship to user model
+            user.sync_name_and_phone_from_sponsorship()
+
             # Create username from email if not exists
             if not user.username:
                 username = user.email.split('@')[0]
@@ -1421,7 +1429,7 @@ def update_sponsorship_status(request, pk):
                     username = f"{original_username}{counter}"
                     counter += 1
                 user.username = username
-            
+
             user.save()
             
             # Create notification
@@ -2605,5 +2613,410 @@ def admin_campaign_detail(request, campaign_id):
         return Response(data)
     except OneRupeeCampaign.DoesNotExist:
         return Response({'error': 'Campaign not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_birthday_campaign(request):
+    """Create a new birthday campaign"""
+    try:
+        from .models import BirthdayCampaign
+        from notices.models import UserNotification
+        from django.core.mail import send_mail
+        from django.conf import settings
+
+        data = request.data
+
+        # Create campaign
+        campaign = BirthdayCampaign.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            full_name=data.get('full_name'),
+            email=data.get('email'),
+            phone=data.get('phone'),
+            birthday_date=data.get('birthday_date'),
+            target_amount=data.get('target_amount'),
+            title=data.get('title'),
+            description=data.get('description')
+        )
+
+        # Handle file uploads
+        if request.FILES.get('profile_photo'):
+            campaign.profile_photo = request.FILES['profile_photo']
+
+        if request.FILES.get('photo'):
+            campaign.photo = request.FILES['photo']
+
+        campaign.save()
+
+        # Create notification if user is authenticated
+        if request.user.is_authenticated:
+            UserNotification.objects.create(
+                user=request.user,
+                notification_type='campaign_created',
+                title='Birthday Campaign Created!',
+                message=f'Your birthday campaign "{campaign.title}" has been created successfully.'
+            )
+
+        # Send email
+        try:
+            send_mail(
+                'Birthday Campaign Created - Aarambha Foundation',
+                f'Dear {campaign.full_name},\n\nYour birthday campaign "{campaign.title}" has been created successfully!\n\nTarget Amount: Rs. {campaign.target_amount}\nBirthday Date: {campaign.birthday_date}\n\nShare your campaign with friends and family to start collecting donations.\n\nBest regards,\nAarambha Foundation Team',
+                settings.EMAIL_HOST_USER,
+                [campaign.email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            print(f'Email error: {e}')
+
+        return Response({
+            'success': True,
+            'campaign_id': campaign.id,
+            'message': 'Birthday campaign created successfully!'
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_birthday_campaign(request, campaign_id):
+    """Get birthday campaign details"""
+    try:
+        from .models import BirthdayCampaign, BirthdayDonation
+        
+        campaign = BirthdayCampaign.objects.get(id=campaign_id)
+        donations = BirthdayDonation.objects.filter(campaign=campaign, status='completed').order_by('-created_at')
+        
+        donation_data = []
+        for donation in donations:
+            donation_data.append({
+                'donor_name': 'Anonymous' if donation.is_anonymous else donation.donor_name,
+                'amount': str(donation.amount),
+                'message': donation.message,
+                'date': donation.payment_date.isoformat() if donation.payment_date else donation.created_at.isoformat()
+            })
+        
+        data = {
+            'id': campaign.id,
+            'full_name': campaign.full_name,
+            'title': campaign.title,
+            'description': campaign.description,
+            'birthday_date': campaign.birthday_date.isoformat(),
+            'target_amount': str(campaign.target_amount),
+            'current_amount': str(campaign.current_amount),
+            'progress_percentage': campaign.get_progress_percentage(),
+            'donors_count': campaign.donors_count,
+            'status': campaign.status,
+            'photo': campaign.photo.url if campaign.photo else None,
+            'donations': donation_data
+        }
+        
+        return Response(data)
+        
+    except BirthdayCampaign.DoesNotExist:
+        return Response({'error': 'Campaign not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def donate_to_birthday_campaign(request, campaign_id):
+    """Make a donation to birthday campaign"""
+    try:
+        from .models import BirthdayCampaign, BirthdayDonation
+        import requests
+        from django.conf import settings
+        
+        campaign = BirthdayCampaign.objects.get(id=campaign_id)
+        data = request.data
+        
+        # Create donation record
+        donation = BirthdayDonation.objects.create(
+            campaign=campaign,
+            donor_name=data.get('donor_name'),
+            donor_email=data.get('donor_email'),
+            donor_phone=data.get('donor_phone', ''),
+            amount=data.get('amount'),
+            message=data.get('message', ''),
+            is_anonymous=data.get('is_anonymous', False)
+        )
+        
+        # Initiate Khalti payment
+        khalti_data = {
+            'return_url': f'{getattr(settings, "FRONTEND_URL", "http://127.0.0.1:8000")}/birthday-campaign/{campaign_id}/',
+            'website_url': getattr(settings, 'FRONTEND_URL', 'http://127.0.0.1:8000'),
+            'amount': int(float(donation.amount) * 100),
+            'purchase_order_id': f'BD_{donation.id}_{timezone.now().strftime("%Y%m%d%H%M%S")}',
+            'purchase_order_name': f'Birthday Donation - {campaign.title}',
+            'customer_info': {
+                'name': donation.donor_name,
+                'email': donation.donor_email,
+                'phone': donation.donor_phone or '9800000000'
+            }
+        }
+        
+        # Use sandbox credentials for testing
+        khalti_secret_key = "05bf95cc57244045b8df5fad06748dab"  # Test key from docs
+        
+        response = requests.post(
+            'https://dev.khalti.com/api/v2/epayment/initiate/',
+            json=khalti_data,
+            headers={
+                'Authorization': f'key {khalti_secret_key}',
+                'Content-Type': 'application/json',
+            },
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            khalti_response = response.json()
+            donation.khalti_payment_token = khalti_response.get('pidx')
+            donation.save()
+            
+            return Response({
+                'success': True,
+                'payment_url': khalti_response.get('payment_url'),
+                'donation_id': donation.id
+            })
+        else:
+            return Response({'error': 'Failed to initiate payment'}, status=status.HTTP_400_BAD_REQUEST)
+            
+    except BirthdayCampaign.DoesNotExist:
+        return Response({'error': 'Campaign not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def verify_birthday_donation(request):
+    """Verify birthday donation payment with Khalti"""
+    try:
+        from .models import BirthdayDonation
+        from notices.models import UserNotification
+        from django.core.mail import send_mail
+        from django.conf import settings
+        import requests
+        
+        pidx = request.GET.get('pidx') or request.data.get('pidx')
+        
+        if not pidx:
+            return Response({'error': 'Payment token not provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        donation = BirthdayDonation.objects.get(khalti_payment_token=pidx)
+        
+        # If already completed, return success
+        if donation.status == 'completed':
+            return Response({
+                'success': True,
+                'donation_id': donation.id,
+                'status': 'completed',
+                'transaction_id': donation.khalti_transaction_id,
+                'amount': str(donation.amount),
+                'message': 'Payment already verified'
+            })
+        
+        # Verify with Khalti using sandbox API
+        khalti_secret_key = "05bf95cc57244045b8df5fad06748dab"  # Test key from docs
+        
+        response = requests.post(
+            'https://dev.khalti.com/api/v2/epayment/lookup/',
+            json={'pidx': pidx},
+            headers={
+                'Authorization': f'key {khalti_secret_key}',
+                'Content-Type': 'application/json',
+            },
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            khalti_response = response.json()
+            payment_status = khalti_response.get('status', '')
+            
+            print(f"Khalti response status: {khalti_response.get('status')}")
+            print(f"Payment status: {payment_status}")
+            
+            if payment_status == 'Completed':
+                donation.status = 'completed'
+                donation.khalti_transaction_id = khalti_response.get('transaction_id')
+                donation.payment_date = timezone.now()
+                donation.save()
+                
+                # Update campaign totals
+                campaign = donation.campaign
+                campaign.current_amount += donation.amount
+                campaign.donors_count += 1
+
+                # Check if campaign target is reached
+                if campaign.current_amount >= campaign.target_amount and campaign.status == 'active':
+                    campaign.status = 'completed'
+
+                campaign.save()
+                
+                # Send emails
+                try:
+                    # Email to donor
+                    send_mail(
+                        f'Thank You for Your Birthday Donation - {campaign.title}',
+                        f'Dear {donation.donor_name},\n\nThank you for your generous donation of Rs. {donation.amount} to {campaign.full_name}\'s birthday campaign "{campaign.title}".\n\nYour contribution will make a real difference in children\'s lives!\n\nTransaction ID: {donation.khalti_transaction_id}\n\nBest regards,\nAarambha Foundation Team',
+                        settings.EMAIL_HOST_USER,
+                        [donation.donor_email],
+                        fail_silently=True,
+                    )
+                    
+                    # Email to campaign owner
+                    send_mail(
+                        f'New Donation Received - {campaign.title}',
+                        f'Dear {campaign.full_name},\n\nGreat news! You received a new donation for your birthday campaign.\n\nDonor: {"Anonymous" if donation.is_anonymous else donation.donor_name}\nAmount: Rs. {donation.amount}\nMessage: {donation.message}\n\nCurrent Progress: Rs. {campaign.current_amount} / Rs. {campaign.target_amount}\n\nBest regards,\nAarambha Foundation Team',
+                        settings.EMAIL_HOST_USER,
+                        [campaign.email],
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    print(f'Email error: {e}')
+            
+            if request.method == 'GET':
+                return redirect(f'/birthday-campaign/{donation.campaign.id}/')
+            
+            return Response({
+                'success': True,
+                'donation_id': donation.id,
+                'status': 'completed' if payment_status == 'Completed' else 'pending',
+                'transaction_id': khalti_response.get('transaction_id'),
+                'amount': str(donation.amount)
+            })
+        else:
+            if request.method == 'GET':
+                return redirect(f'/birthday-campaign/{donation.campaign.id}/?error=payment_failed')
+            return Response({'error': 'Payment verification failed'}, status=status.HTTP_400_BAD_REQUEST)
+            
+    except Exception as e:
+        if request.method == 'GET':
+            return redirect('/celebrate-birthday/?error=payment_error')
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.authentication import SessionAuthentication
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_birthday_campaign_stats(request):
+    """Get birthday campaign statistics for admin dashboard"""
+    if not request.user.is_superuser:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        from .models import BirthdayCampaign, BirthdayDonation
+        from django.db.models import Sum, Count
+        
+        all_campaigns = BirthdayCampaign.objects.all()
+        all_donations = BirthdayDonation.objects.filter(status='completed')
+        
+        stats = {
+            'total_campaigns': all_campaigns.count(),
+            'active_campaigns': all_campaigns.filter(status='active').count(),
+            'total_raised': float(all_donations.aggregate(total=Sum('amount'))['total'] or 0),
+            'total_donors': all_donations.count()
+        }
+        
+        return Response(stats)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_active_birthday_campaigns(request):
+    """Get list of active birthday campaigns for public display"""
+    try:
+        from .models import BirthdayCampaign
+        from django.core.paginator import Paginator
+
+        # Get only active campaigns, ordered by creation date (newest first)
+        campaigns = BirthdayCampaign.objects.filter(status='active').order_by('-created_at')
+
+        # Optional: limit to recent campaigns or those with some donations
+        # campaigns = campaigns.filter(current_amount__gt=0)  # Uncomment to show only campaigns with donations
+
+        # Limit to first 20 for performance
+        campaigns = campaigns[:20]
+
+        data = []
+        for campaign in campaigns:
+            data.append({
+                'id': campaign.id,
+                'full_name': campaign.full_name,
+                'title': campaign.title,
+                'description': campaign.description,
+                'birthday_date': campaign.birthday_date.isoformat(),
+                'target_amount': str(campaign.target_amount),
+                'current_amount': str(campaign.current_amount),
+                'progress_percentage': campaign.get_progress_percentage(),
+                'donors_count': campaign.donors_count,
+                'photo': campaign.photo.url if campaign.photo else None,
+                'profile_photo': campaign.profile_photo.url if campaign.profile_photo else None
+            })
+
+        return Response(data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_birthday_campaign_list(request):
+    """Get paginated list of all birthday campaigns for admin"""
+    if not request.user.is_superuser:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        from .models import BirthdayCampaign
+        from django.core.paginator import Paginator
+        from django.db.models import Q
+        
+        campaigns = BirthdayCampaign.objects.order_by('-created_at')
+        
+        search = request.GET.get('search', '')
+        status_filter = request.GET.get('status', '')
+        
+        if search:
+            campaigns = campaigns.filter(
+                Q(full_name__icontains=search) | Q(title__icontains=search)
+            )
+        
+        if status_filter:
+            campaigns = campaigns.filter(status=status_filter)
+        
+        paginator = Paginator(campaigns, 20)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+        
+        data = []
+        for campaign in page_obj:
+            data.append({
+                'id': campaign.id,
+                'full_name': campaign.full_name,
+                'email': campaign.email,
+                'phone': campaign.phone,
+                'title': campaign.title,
+                'birthday_date': campaign.birthday_date.isoformat(),
+                'target_amount': str(campaign.target_amount),
+                'current_amount': str(campaign.current_amount),
+                'progress_percentage': campaign.get_progress_percentage(),
+                'donors_count': campaign.donors_count,
+                'status': campaign.status,
+                'created_at': campaign.created_at.isoformat()
+            })
+        
+        return Response({
+            'results': data,
+            'count': paginator.count,
+            'next': page_obj.has_next(),
+            'previous': page_obj.has_previous()
+        })
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

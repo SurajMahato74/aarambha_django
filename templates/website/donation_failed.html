@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Failed - Aarambha Foundation</title>
+    <link href="{% static 'website/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .failed-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        .failed-card {
+            background: white;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+        }
+        .failed-icon {
+            font-size: 4rem;
+            color: #dc3545;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="failed-container">
+        <div class="failed-card">
+            <i class="fas fa-times-circle failed-icon"></i>
+            <h2 class="text-danger mb-3">Payment Failed</h2>
+            <p class="mb-4">Unfortunately, your donation could not be processed.</p>
+            
+            {% if error %}
+            <div class="alert alert-warning">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <p class="text-muted mb-4">Please try again or contact us if the problem persists.</p>
+            
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="/" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Back to Home
+                </a>
+                <button class="btn btn-outline-primary" onclick="history.back()">
+                    <i class="fas fa-arrow-left me-2"></i>Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

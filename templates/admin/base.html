@@ -89,6 +89,14 @@
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_one_rupee_campaign' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-coins w-4"></i> One Rupee Campaign
                 </a>
+                <a href="{% url 'admin_birthday_campaigns' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_birthday_campaigns' %}active text-indigo-300 font-medium{% endif %}">
+                    <i class="fas fa-birthday-cake w-4"></i> Birthday Campaigns
+                </a>
+                <a href="{% url 'admin_donations' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_donations' %}active text-indigo-300 font-medium{% endif %}">
+                    <i class="fas fa-donate w-4"></i> Donations
+                </a>
                 <a href="{% url 'admin_children' %}"
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_children' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-child w-4"></i> Children Database
@@ -173,6 +181,10 @@
                             <a href="{% url 'admin_ourwork' %}"
                                 class="menu-link hover-bg flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 text-sm {% if request.resolver_match.url_name == 'admin_ourwork' %}active text-indigo-300 font-medium{% endif %}">
                                 <i class="fas fa-briefcase w-4"></i> Our Work
+                            </a>
+                            <a href="{% url 'admin_blogs' %}"
+                                class="menu-link hover-bg flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 text-sm {% if request.resolver_match.url_name == 'admin_blogs' %}active text-indigo-300 font-medium{% endif %}">
+                                <i class="fas fa-blog w-4"></i> Blogs
                             </a>
                         </div>
                     </div>

@@ -885,9 +885,77 @@ def school_dropout_report_update_status(request, pk):
     try:
         report = SchoolDropoutReport.objects.get(pk=pk)
         new_status = request.data.get('status')
+        admin_notes = request.data.get('admin_notes', '')
+        
         if new_status in ['pending', 'investigated', 'resolved']:
+            old_status = report.status
             report.status = new_status
+            if admin_notes:
+                report.admin_notes = admin_notes
             report.save()
+            
+            # Send notification and email if status changed
+            if old_status != new_status:
+                try:
+                    from users.models import CustomUser
+                    from notices.models import UserNotification
+                    from django.core.mail import send_mail
+                    from django.conf import settings
+                    
+                    # Try to find user by email
+                    try:
+                        user = CustomUser.objects.get(email=report.reporter_email)
+                        # Create notification
+                        UserNotification.objects.create(
+                            user=user,
+                            notification_type='general',
+                            title=f'School Dropout Report Update - {new_status.title()}',
+                            message=f'Your school dropout report for {report.dropout_name} has been updated to {new_status.replace("_", " ").title()}.'
+                        )
+                    except CustomUser.DoesNotExist:
+                        pass  # User not registered, only send email
+                    
+                    # Send email notification
+                    status_messages = {
+                        'pending': 'We have received your report and it is currently pending review.',
+                        'investigated': 'We are actively investigating the case and working on a solution.',
+                        'resolved': 'The case has been resolved. Thank you for bringing this to our attention.'
+                    }
+                    
+                    subject = f'📋 School Dropout Report Update - {new_status.title()} - Aarambha Foundation'
+                    message = f'''Dear {report.reporter_name},
+
+We wanted to update you on the status of your school dropout report.
+
+📄 Report Details:
+- Child's Name: {report.dropout_name}
+- School: {report.school_name}
+- Location: {report.school_location}, {report.district}
+- Report ID: #{report.id}
+
+📊 Status Update: {new_status.replace("_", " ").title()}
+{status_messages.get(new_status, '')}
+
+{f"📝 Admin Notes: {admin_notes}" if admin_notes else ""}
+
+Thank you for your continued support in helping children return to education.
+
+Best regards,
+Aarambha Foundation Team
+Email: we.aarambha@gmail.com
+Phone: +977 (984)346-7402'''
+                    
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[report.reporter_email],
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    # Log error but don't fail the request
+                    print(f"Failed to send notification/email: {e}")
+            
             return Response(SchoolDropoutReportSerializer(report).data)
         return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
     except SchoolDropoutReport.DoesNotExist:
@@ -906,7 +974,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def donation_initiate_payment(request):
     """
     Initiate a donation payment with Khalti.
@@ -938,11 +1006,6 @@ def donation_initiate_payment(request):
                     {'error': 'Amount should be greater than Rs. 10'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            if amount > 200:
-                return Response(
-                    {'error': 'Amount should not exceed Rs. 200. For larger donations, please contact us directly.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
         except Exception as e:
             logger.error(f"Amount validation error: {e}")
             return Response(
@@ -970,8 +1033,8 @@ def donation_initiate_payment(request):
             logger.error(f"Error creating donation: {e}")
             raise
         
-        # Get Khalti credentials from settings
-        khalti_secret_key = getattr(settings, 'KHALTI_SECRET_KEY', 'live_secret_key_9fa11bce45e44676bb9040b5354a3918')
+        # Get Khalti credentials from settings (using sandbox for development)
+        khalti_secret_key = settings.KHALTI_SECRET_KEY
         logger.info(f"Using Khalti secret key: {khalti_secret_key[:10]}...")
 
         # Get return URL from request or use default
@@ -980,53 +1043,46 @@ def donation_initiate_payment(request):
         website_url = base_url
         logger.info(f"Return URL: {return_url}, Website URL: {website_url}")
 
-        # Prepare Khalti payment initiate payload
+        # Prepare Khalti payment initiate payload (match working format)
         khalti_payload = {
-            "return_url": return_url,
-            "website_url": website_url,
-            "amount": donation.amount_in_paisa,
-            "purchase_order_id": purchase_order_id,
-            "purchase_order_name": f"Donation by {full_name}",
-            "customer_info": {
-                "name": full_name,
-                "email": email,
-                "phone": phone if phone else "9800000000"
+            'return_url': return_url,
+            'website_url': website_url,
+            'amount': donation.amount_in_paisa,  # Use the model property
+            'purchase_order_id': purchase_order_id,
+            'purchase_order_name': f'Donation by {full_name}',
+            'customer_info': {
+                'name': full_name,
+                'email': email,
+                'phone': phone if phone else '9800000000'
             }
         }
         logger.info(f"Khalti payload: {khalti_payload}")
 
-        # Make request to Khalti API
-        khalti_url = "https://pay.khalti.com/api/v2/epayment/initiate/"
+        # Make request to Khalti API (use sandbox for development)
+        khalti_url = 'https://dev.khalti.com/api/v2/epayment/initiate/'
         headers = {
             'Authorization': f'key {khalti_secret_key}',
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
         }
         logger.info(f"Making request to Khalti API: {khalti_url}")
 
-        try:
-            response = requests.post(khalti_url, json=khalti_payload, headers=headers, timeout=30)
-            logger.info(f"Khalti API response status: {response.status_code}")
-        except Exception as e:
-            logger.error(f"Request to Khalti API failed: {e}")
-            raise
+        response = requests.post(khalti_url, json=khalti_payload, headers=headers, timeout=30)
+        logger.info(f"Khalti API response status: {response.status_code}")
         
-        if response.status_code == 200:
-            try:
-                khalti_response = response.json()
-                logger.info(f"Khalti response: {khalti_response}")
-            except Exception as e:
-                logger.error(f"Failed to parse Khalti response JSON: {e}, content: {response.text}")
-                raise
+        try:
+            khalti_response = response.json()
+        except:
+            khalti_response = {'error': response.text}
+        
+        if response.status_code == 200 and 'pidx' in khalti_response:
+
+            logger.info(f"Khalti response: {khalti_response}")
 
             # Update donation with Khalti response
-            try:
-                donation.pidx = khalti_response.get('pidx')
-                donation.payment_url = khalti_response.get('payment_url')
-                donation.save()
-                logger.info(f"Donation updated with pidx: {donation.pidx}")
-            except Exception as e:
-                logger.error(f"Failed to update donation: {e}")
-                raise
+            donation.pidx = khalti_response.get('pidx')
+            donation.payment_url = khalti_response.get('payment_url')
+            donation.save()
+            logger.info(f"Donation updated with pidx: {donation.pidx}")
 
             return Response({
                 'success': True,
@@ -1040,17 +1096,14 @@ def donation_initiate_payment(request):
             }, status=status.HTTP_200_OK)
         else:
             # Khalti API error
-            logger.error(f"Khalti API error status: {response.status_code}, content: {response.text}")
+            logger.error(f"Khalti API error status: {response.status_code}, content: {khalti_response}")
             donation.payment_status = 'failed'
             donation.save()
 
-            try:
-                error_data = response.json() if response.content else {'error': 'Unknown error'}
-            except:
-                error_data = {'error': 'Failed to parse error response', 'content': response.text}
             return Response({
                 'error': 'Failed to initiate payment with Khalti',
-                'details': error_data
+                'details': khalti_response,
+                'status_code': response.status_code
             }, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
@@ -1102,17 +1155,17 @@ def donation_verify_payment(request):
                 'message': 'Payment already verified'
             }, status=status.HTTP_200_OK)
 
-        # Get Khalti credentials from settings
-        khalti_secret_key = getattr(settings, 'KHALTI_SECRET_KEY', 'live_secret_key_9fa11bce45e44676bb9040b5354a3918')
+        # Get Khalti credentials from settings (using sandbox for development)
+        khalti_secret_key = settings.KHALTI_SECRET_KEY
 
-        # Use ePayment lookup API as per Khalti support recommendation
-        khalti_url = "https://pay.khalti.com/api/v2/epayment/lookup/"
+        # Use ePayment lookup API as per Khalti support recommendation (sandbox)
+        khalti_url = 'https://dev.khalti.com/api/v2/epayment/lookup/'
         headers = {
             'Authorization': f'key {khalti_secret_key}',
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
         }
 
-        lookup_payload = {"pidx": pidx}
+        lookup_payload = {'pidx': pidx}
         response = requests.post(khalti_url, json=lookup_payload, headers=headers)
 
         if response.status_code == 200:
@@ -1138,6 +1191,51 @@ def donation_verify_payment(request):
 
             if donation.payment_status == 'completed' and not donation.completed_at:
                 donation.completed_at = timezone.now()
+                
+                # Send notification and email on successful payment
+                try:
+                    from notices.models import UserNotification
+                    from django.core.mail import send_mail
+                    
+                    # Create notification if user exists
+                    if hasattr(request, 'user') and request.user.is_authenticated:
+                        UserNotification.objects.create(
+                            user=request.user,
+                            notification_type='general',
+                            title='Donation Successful',
+                            message=f'Your donation of Rs. {donation.amount} has been successfully processed. Thank you for your support!'
+                        )
+                    
+                    # Send email receipt
+                    subject = f'✅ Donation Receipt - Rs. {donation.amount} - Aarambha Foundation'
+                    message = f'''Dear {donation.full_name},
+
+Thank you for your generous donation to Aarambha Foundation!
+
+💰 Donation Details:
+- Amount: Rs. {donation.amount}
+- Transaction ID: {donation.transaction_id}
+- Date: {donation.completed_at.strftime("%B %d, %Y at %I:%M %p")}
+- Receipt ID: {donation.purchase_order_id}
+
+Your contribution helps us provide education, healthcare, and community development programs. Together, we are making a lasting impact in our communities.
+
+This email serves as your official receipt for tax purposes.
+
+With gratitude,
+Aarambha Foundation Team
+Email: we.aarambha@gmail.com
+Phone: +977 (984)346-7402'''
+                    
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[donation.email],
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send notification/email: {e}")
 
             donation.save()
 
@@ -1165,6 +1263,146 @@ def donation_verify_payment(request):
             {'error': f'An error occurred: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_donations_list(request):
+    """Get current user's donations"""
+    try:
+        donations = Donation.objects.filter(email=request.user.email).order_by('-created_at')
+        
+        data = []
+        for donation in donations:
+            data.append({
+                'id': donation.id,
+                'amount': str(donation.amount),
+                'purchase_order_id': donation.purchase_order_id,
+                'transaction_id': donation.transaction_id,
+                'payment_status': donation.payment_status,
+                'created_at': donation.created_at.isoformat(),
+                'completed_at': donation.completed_at.isoformat() if donation.completed_at else None
+            })
+        
+        return Response(data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_school_dropout_reports(request):
+    """Get current user's school dropout reports"""
+    try:
+        reports = SchoolDropoutReport.objects.filter(reporter_email=request.user.email).order_by('-created_at')
+        
+        data = []
+        for report in reports:
+            data.append({
+                'id': report.id,
+                'dropout_name': report.dropout_name,
+                'school_name': report.school_name,
+                'district': report.district,
+                'status': report.status,
+                'created_at': report.created_at.isoformat(),
+                'updated_at': report.updated_at.isoformat()
+            })
+        
+        return Response(data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_dropout_to_child_database(request, pk):
+    """Add a school dropout report to the child database"""
+    try:
+        from applications.models import Child
+        from decimal import Decimal
+        
+        report = SchoolDropoutReport.objects.get(pk=pk)
+        
+        # Check if report is investigated
+        if report.status != 'investigated':
+            return Response(
+                {'error': 'Report must be investigated before adding to child database'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if already added
+        if report.added_to_child_database:
+            return Response(
+                {'error': 'This dropout has already been added to child database'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get additional data from request
+        data = request.data
+        
+        # Create child record with data from dropout report and additional info
+        child = Child.objects.create(
+            full_name=report.dropout_name,
+            date_of_birth=data.get('date_of_birth'),
+            gender=report.dropout_gender.title(),
+            district=report.district,
+            village=data.get('village', ''),
+            address=data.get('address', report.school_location),
+            
+            # Family Information
+            father_name=data.get('father_name', ''),
+            father_occupation=data.get('father_occupation', ''),
+            father_alive=data.get('father_alive', True),
+            mother_name=data.get('mother_name', ''),
+            mother_occupation=data.get('mother_occupation', ''),
+            mother_alive=data.get('mother_alive', True),
+            guardian_name=data.get('guardian_name', ''),
+            guardian_relationship=data.get('guardian_relationship', ''),
+            guardian_occupation=data.get('guardian_occupation', ''),
+            family_situation=data.get('family_situation', report.reason_for_dropout),
+            family_income=Decimal(str(data.get('family_income', 0))) if data.get('family_income') else None,
+            
+            # Education Information
+            school_name=report.school_name,
+            grade_level=data.get('grade_level', ''),
+            educational_needs=data.get('educational_needs', ''),
+            
+            # Health Information
+            health_status=data.get('health_status', ''),
+            special_needs=data.get('special_needs', ''),
+            
+            # Personal Information
+            interests_hobbies=data.get('interests_hobbies', ''),
+            personality_description=data.get('personality_description', ''),
+            dreams_aspirations=data.get('dreams_aspirations', ''),
+            
+            # Sponsorship Information
+            monthly_sponsorship_amount=Decimal(str(data.get('monthly_sponsorship_amount', 0))),
+            preferred_sponsorship_type=data.get('preferred_sponsorship_type', []),
+            preferred_frequency=data.get('preferred_frequency', []),
+            
+            # Story and Additional Info
+            story=data.get('story', f"Child reported as dropout from {report.school_name}. {report.additional_notes}"),
+            urgent_needs=data.get('urgent_needs', ''),
+            admin_notes=f"Added from dropout report #{report.id}. Original reason: {report.reason_for_dropout}",
+            
+            status='available'
+        )
+        
+        # Mark report as added to database
+        report.added_to_child_database = True
+        report.save()
+        
+        return Response({
+            'success': True,
+            'child_id': child.id,
+            'message': f'{child.full_name} has been successfully added to the child database'
+        }, status=status.HTTP_201_CREATED)
+        
+    except SchoolDropoutReport.DoesNotExist:
+        return Response({'error': 'Report not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

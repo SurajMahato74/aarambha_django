@@ -1,0 +1,302 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Blog Management{% endblock %}
+{% block page_title %}Blog Management{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+<style>
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.preview-image { max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 8px; }
+.category-badge { padding: 0.2rem 0.6rem; border-radius: 15px; font-size: 0.7rem; color: white; margin-right: 0.3rem; }
+</style>
+
+<!-- Add/Edit Blog Modal -->
+<div id="blogModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white" id="modalTitle">Add Blog Post</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <form id="blogForm" class="space-y-4" enctype="multipart/form-data">
+            <input type="hidden" id="blogId">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Title *</label>
+                    <input type="text" id="title" name="title" required maxlength="300"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Slug</label>
+                    <input type="text" id="slug" name="slug" maxlength="300"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    <p class="text-xs text-slate-400 mt-1">Auto-generated from title if empty</p>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Excerpt *</label>
+                <textarea id="excerpt" name="excerpt" rows="3" required maxlength="500"
+                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                <p class="text-xs text-slate-400 mt-1">Short description for the blog post</p>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Featured Image *</label>
+                <input type="file" id="featured_image" name="featured_image" accept="image/*"
+                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                <div id="currentImagePreview" class="mt-2"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Status</label>
+                    <select id="status" name="status" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Categories</label>
+                    <select id="categories" name="categories" multiple class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white" style="height: 80px;">
+                        <!-- Categories will be loaded dynamically -->
+                    </select>
+                    <p class="text-xs text-slate-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Paragraph Count</label>
+                    <input type="number" id="paragraph_count" name="paragraph_count" min="1" max="20" value="3"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    <p class="text-xs text-slate-400 mt-1">For new posts only</p>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" id="is_featured" name="is_featured" class="mr-2">
+                <label class="text-sm text-slate-300">Featured Post</label>
+            </div>
+            <div id="formMessage" class="text-sm"></div>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                    <span id="submitButtonText">Create</span>
+                </button>
+                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card rounded-lg overflow-hidden bg-transparent">
+    <div class="p-5 border-b border-slate-700">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-medium text-white">Blog Posts</h3>
+            <div class="flex gap-2">
+                <a href="{% url 'admin_blog_categories' %}" class="px-3 py-2 bg-slate-600 text-white rounded text-sm hover:bg-slate-700">
+                    Manage Categories
+                </a>
+                <button onclick="openAddModal()" class="px-3 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">
+                    + Add Blog Post
+                </button>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="bg-slate-800/50 p-3 rounded">
+                <div class="text-2xl font-bold text-white">{{ total_posts }}</div>
+                <div class="text-xs text-slate-400">Total Posts</div>
+            </div>
+            <div class="bg-slate-800/50 p-3 rounded">
+                <div class="text-2xl font-bold text-emerald-400">{{ published_posts }}</div>
+                <div class="text-xs text-slate-400">Published</div>
+            </div>
+            <div class="bg-slate-800/50 p-3 rounded">
+                <div class="text-2xl font-bold text-amber-400">{{ draft_posts }}</div>
+                <div class="text-xs text-slate-400">Drafts</div>
+            </div>
+            <div class="bg-slate-800/50 p-3 rounded">
+                <div class="text-2xl font-bold text-blue-400" id="categories-count">0</div>
+                <div class="text-xs text-slate-400">Categories</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-800/50 text-xs text-slate-400">
+                <tr>
+                    <th class="text-left p-4">ID</th>
+                    <th class="text-left p-4">Title</th>
+                    <th class="text-left p-4">Author</th>
+                    <th class="text-left p-4">Status</th>
+                    <th class="text-left p-4">Categories</th>
+                    <th class="text-left p-4">Paragraphs</th>
+                    <th class="text-left p-4">Created</th>
+                    <th class="text-left p-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="blogTableBody" class="divide-y divide-slate-700">
+                <tr><td colspan="8" class="p-4 text-center text-slate-400">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="{% static 'js/config.js' %}"></script>
+<script>
+let blogPosts = {{ blog_posts|safe }};
+let categories = {{ categories|safe }};
+
+// Update categories count
+document.getElementById('categories-count').textContent = categories.length;
+
+function loadBlogPosts() {
+    const tbody = document.getElementById('blogTableBody');
+    
+    if (blogPosts.length > 0) {
+        tbody.innerHTML = blogPosts.map(post => {
+            const statusColors = {
+                'draft': 'bg-amber-900/30 text-amber-300',
+                'published': 'bg-emerald-900/30 text-emerald-300',
+                'archived': 'bg-slate-700 text-slate-400'
+            };
+            
+            const categoriesHtml = post.categories.map(cat => 
+                `<span class="category-badge" style="background-color: ${cat.color};">${cat.name}</span>`
+            ).join('');
+            
+            return `
+                <tr class="hover:bg-slate-800/30 transition">
+                    <td class="p-4">${post.id}</td>
+                    <td class="p-4">
+                        <div class="font-medium text-white">${post.title}</div>
+                        <div class="text-xs text-slate-400">${post.slug}</div>
+                        ${post.is_featured ? '<div class="text-xs text-yellow-400">★ Featured</div>' : ''}
+                    </td>
+                    <td class="p-4 text-sm text-slate-300">${post.author_name}</td>
+                    <td class="p-4">
+                        <span class="badge ${statusColors[post.status]}">
+                            ${post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+                        </span>
+                    </td>
+                    <td class="p-4">${categoriesHtml || '-'}</td>
+                    <td class="p-4 text-sm">${post.paragraph_count}</td>
+                    <td class="p-4 text-sm text-slate-400">${new Date(post.created_at).toLocaleDateString()}</td>
+                    <td class="p-4 flex gap-1">
+                        ${post.status === 'published' ? 
+                            `<a href="${post.view_url}" target="_blank" class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700" title="View">
+                                <span class="material-symbols-outlined text-sm">visibility</span>
+                            </a>` : ''
+                        }
+                        <a href="/admin/blog-edit/${post.id}/" class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700" title="Edit">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                        </a>
+                        <button onclick="deleteBlogPost(${post.id})" class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700" title="Delete">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } else {
+        tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-400">No blog posts found. Create one to get started.</td></tr>';
+    }
+}
+
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add Blog Post';
+    document.getElementById('submitButtonText').textContent = 'Create';
+    document.getElementById('blogForm').reset();
+    document.getElementById('blogId').value = '';
+    document.getElementById('currentImagePreview').innerHTML = '';
+    document.getElementById('paragraph_count').style.display = 'block';
+    document.getElementById('blogModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('blogModal').classList.add('hidden');
+    document.getElementById('blogForm').reset();
+    document.getElementById('formMessage').textContent = '';
+}
+
+function deleteBlogPost(postId) {
+    if (!confirm('Are you sure you want to delete this blog post? This action cannot be undone.')) return;
+    
+    // Redirect to Django admin delete page
+    window.location.href = `/django-admin/core/blogpost/${postId}/delete/`;
+}
+
+document.getElementById('blogForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const messageDiv = document.getElementById('formMessage');
+    
+    try {
+        const formData = new FormData();
+        formData.append('title', document.getElementById('title').value);
+        formData.append('slug', document.getElementById('slug').value);
+        formData.append('excerpt', document.getElementById('excerpt').value);
+        formData.append('status', document.getElementById('status').value);
+        formData.append('is_featured', document.getElementById('is_featured').checked);
+        formData.append('paragraph_count', document.getElementById('paragraph_count').value);
+        
+        // Add selected categories
+        const selectedCategories = Array.from(document.getElementById('categories').selectedOptions).map(option => option.value);
+        selectedCategories.forEach(categoryId => {
+            formData.append('categories', categoryId);
+        });
+        
+        const imageFile = document.getElementById('featured_image').files[0];
+        if (imageFile) {
+            formData.append('featured_image', imageFile);
+        }
+        
+        const response = await fetch('/api/blog/create/', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            messageDiv.className = 'text-sm text-emerald-400';
+            messageDiv.textContent = 'Blog post created successfully! Redirecting to edit...';
+            const result = await response.json();
+            setTimeout(() => {
+                window.location.href = `/admin/blog-edit/${result.id}/`;
+            }, 1000);
+        } else {
+            const result = await response.json();
+            messageDiv.className = 'text-sm text-rose-400';
+            messageDiv.textContent = Object.values(result).flat().join(', ');
+        }
+    } catch (error) {
+        messageDiv.className = 'text-sm text-rose-400';
+        messageDiv.textContent = 'Error creating blog post';
+    }
+});
+
+// Auto-generate slug from title
+document.getElementById('title').addEventListener('input', function() {
+    const slug = this.value.toLowerCase()
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim('-');
+    document.getElementById('slug').value = slug;
+});
+
+// Load blog posts on page load
+loadBlogPosts();
+
+// Load categories into select dropdown
+function loadCategoriesSelect() {
+    const select = document.getElementById('categories');
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        option.style.backgroundColor = category.color;
+        option.style.color = 'white';
+        select.appendChild(option);
+    });
+}
+
+// Load categories on page load
+loadCategoriesSelect();
+</script>
+{% endblock %}

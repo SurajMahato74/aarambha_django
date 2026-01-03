@@ -1,0 +1,262 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Edit Blog Post{% endblock %}
+{% block page_title %}Edit Blog Post: {{ blog_post.title }}{% endblock %}
+
+{% block content %}
+<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+<style>
+.paragraph-item { border: 1px solid #334155; border-radius: 8px; margin-bottom: 1rem; }
+.paragraph-header { background: #1e293b; padding: 0.75rem; border-radius: 8px 8px 0 0; }
+.paragraph-content { padding: 1rem; }
+.preview-image { max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 8px; }
+</style>
+
+<div class="space-y-6">
+    <!-- Blog Post Details -->
+    <div class="card rounded-lg overflow-hidden bg-transparent">
+        <div class="p-5 border-b border-slate-700">
+            <div class="flex justify-between items-center">
+                <h3 class="font-medium text-white">Blog Post Details</h3>
+                <div class="flex gap-2">
+                    <a href="{% url 'admin_blogs' %}" class="px-3 py-2 bg-slate-600 text-white rounded text-sm hover:bg-slate-700">
+                        Back to Blogs
+                    </a>
+                    {% if blog_post.status == 'published' %}
+                    <a href="{{ blog_post.get_absolute_url }}" target="_blank" class="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                        View Post
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-5">
+            <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_post">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Title *</label>
+                        <input type="text" name="title" value="{{ blog_post.title }}" required
+                            class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Slug</label>
+                        <input type="text" name="slug" value="{{ blog_post.slug }}"
+                            class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Excerpt *</label>
+                    <textarea name="excerpt" rows="3" required
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">{{ blog_post.excerpt }}</textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Meta Description</label>
+                    <textarea name="meta_description" rows="2"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">{{ blog_post.meta_description }}</textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Featured Image</label>
+                        <input type="file" name="featured_image" accept="image/*"
+                            class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                        {% if blog_post.featured_image %}
+                        <img src="{{ blog_post.featured_image.url }}" class="preview-image mt-2">
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Status</label>
+                        <select name="status" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                            <option value="draft" {% if blog_post.status == 'draft' %}selected{% endif %}>Draft</option>
+                            <option value="published" {% if blog_post.status == 'published' %}selected{% endif %}>Published</option>
+                            <option value="archived" {% if blog_post.status == 'archived' %}selected{% endif %}>Archived</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Categories</label>
+                        <select name="categories" multiple class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white" style="height: 80px;" id="categoriesSelect">
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_featured" {% if blog_post.is_featured %}checked{% endif %} class="mr-2">
+                    <label class="text-sm text-slate-300">Featured Post</label>
+                </div>
+                
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                    Update Blog Post
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Paragraphs Management -->
+    <div class="card rounded-lg overflow-hidden bg-transparent">
+        <div class="p-5 border-b border-slate-700">
+            <div class="flex justify-between items-center">
+                <h3 class="font-medium text-white">Content Paragraphs</h3>
+                <form method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_paragraph">
+                    <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">
+                        + Add Paragraph
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="p-5" id="paragraphsContainer">
+            <!-- Paragraphs will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+const paragraphs = {{ paragraphs|safe }};
+const categories = {{ categories|safe }};
+const selectedCategories = {{ selected_categories|safe }};
+
+// Load categories
+function loadCategories() {
+    const select = document.getElementById('categoriesSelect');
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        option.style.backgroundColor = category.color;
+        option.style.color = 'white';
+        if (selectedCategories.includes(category.id)) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+}
+
+// Load paragraphs
+function loadParagraphs() {
+    const container = document.getElementById('paragraphsContainer');
+    
+    if (paragraphs.length === 0) {
+        container.innerHTML = '<p class="text-slate-400 text-center py-8">No paragraphs yet. Add one to get started.</p>';
+        return;
+    }
+    
+    container.innerHTML = paragraphs.map(paragraph => {
+        let contentHtml = '';
+        
+        if (paragraph.paragraph_type === 'text') {
+            contentHtml = `
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">Content</label>
+                    <textarea name="content" id="content_${paragraph.id}" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white" rows="6">${paragraph.content}</textarea>
+                </div>
+            `;
+        } else if (paragraph.paragraph_type === 'image') {
+            contentHtml = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Image</label>
+                        <input type="file" name="image" accept="image/*" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                        ${paragraph.image ? `<img src="${paragraph.image}" class="preview-image mt-2">` : ''}
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Caption</label>
+                        <input type="text" name="image_caption" value="${paragraph.image_caption}" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                        <label class="block text-sm text-slate-300 mb-1 mt-2">Alt Text</label>
+                        <input type="text" name="image_alt_text" value="${paragraph.image_alt_text}" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                </div>
+            `;
+        } else if (paragraph.paragraph_type === 'quote') {
+            contentHtml = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Quote Text</label>
+                        <textarea name="quote_text" rows="4" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">${paragraph.quote_text}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Quote Author</label>
+                        <input type="text" name="quote_author" value="${paragraph.quote_author}" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+                    </div>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="paragraph-item">
+                <div class="paragraph-header flex justify-between items-center">
+                    <span class="text-white font-medium">Paragraph ${paragraph.order} - ${paragraph.paragraph_type.charAt(0).toUpperCase() + paragraph.paragraph_type.slice(1)}</span>
+                    <div class="flex gap-2">
+                        <button onclick="toggleParagraph(${paragraph.id})" class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                            Edit
+                        </button>
+                        <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this paragraph?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_paragraph">
+                            <input type="hidden" name="paragraph_id" value="${paragraph.id}">
+                            <button type="submit" class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="paragraph-content hidden" id="paragraph_${paragraph.id}">
+                    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_paragraph">
+                        <input type="hidden" name="paragraph_id" value="${paragraph.id}">
+                        
+                        <div>
+                            <label class="block text-sm text-slate-300 mb-1">Type</label>
+                            <select name="paragraph_type" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white" onchange="location.reload()">
+                                <option value="text" ${paragraph.paragraph_type === 'text' ? 'selected' : ''}>Text</option>
+                                <option value="image" ${paragraph.paragraph_type === 'image' ? 'selected' : ''}>Image</option>
+                                <option value="quote" ${paragraph.paragraph_type === 'quote' ? 'selected' : ''}>Quote</option>
+                            </select>
+                        </div>
+                        
+                        ${contentHtml}
+                        
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            Update Paragraph
+                        </button>
+                    </form>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Initialize CKEditor for text paragraphs
+    paragraphs.forEach(paragraph => {
+        if (paragraph.paragraph_type === 'text') {
+            setTimeout(() => {
+                if (CKEDITOR.instances[`content_${paragraph.id}`]) {
+                    CKEDITOR.instances[`content_${paragraph.id}`].destroy();
+                }
+                CKEDITOR.replace(`content_${paragraph.id}`, {
+                    height: 200,
+                    toolbar: 'full'
+                });
+            }, 100);
+        }
+    });
+}
+
+function toggleParagraph(paragraphId) {
+    const element = document.getElementById(`paragraph_${paragraphId}`);
+    element.classList.toggle('hidden');
+}
+
+// Load data on page load
+loadCategories();
+loadParagraphs();
+</script>
+{% endblock %}

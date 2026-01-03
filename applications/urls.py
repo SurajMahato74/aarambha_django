@@ -62,4 +62,15 @@ urlpatterns = [
     path('admin-campaign-stats/', views.admin_campaign_stats, name='admin_campaign_stats'),
     path('admin-campaigns/', views.admin_campaign_list, name='admin_campaign_list'),
     path('admin-campaign/<int:campaign_id>/', views.admin_campaign_detail, name='admin_campaign_detail'),
+    
+    # Birthday Campaign URLs
+    path('birthday-campaign/create/', views.create_birthday_campaign, name='create_birthday_campaign'),
+    path('birthday-campaign/list/', views.list_active_birthday_campaigns, name='list_active_birthday_campaigns'),
+    path('birthday-campaign/<int:campaign_id>/', views.get_birthday_campaign, name='get_birthday_campaign'),
+    path('birthday-campaign/<int:campaign_id>/donate/', views.donate_to_birthday_campaign, name='donate_to_birthday_campaign'),
+    path('verify-birthday-donation/', views.verify_birthday_donation, name='verify_birthday_donation'),
+    
+    # Admin Birthday Campaign URLs
+    path('admin-birthday-campaign-stats/', views.admin_birthday_campaign_stats, name='admin_birthday_campaign_stats'),
+    path('admin-birthday-campaigns/', views.admin_birthday_campaign_list, name='admin_birthday_campaign_list'),
 ]

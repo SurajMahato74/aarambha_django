@@ -144,6 +144,9 @@
                                         <a href="#" class="nav-link" data-target="applications" style="color: #E36F1E;">
                                             <i class="fas fa-file-alt me-1"></i>Applications
                                         </a>
+                                        <a href="#" class="nav-link" data-target="donations" style="color: #E36F1E;">
+                                            <i class="fas fa-heart me-1"></i>My Donations
+                                        </a>
                                     </nav>
                                 </div>
                             </div>
@@ -187,6 +190,29 @@
                                             <tr>
                                                 <td colspan="5" class="text-center py-4">
                                                     <i class="fas fa-spinner fa-spin me-2"></i>Loading applications...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div id="donations" class="content-section" style="display: none; ">
+                                <div class="table-responsive">
+                                    <table class="table table-borderless">
+                                        <thead style="background: #2D3B5B; color: #fff;">
+                                            <tr>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                                <th>Transaction ID</th>
+                                                <th>Date</th>
+                                                <th>Receipt ID</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="donationsTableBody">
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4">
+                                                    <i class="fas fa-spinner fa-spin me-2"></i>Loading donations...
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -296,6 +322,17 @@
                 }, 500);
             }
             
+            // Check for donation redirect parameter and auto-click donations tab
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('tab') === 'donations' || window.location.hash === '#donations') {
+                setTimeout(() => {
+                    const donationsTab = document.querySelector('[data-target="donations"]');
+                    if (donationsTab) {
+                        donationsTab.click();
+                    }
+                }, 500);
+            }
+            
             {% if django_authenticated %}
             // Sync Django auth to localStorage
             localStorage.setItem('access_token', '{{ access_token }}');
@@ -356,6 +393,10 @@
                     // Load data when switching to notices tab
                     if (target === 'notices') {
                         loadNotices();
+                    }
+                    // Load data when switching to donations tab
+                    if (target === 'donations') {
+                        loadDonations();
                     }
                 }
             });
@@ -494,9 +535,13 @@
                 const sponsorshipResponse = await fetchAPI('/api/applications/sponsorships/my/');
                 const sponsorships = await sponsorshipResponse.json();
                 
+                // Load school dropout reports
+                const reportsResponse = await fetchAPI('/api/core/reports/school-dropout/my/');
+                const reports = await reportsResponse.json();
+                
                 const tbody = document.getElementById('applicationsTableBody');
                 
-                if (applications.length === 0 && sponsorships.length === 0) {
+                if (applications.length === 0 && sponsorships.length === 0 && reports.length === 0) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="5" class="text-center py-4">
@@ -538,6 +583,17 @@
                         });
                     });
                     
+                    // Add school dropout reports
+                    reports.forEach(report => {
+                        allApplications.push({
+                            ...report,
+                            type: 'report',
+                            display_type: 'SCHOOL DROPOUT REPORT',
+                            application_type: 'report',
+                            applied_at: report.created_at
+                        });
+                    });
+                    
                     // Sort by creation date
                     allApplications.sort((a, b) => new Date(b.applied_at || b.created_at) - new Date(a.applied_at || a.created_at));
                     
@@ -545,10 +601,11 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <i class="fas fa-${app.type === 'sponsorship' ? 'heart' : app.application_type === 'member' ? 'user' : 'hands-helping'} me-2 text-primary"></i>
+                                    <i class="fas fa-${app.type === 'sponsorship' ? 'heart' : app.type === 'report' ? 'exclamation-triangle' : app.application_type === 'member' ? 'user' : 'hands-helping'} me-2 text-primary"></i>
                                     <div>
                                         <div class="fw-bold">${app.display_type}</div>
                                         <small class="text-muted">ID: #${app.id}</small>
+                                        ${app.type === 'report' ? `<br><small class="text-muted">${app.dropout_name} - ${app.school_name}</small>` : ''}
                                     </div>
                                 </div>
                             </td>
@@ -578,7 +635,7 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button class="fs-3" onclick="${app.type === 'sponsorship' ? 'showSponsorshipModal' : 'showApplicationModal'}(${app.id})" title="Details">
+                                    <button class="fs-3" onclick="${app.type === 'sponsorship' ? 'showSponsorshipModal' : app.type === 'report' ? 'showReportModal' : 'showApplicationModal'}(${app.id})" title="Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     ${app.type === 'application' && app.status === 'interview_scheduled' ? `
@@ -628,7 +685,9 @@
                 pending: '#ffc107',
                 interview_scheduled: '#17a2b8',
                 rejected: '#dc3545',
-                approved: '#28a745'
+                approved: '#28a745',
+                investigated: '#17a2b8',
+                resolved: '#28a745'
             };
             return colors[status] || '#6c757d';
         }
@@ -703,6 +762,83 @@
             } catch (error) {
                 console.error('Error loading sponsorship details:', error);
                 alert('Error loading sponsorship details.');
+            }
+        }
+        
+        async function showReportModal(id) {
+            try {
+                const response = await fetchAPI(`/api/core/reports/school-dropout/admin/${id}/`);
+                const report = await response.json();
+                
+                const modalBody = document.getElementById('applicationModalBody');
+                modalBody.innerHTML = `
+                    <!-- Profile Header -->
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <h5 class="mb-0" style="color: #E36F1E;">School Dropout Report</h5>
+                            <p class="text-muted mb-0">${report.reporter_email} | ${report.reporter_phone || 'N/A'}</p>
+                            <span class="badge fs-6 px-3 py-2" style="background-color: ${getStatusColor(report.status)}; color: #000 !important;">${report.status.replace('_', ' ').toUpperCase()}</span>
+                            <p class="small text-muted mb-2">Report #${report.id} | ${new Date(report.created_at).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <hr/>
+                    
+                    <!-- Reporter Information -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-user me-2"></i>Reporter Information</h6>
+                            <p><strong>Name:</strong> ${report.reporter_name}</p>
+                            <p><strong>Email:</strong> ${report.reporter_email}</p>
+                            <p><strong>Phone:</strong> ${report.reporter_phone || 'N/A'}</p>
+                            <p><strong>Anonymous:</strong> ${report.is_anonymous ? 'Yes' : 'No'}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-child me-2"></i>Child Information</h6>
+                            <p><strong>Name:</strong> ${report.dropout_name}</p>
+                            <p><strong>Age:</strong> ${report.dropout_age}</p>
+                            <p><strong>Gender:</strong> ${report.dropout_gender}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- School Information -->
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <h6 class="text-primary"><i class="fas fa-school me-2"></i>School Information</h6>
+                            <p><strong>School Name:</strong> ${report.school_name}</p>
+                            <p><strong>Location:</strong> ${report.school_location}</p>
+                            <p><strong>District:</strong> ${report.district}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Report Details -->
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <h6 class="text-primary"><i class="fas fa-info-circle me-2"></i>Report Details</h6>
+                            <p><strong>Reason for Dropout:</strong></p>
+                            <div class="alert alert-light">${report.reason_for_dropout}</div>
+                            ${report.additional_notes ? `
+                                <p><strong>Additional Notes:</strong></p>
+                                <div class="alert alert-light">${report.additional_notes}</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline -->
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <h6 class="text-primary"><i class="fas fa-clock me-2"></i>Timeline</h6>
+                            <p class="mb-0"><strong>Submitted:</strong> ${new Date(report.created_at).toLocaleString()}</p>
+                            <p class="mb-0"><strong>Last Updated:</strong> ${new Date(report.updated_at).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Show modal using Bootstrap 4 syntax
+                $('#applicationModal').modal('show');
+            } catch (error) {
+                console.error('Error loading report details:', error);
+                alert('Error loading report details.');
             }
         }
         
@@ -1467,6 +1603,83 @@
                 console.error('Error confirming test payment:', error);
                 alert('Error confirming payment. Please try again.');
             }
+        }
+        
+        async function loadDonations() {
+            try {
+                const response = await fetchAPI('/api/core/donations/my/');
+                const donations = await response.json();
+                
+                const tbody = document.getElementById('donationsTableBody');
+                
+                if (donations.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                                <p class="text-muted mb-4">No donations found.</p>
+                                <p class="text-muted small">Your donations will appear here after you make a contribution.</p>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = donations.map(donation => `
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-heart me-2 text-danger"></i>
+                                    <div>
+                                        <div class="fw-bold">Rs. ${donation.amount}</div>
+                                        <small class="text-muted">Donation</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge" style="background-color: ${getDonationStatusColor(donation.payment_status)}; color: #000 !important;">
+                                    ${donation.payment_status.replace('_', ' ').toUpperCase()}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="text-muted small">
+                                    ${donation.transaction_id || 'N/A'}
+                                </div>
+                            </td>
+                            <td>
+                                <div>${new Date(donation.created_at).toLocaleDateString()}</div>
+                                <small class="text-muted">${new Date(donation.created_at).toLocaleTimeString()}</small>
+                                ${donation.completed_at ? `<br><small class="text-success">Completed: ${new Date(donation.completed_at).toLocaleDateString()}</small>` : ''}
+                            </td>
+                            <td>
+                                <div class="text-muted small">
+                                    ${donation.purchase_order_id}
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading donations:', error);
+                document.getElementById('donationsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p>Error loading donations.</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function getDonationStatusColor(status) {
+            const colors = {
+                completed: '#28a745',
+                pending: '#ffc107',
+                initiated: '#17a2b8',
+                failed: '#dc3545',
+                expired: '#6c757d',
+                canceled: '#6c757d'
+            };
+            return colors[status] || '#6c757d';
         }
     </script>
 </body>

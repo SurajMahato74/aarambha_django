@@ -1,20 +1,28 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
+from . import test_views
 
 
 urlpatterns = [
     path('', views.website_home, name='home'),
     path('api/our-work/', views.OurWorkAPI.as_view(), name='our_work_api'),
+    path('api/donations/create/', views.DonationCreateAPI.as_view(), name='donation_create_api'),
+    path('api/blog-categories/', views.BlogCategoriesAPI.as_view(), name='blog_categories_api'),
+    path('api/blog/create/', views.BlogCreateAPI.as_view(), name='blog_create_api'),
     path('member-form/', views.website_member_form, name='website_member_form'),
     path('volunteer-form/', views.website_volunteer_form, name='website_volunteer_form'),
     path('sponsor-child-form/', views.website_sponsor_child_form, name='website_sponsor_child_form'),
     path('events/', views.website_events, name='website_events'),
     path('events/<int:event_id>/', views.website_event_detail, name='website_event_detail'),
     path('blogs/', views.website_blogs, name='website_blogs'),
+    path('blogs/<str:slug>/', views.blog_detail, name='blog_detail'),
     path('privacy-policy/', views.website_pravicy_policy, name='website_privacy_policy'),
     path('enroll-one-rupee-day-campaign/', views.website_enrollDayCamping, name='website_enrollDayCamping'),
     path('celebrate-birthday/', views.website_celebratebirthday, name='website_celebratebirthday'),
+    path('birthday-campaign/<int:campaign_id>/', views.birthday_campaign_detail, name='birthday_campaign_detail'),
+    path('admin/birthday-campaigns/', views.admin_birthday_campaigns, name='admin_birthday_campaigns'),
+    path('admin/donations/', views.admin_donations, name='admin_donations'),
     path('get-involved/', views.get_involved, name='get_involved'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
@@ -31,6 +39,7 @@ urlpatterns = [
     path('admin/sponsorships/', views.admin_sponsorships, name='admin_sponsorships'),
     path('admin/sponsorship-payments/', views.admin_sponsorship_payments, name='admin_sponsorship_payments'),
     path('admin/one-rupee-campaign/', views.admin_one_rupee_campaign, name='admin_one_rupee_campaign'),
+    path('test/create-birthday-campaign/', test_views.create_test_birthday_campaign, name='create_test_birthday_campaign'),
     path('admin/tasks/', views.admin_tasks, name='admin_tasks'),
     path('admin/tasks/detail/', views.admin_task_detail, name='admin_task_detail'),
     path('admin/notices/', views.admin_notices, name='admin_notices'),
@@ -69,6 +78,9 @@ urlpatterns = [
     path('member/recommendation-letters/', views.member_recommendation_letters, name='member_recommendation_letters'),
     path('volunteer/recommendation-letters/', views.volunteer_recommendation_letters, name='volunteer_recommendation_letters'),
     path('admin/recommendation-letters/', views.admin_recommendation_letters, name='admin_recommendation_letters'),
+    path('admin/blogs/', views.admin_blogs, name='admin_blogs'),
+    path('admin/blog-categories/', views.admin_blog_categories, name='admin_blog_categories'),
+    path('admin/blog-edit/<int:blog_id>/', views.admin_blog_edit, name='admin_blog_edit'),
     path('admin/children/', views.admin_children, name='admin_children'),
     path('sponsor/dashboard/', views.sponsor_dashboard, name='sponsor_dashboard'),
     path('sponsor/profile/', views.sponsor_profile, name='sponsor_profile'),

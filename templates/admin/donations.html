@@ -1,0 +1,307 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Donations Management{% endblock %}
+{% block page_title %}Donations Management{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Total Donations</p>
+                <p class="text-2xl font-bold text-white mt-1">Rs. {{ stats.total_donations|floatformat:0 }}</p>
+            </div>
+            <i class="fas fa-donate text-2xl text-green-500"></i>
+        </div>
+    </div>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Completed</p>
+                <p class="text-2xl font-bold text-white mt-1">Rs. {{ stats.total_completed|floatformat:0 }}</p>
+            </div>
+            <i class="fas fa-check-circle text-2xl text-blue-500"></i>
+        </div>
+    </div>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Total Count</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ stats.total_count }}</p>
+            </div>
+            <i class="fas fa-list text-2xl text-yellow-500"></i>
+        </div>
+    </div>
+    <div class="card p-5 rounded-lg bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-xs">Success Rate</p>
+                <p class="text-2xl font-bold text-white mt-1">{% if stats.total_count > 0 %}{% widthratio stats.completed_count stats.total_count 100 %}%{% else %}0%{% endif %}</p>
+            </div>
+            <i class="fas fa-chart-line text-2xl text-purple-500"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card p-6 rounded-lg bg-slate-800/50 mb-6">
+    <h3 class="text-lg font-medium text-white mb-4">Filters</h3>
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Quick Filter</label>
+            <select name="date_filter" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white">
+                <option value="">All Time</option>
+                <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+                <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Last 7 Days</option>
+                <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Last 30 Days</option>
+                <option value="year" {% if date_filter == 'year' %}selected{% endif %}>Last Year</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white">
+        </div>
+        <div class="flex items-end">
+            <button type="submit" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                Apply Filters
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Donations Table -->
+<div class="card rounded-lg overflow-hidden bg-slate-800/50">
+    <div class="p-5 border-b border-slate-700">
+        <h3 class="font-medium text-white flex items-center">
+            <i class="fas fa-donate mr-2 text-green-500"></i>
+            Donations List
+        </h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-700/50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Donor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Program</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Transaction ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="donationsTableBody" class="divide-y divide-slate-700">
+                <!-- Donations will be loaded here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Donation Detail Modal -->
+<div id="donationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-white">Donation Details</h3>
+            <button onclick="closeDonationModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="donationDetails" class="space-y-4">
+            <!-- Details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+const donations = {{ donations|safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadDonations();
+});
+
+function loadDonations() {
+    const tbody = document.getElementById('donationsTableBody');
+    
+    if (donations.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-8 text-center text-slate-400">
+                    <i class="fas fa-donate text-3xl mb-2"></i>
+                    <p>No donations found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = donations.map(donation => `
+        <tr class="hover:bg-slate-700/30 transition">
+            <td class="px-6 py-4">
+                <div>
+                    <p class="text-white font-medium">${donation.full_name}</p>
+                    <p class="text-slate-400 text-sm">${donation.email}</p>
+                    ${donation.phone ? `<p class="text-slate-500 text-xs">${donation.phone}</p>` : ''}
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div>
+                    <p class="text-white text-sm">${donation.program_name || 'General Donation'}</p>
+                    <span class="badge ${getProgramTypeBadgeColor(donation.program_type)}">
+                        ${getProgramTypeLabel(donation.program_type)}
+                    </span>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <span class="text-white font-medium">Rs. ${donation.amount.toLocaleString()}</span>
+            </td>
+            <td class="px-6 py-4">
+                <span class="badge ${getStatusBadgeColor(donation.payment_status)}">
+                    ${getStatusLabel(donation.payment_status)}
+                </span>
+                ${donation.refunded ? '<span class="badge bg-red-900/30 text-red-300 ml-1">Refunded</span>' : ''}
+            </td>
+            <td class="px-6 py-4">
+                <div>
+                    <p class="text-white text-sm">${formatDate(donation.created_at)}</p>
+                    ${donation.completed_at ? `<p class="text-slate-400 text-xs">Completed: ${formatDate(donation.completed_at)}</p>` : ''}
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div>
+                    <p class="text-slate-300 text-sm font-mono">${donation.transaction_id || 'N/A'}</p>
+                    <p class="text-slate-500 text-xs">${donation.purchase_order_id}</p>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <button onclick="viewDonation(${donation.id})" class="text-blue-400 hover:text-blue-300 text-sm">
+                    <i class="fas fa-eye mr-1"></i> View
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getProgramTypeBadgeColor(type) {
+    const colors = {
+        'database': 'bg-blue-900/30 text-blue-300',
+        'fallback': 'bg-orange-900/30 text-orange-300',
+        'general': 'bg-gray-900/30 text-gray-300'
+    };
+    return colors[type] || 'bg-gray-900/30 text-gray-300';
+}
+
+function getProgramTypeLabel(type) {
+    const labels = {
+        'database': 'Database',
+        'fallback': 'Fallback',
+        'general': 'General'
+    };
+    return labels[type] || 'General';
+}
+
+function getStatusBadgeColor(status) {
+    const colors = {
+        'completed': 'bg-green-900/30 text-green-300',
+        'pending': 'bg-yellow-900/30 text-yellow-300',
+        'initiated': 'bg-blue-900/30 text-blue-300',
+        'failed': 'bg-red-900/30 text-red-300',
+        'expired': 'bg-gray-900/30 text-gray-300',
+        'canceled': 'bg-orange-900/30 text-orange-300',
+        'refunded': 'bg-purple-900/30 text-purple-300'
+    };
+    return colors[status] || 'bg-gray-900/30 text-gray-300';
+}
+
+function getStatusLabel(status) {
+    const labels = {
+        'completed': 'Completed',
+        'pending': 'Pending',
+        'initiated': 'Initiated',
+        'failed': 'Failed',
+        'expired': 'Expired',
+        'canceled': 'Canceled',
+        'refunded': 'Refunded'
+    };
+    return labels[status] || status;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+}
+
+function viewDonation(donationId) {
+    const donation = donations.find(d => d.id === donationId);
+    if (!donation) return;
+    
+    const detailsHtml = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <h4 class="text-sm font-medium text-slate-300 mb-2">Donor Information</h4>
+                <div class="bg-slate-700/50 p-4 rounded-lg space-y-2">
+                    <p class="text-white"><strong>Name:</strong> ${donation.full_name}</p>
+                    <p class="text-white"><strong>Email:</strong> ${donation.email}</p>
+                    ${donation.phone ? `<p class="text-white"><strong>Phone:</strong> ${donation.phone}</p>` : ''}
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-slate-300 mb-2">Program Information</h4>
+                <div class="bg-slate-700/50 p-4 rounded-lg space-y-2">
+                    <p class="text-white"><strong>Program:</strong> ${donation.program_name || 'General Donation'}</p>
+                    <p class="text-white"><strong>Type:</strong> 
+                        <span class="badge ${getProgramTypeBadgeColor(donation.program_type)} ml-1">
+                            ${getProgramTypeLabel(donation.program_type)}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-slate-300 mb-2">Payment Information</h4>
+                <div class="bg-slate-700/50 p-4 rounded-lg space-y-2">
+                    <p class="text-white"><strong>Amount:</strong> Rs. ${donation.amount.toLocaleString()}</p>
+                    <p class="text-white"><strong>Status:</strong> 
+                        <span class="badge ${getStatusBadgeColor(donation.payment_status)} ml-1">
+                            ${getStatusLabel(donation.payment_status)}
+                        </span>
+                    </p>
+                    ${donation.refunded ? '<p class="text-red-300"><strong>Refunded:</strong> Yes</p>' : ''}
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-slate-300 mb-2">Transaction Details</h4>
+                <div class="bg-slate-700/50 p-4 rounded-lg space-y-2">
+                    <p class="text-white"><strong>Purchase Order ID:</strong> <code class="bg-slate-600 px-2 py-1 rounded text-sm">${donation.purchase_order_id}</code></p>
+                    ${donation.transaction_id ? `<p class="text-white"><strong>Transaction ID:</strong> <code class="bg-slate-600 px-2 py-1 rounded text-sm">${donation.transaction_id}</code></p>` : ''}
+                    <p class="text-white"><strong>Created:</strong> ${formatDate(donation.created_at)}</p>
+                    ${donation.completed_at ? `<p class="text-white"><strong>Completed:</strong> ${formatDate(donation.completed_at)}</p>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('donationDetails').innerHTML = detailsHtml;
+    document.getElementById('donationModal').classList.remove('hidden');
+}
+
+function closeDonationModal() {
+    document.getElementById('donationModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('donationModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDonationModal();
+    }
+});
+</script>
+{% endblock %}

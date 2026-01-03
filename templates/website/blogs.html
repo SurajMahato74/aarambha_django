@@ -14,28 +14,110 @@
   <link rel="stylesheet" href="{% static 'website/css/slick.min.css' %}" crossorigin="anonymous"
     referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="{% static 'website/css/owl.carousel.min.css' %}" />
-  <!-- Link Swiper's CSS -->
   <link rel="stylesheet" href="{% static 'website/css/swiper-bundle.min.css' %}" />
-  <!-- Link Swiper's CSS end-->
   <link rel="stylesheet" href="{% static 'website/css/animate.min.css' %}" />
-  <!-- custom-css  -->
   <link rel="stylesheet" href="{% static 'website/css/index.css' %}" />
   <link rel="stylesheet" href="{% static 'website/css/style.css' %}" />
-  <!-- custom-css end -->
   <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
-  <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
+  <title>Blogs - Aarambha Foundation</title>
   <style>
-    .image-box{
-      width: 100%;
+    .blog-card {
+      border: none;
+      border-radius: 12px;
       overflow: hidden;
-      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      height: 100%;
     }
-    .image-box img{
+    .blog-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .blog-image {
+      height: 200px;
+      overflow: hidden;
+    }
+    .blog-image img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
+      transition: transform 0.3s ease;
     }
-    .image-box:hover{
-      transform: scale(1.02);
-      transition: all 0.5s ease;
+    .blog-placeholder {
+      width: 100%;
+      height: 100%;
+      background: #f8f9fa;
+      border: 2px dashed #dee2e6;
+    }
+    .blog-card:hover .blog-image img {
+      transform: scale(1.05);
+    }
+    .blog-content {
+      padding: 1.5rem;
+    }
+    .blog-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: #2c3e50;
+    }
+    .blog-excerpt {
+      color: #6c757d;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .blog-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+    .category-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: white;
+    }
+    .featured-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #ff6b6b;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .category-filter {
+      margin-bottom: 2rem;
+    }
+    .category-filter .btn {
+      margin: 0.25rem;
+      border-radius: 20px;
+    }
+    .featured-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 3rem 0;
+      margin-bottom: 3rem;
+    }
+    .featured-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      height: 100%;
+    }
+    .featured-card:hover {
+      background: rgba(255,255,255,0.15);
+      transform: translateY(-3px);
+      transition: all 0.3s ease;
     }
   </style>
 </head>
@@ -43,63 +125,127 @@
 <body>
   {% include 'website/includes/navbar.html'%}
 
-  <!-- START blogs and Areas of Impact SECTION -->
-  <section class="pb-3">
-    <div class="bg-blue py-5">
-     <h3 class="text-center text-white">Blogs</h3>
-    </div>
-    <div class="container ">
-      <div class="row my-3 py-2">
-        <div class="col-md-6">
-          <div class="image-box">
-            <img src="{% static 'website/images/health.jpg' %}" width="100%" height="100%" alt="Blog Image" />
-          </div>
-        </div>
-        <div class="col-md-6  ">
-          <h3 class="mb-3 mt-2">Health and Well-being</h3>
-          <p>
-            Promoting physical and mental health involves creating awareness about healthy lifestyles, preventing diseases, and encouraging early medical care. This is achieved through awareness campaigns that educate people about nutrition, exercise, stress management, and mental well-being. Health camps play a vital role by providing free or affordable health check-ups, screenings, and consultations, especially in underserved communities. Additionally, ensuring access to medical services helps individuals receive timely diagnosis and treatment, improving overall health outcomes and enhancing quality of life.
-          </p>
-        </div>
-      </div>
-
-       <div class="row ">
-        <div class="col-md-6 d-flex flex-column justify-content-start">
-          <h3 class="mb-3">Health Awareness and Support</h3>
-          <p>
-            Health Awareness and Support focuses on educating individuals and communities about physical and mental well-being while ensuring access to essential health services. It includes awareness campaigns on healthy lifestyles, disease prevention, and mental health, along with health camps that provide check-ups, screenings, and medical consultations. Through timely support and improved access to healthcare services, this initiative helps promote early treatment, better health outcomes, and an improved quality of life.
-          </p>
-        </div>
-        <div class="col-md-6">
-          <div class="image-box">
-            <img src="{% static 'website/images/help.jpg' %}" width="100%" height="100%" alt="Blog Image" />
-          </div>
+  <!-- Blog Header -->
+  <section class="bg-blue py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 text-center">
+          <h1 class="text-white mb-3">Our Blogs</h1>
+          <p class="text-white-50">Stories, insights, and updates from our community</p>
         </div>
       </div>
     </div>
-    
-
   </section>
-  <!-- end blogs and Areas of Impact SECTION -->
 
+  <!-- Featured Posts Section -->
+  {% if featured_posts %}
+  <section class="featured-section">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 text-center mb-4">
+          <h2>Featured Stories</h2>
+          <p class="mb-0">Highlighting our most impactful content</p>
+        </div>
+      </div>
+      <div class="row">
+        {% for post in featured_posts %}
+        <div class="col-md-4 mb-4">
+          <div class="featured-card">
+            <h5><a href="{% url 'blog_detail' post.slug %}" class="text-white text-decoration-none">{{ post.title }}</a></h5>
+            <p class="mb-3">{{ post.excerpt|truncatewords:15 }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <small>{{ post.published_at|date:"M d, Y" }}</small>
+              <a href="{% url 'blog_detail' post.slug %}" class="btn btn-outline-light btn-sm">Read More</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
+  <!-- Main Blog Section -->
+  <section class="py-5">
+    <div class="container">
+      <!-- Category Filter -->
+      {% if categories %}
+      <div class="category-filter text-center">
+        <h4 class="mb-3">Browse by Category</h4>
+        <a href="{% url 'website_blogs' %}" class="btn {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">All Posts</a>
+        {% for category in categories %}
+        <a href="{% url 'website_blogs' %}?category={{ category.slug }}" 
+           class="btn {% if selected_category == category.slug %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          {{ category.name }}
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Blog Posts Grid -->
+      <div class="row">
+        {% for post in blog_posts %}
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card blog-card position-relative">
+            {% if post.is_featured %}
+            <span class="featured-badge">Featured</span>
+            {% endif %}
+            
+            <div class="blog-image">
+              {% if post.featured_image %}
+                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" 
+                     onload="console.log('Image loaded successfully:', this.src)" 
+                     onerror="console.log('Image failed to load:', this.src)">
+              {% else %}
+                <div class="blog-placeholder d-flex align-items-center justify-content-center">
+                  <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="blog-content">
+              <h5 class="blog-title">
+                <a href="{% url 'blog_detail' post.slug %}" class="text-decoration-none text-dark">{{ post.title }}</a>
+              </h5>
+              
+              <p class="blog-excerpt">{{ post.excerpt|truncatewords:20 }}</p>
+              
+              <div class="blog-meta">
+                <div>
+                  {% for category in post.categories.all %}
+                  <a href="{% url 'website_blogs' %}?category={{ category.slug }}" 
+                     class="category-badge me-1" 
+                     style="background-color: {{ category.color }};">{{ category.name }}</a>
+                  {% endfor %}
+                </div>
+                <small>{{ post.published_at|date:"M d, Y" }}</small>
+              </div>
+              
+              <div class="mt-3">
+                <a href="{% url 'blog_detail' post.slug %}" class="btn btn-primary btn-sm">Read More</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+          <h4 class="text-muted">No blog posts available</h4>
+          <p class="text-muted">Check back soon for new content!</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
 
   {% include "website/includes/login_modal.html" %}
   {% include "website/includes/footer.html" %}
-  <!-- scripts start -->
-  <!-- jquery  start-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
-  <!-- jquery end -->
-  <!-- bootstrap  start -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
-    crossorigin="anonymous"></script>
-  <!-- bootstrap end -->
-  <script src="{% static 'website/js/slick.min.js' %}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <!-- Swiper JS -->
-  <script src="{% static 'website/js/swiper-bundle.min.js' %}" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
-  <script src="{% static 'website/js/modernizr.min.js' %}" type="text/javascript"></script>
+  
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="{% static 'website/js/slick.min.js' %}" crossorigin="anonymous"></script>
+  <script src="{% static 'website/js/swiper-bundle.min.js' %}" crossorigin="anonymous"></script>
+  <script src="{% static 'website/js/modernizr.min.js' %}"></script>
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
   <script src="{% static 'website/js/owl.carousel.min.js' %}"></script>
   <script src="{% static 'website/js/api.js' %}"></script>

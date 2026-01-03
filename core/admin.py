@@ -1,7 +1,12 @@
 from django.contrib import admin
-from .models import HeroSection, WhoWeAre, GrowingOurImpact, Statistics, SupportCard, Partner, ContactInfo, Award, OurWork, SchoolDropoutReport, Donation, RecommendationLetter
+from .models import (
+    HeroSection, WhoWeAre, GrowingOurImpact, Statistics, SupportCard, Partner, 
+    ContactInfo, Award, OurWork, SchoolDropoutReport, Donation, RecommendationLetter,
+    IndexEvent, BlogPost, BlogParagraph, BlogCategory
+)
 from ckeditor.widgets import CKEditorWidget
 from ckeditor.fields import RichTextField
+from django import forms
 
 @admin.register(SupportCard)
 class SupportCardAdmin(admin.ModelAdmin):
@@ -257,3 +262,137 @@ class RecommendationLetterAdmin(admin.ModelAdmin):
         return bool(obj.signed_letter)
     has_signed_letter.boolean = True
     has_signed_letter.short_description = 'Letter Uploaded'
+
+
+@admin.register(IndexEvent)
+class IndexEventAdmin(admin.ModelAdmin):
+    list_display = ['title', 'location', 'event_date', 'order', 'is_active']
+    list_filter = ['is_active', 'event_date']
+    search_fields = ['title', 'location']
+    ordering = ['order', '-event_date']
+
+
+@admin.register(BlogCategory)
+class BlogCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'color', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'description']
+    prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ['created_at']
+
+
+class BlogParagraphInline(admin.StackedInline):
+    model = BlogParagraph
+    extra = 0
+    fields = ['order', 'paragraph_type', 'content', 'image', 'image_caption', 'image_alt_text', 'quote_text', 'quote_author']
+    formfield_overrides = {
+        RichTextField: {'widget': CKEditorWidget(config_name='default')},
+    }
+    
+    def get_extra(self, request, obj=None, **kwargs):
+        # Return 3 extra forms for new blog posts, 0 for existing ones
+        if obj is None:
+            return 3
+        return 0
+
+
+class BlogPostAdminForm(forms.ModelForm):
+    class Meta:
+        model = BlogPost
+        fields = '__all__'
+
+
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    form = BlogPostAdminForm
+    list_display = ['title', 'author', 'status', 'is_featured', 'paragraph_count_display', 'created_at', 'published_at']
+    list_filter = ['status', 'is_featured', 'categories', 'created_at', 'author']
+    search_fields = ['title', 'excerpt', 'meta_description']
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ['created_at', 'updated_at']
+    filter_horizontal = ['categories']
+    inlines = [BlogParagraphInline]
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('title', 'slug', 'author', 'excerpt', 'featured_image')
+        }),
+        ('Categorization', {
+            'fields': ('categories',)
+        }),
+        ('SEO & Meta', {
+            'fields': ('meta_description',),
+            'classes': ('collapse',)
+        }),
+        ('Publishing', {
+            'fields': ('status', 'is_featured', 'published_at')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def paragraph_count_display(self, obj):
+        return obj.paragraphs.count()
+    paragraph_count_display.short_description = 'Paragraphs'
+    
+    def save_model(self, request, obj, form, change):
+        # Set author to current user if not set
+        if not obj.author_id:
+            obj.author = request.user
+        
+        # Set published_at when status changes to published
+        if obj.status == 'published' and not obj.published_at:
+            from django.utils import timezone
+            obj.published_at = timezone.now()
+        
+        super().save_model(request, obj, form, change)
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('categories', 'paragraphs')
+
+
+@admin.register(BlogParagraph)
+class BlogParagraphAdmin(admin.ModelAdmin):
+    list_display = ['blog_post', 'order', 'paragraph_type', 'content_preview', 'has_image']
+    list_filter = ['paragraph_type', 'blog_post__status']
+    search_fields = ['blog_post__title', 'content', 'quote_text']
+    ordering = ['blog_post', 'order']
+    formfield_overrides = {
+        RichTextField: {'widget': CKEditorWidget(config_name='default')},
+    }
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('blog_post', 'order', 'paragraph_type')
+        }),
+        ('Text Content', {
+            'fields': ('content',),
+            'classes': ('collapse',)
+        }),
+        ('Image Content', {
+            'fields': ('image', 'image_caption', 'image_alt_text'),
+            'classes': ('collapse',)
+        }),
+        ('Quote Content', {
+            'fields': ('quote_text', 'quote_author'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def content_preview(self, obj):
+        if obj.paragraph_type == 'text' and obj.content:
+            from django.utils.html import strip_tags
+            return strip_tags(obj.content)[:100] + '...' if len(strip_tags(obj.content)) > 100 else strip_tags(obj.content)
+        elif obj.paragraph_type == 'quote' and obj.quote_text:
+            return f'Quote: {obj.quote_text[:50]}...' if len(obj.quote_text) > 50 else f'Quote: {obj.quote_text}'
+        elif obj.paragraph_type == 'image' and obj.image_caption:
+            return f'Image: {obj.image_caption}'
+        return 'No content'
+    content_preview.short_description = 'Content Preview'
+    
+    def has_image(self, obj):
+        return bool(obj.image)
+    has_image.boolean = True
+    has_image.short_description = 'Has Image'
