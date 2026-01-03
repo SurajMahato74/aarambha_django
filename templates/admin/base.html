@@ -77,6 +77,22 @@
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_applications' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-file-lines w-4"></i> Applications
                 </a>
+                <a href="{% url 'admin_sponsorships' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_sponsorships' %}active text-indigo-300 font-medium{% endif %}">
+                    <i class="fas fa-heart w-4"></i> Child Sponsorships
+                </a>
+                <a href="{% url 'admin_sponsorship_payments' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_sponsorship_payments' %}active text-indigo-300 font-medium{% endif %}">
+                    <i class="fas fa-money-bill-wave w-4"></i> Payment Details
+                </a>
+                <a href="{% url 'admin_one_rupee_campaign' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_one_rupee_campaign' %}active text-indigo-300 font-medium{% endif %}">
+                    <i class="fas fa-coins w-4"></i> One Rupee Campaign
+                </a>
+                <a href="{% url 'admin_children' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_children' %}active text-indigo-300 font-medium{% endif %}">
+                    <i class="fas fa-child w-4"></i> Children Database
+                </a>
                 <a href="{% url 'admin_tasks' %}"
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_tasks' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-tasks w-4"></i> Tasks

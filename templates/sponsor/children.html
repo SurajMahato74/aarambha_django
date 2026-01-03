@@ -1,0 +1,542 @@
+{% extends 'sponsor/base.html' %}
+
+{% block title %}Sponsored Children{% endblock %}
+{% block page_title %}Sponsored Children{% endblock %}
+{% block page_subtitle %}View and manage your sponsored children{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Sponsored Children</p>
+                    <p class="text-2xl font-bold text-white" id="totalSponsorships">0</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-heart text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Active Children</p>
+                    <p class="text-2xl font-bold text-green-400" id="activeSponsorships">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Pending Assignments</p>
+                    <p class="text-2xl font-bold text-yellow-400" id="pendingSponsorships">0</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Monthly Total</p>
+                    <p class="text-2xl font-bold text-indigo-400" id="totalDonated">Rs. 0</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-donate text-indigo-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sponsorships List -->
+    <div class="card rounded-lg overflow-hidden">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-white">My Sponsored Children</h3>
+                <a href="{% url 'website_sponsor_child_form' %}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Sponsor Another Child
+                </a>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-800">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Child Details</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Sponsorship Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Education & Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Sponsored Since</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sponsorshipsTableBody" class="divide-y divide-slate-700">
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Loading your sponsorships...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Sponsorship Detail Modal -->
+<div id="sponsorshipModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-white">Child Details</h3>
+                <button onclick="closeSponsorshipModal()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="sponsorshipModalBody" class="p-6">
+            <!-- Content loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg max-w-md w-full mx-4">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-white">Make Payment</h3>
+                <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-6">
+            <form id="paymentForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Child Name</label>
+                        <input type="text" id="childName" readonly class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Payment Amount (NPR)</label>
+                        <input type="number" id="paymentAmount" step="0.01" min="1" required
+                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Payment Method</label>
+                        <select id="paymentMethod" required
+                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="khalti">Khalti</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closePaymentModal()"
+                        class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-credit-card mr-2"></i>Proceed to Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History Modal -->
+<div id="paymentHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-white">Payment History</h3>
+                <button onclick="closePaymentHistoryModal()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-6">
+            <div id="paymentHistoryContent">
+                <div class="text-center text-slate-400 py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Loading payment history...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadSponsorships();
+});
+
+async function loadSponsorships() {
+    try {
+        const response = await fetchAPI('/api/applications/my-sponsorship-history/');
+        const children = await response.json();
+        
+        // Update stats
+        const activeChildren = children.filter(child => child.is_active);
+        const stats = {
+            total: children.length,
+            active: activeChildren.length,
+            pending: 0,
+            totalAmount: activeChildren.reduce((sum, child) => sum + (parseFloat(child.monthly_sponsorship_amount) || 0), 0)
+        };
+        
+        document.getElementById('totalSponsorships').textContent = stats.total;
+        document.getElementById('activeSponsorships').textContent = stats.active;
+        document.getElementById('pendingSponsorships').textContent = stats.pending;
+        document.getElementById('totalDonated').textContent = `Rs. ${stats.totalAmount.toLocaleString()}`;
+        
+        displaySponsoredChildren(children);
+        
+    } catch (error) {
+        console.error('Error loading sponsored children:', error);
+        document.getElementById('sponsorshipsTableBody').innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-8 text-center text-red-400">
+                    <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                    <p>Error loading sponsored children</p>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displaySponsoredChildren(children) {
+    const tbody = document.getElementById('sponsorshipsTableBody');
+    
+    if (children.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-8 text-center text-slate-400">
+                    <i class="fas fa-heart text-4xl mb-4 opacity-50"></i>
+                    <p class="text-lg mb-2">No sponsored children yet</p>
+                    <p class="text-sm mb-4">Your approved sponsorships will appear here</p>
+                    <a href="{% url 'website_sponsor_child_form' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Sponsor a Child
+                    </a>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = children.map(child => `
+        <tr class="hover:bg-slate-700/50">
+            <td class="px-6 py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-full overflow-hidden">
+                        ${child.photo ? 
+                            `<img src="${child.photo}" alt="${child.full_name}" class="w-full h-full object-cover">` :
+                            `<div class="w-full h-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">${child.full_name.charAt(0).toUpperCase()}</div>`
+                        }
+                    </div>
+                    <div>
+                        <div class="font-medium text-white">${child.full_name}</div>
+                        <div class="text-sm text-slate-400">${child.age} years, ${child.gender}</div>
+                        <div class="text-sm text-slate-400">${child.district}, ${child.village}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-slate-300">
+                    <div class="font-medium">Monthly Sponsorship</div>
+                    <div class="text-slate-400">Rs. ${child.monthly_sponsorship_amount}</div>
+                    ${child.sponsorship_start_date ? `<div class="text-slate-400">Since: ${new Date(child.sponsorship_start_date).toLocaleDateString()}</div>` : ''}
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-slate-300">
+                    ${child.school_name ? `<div>School: ${child.school_name}</div>` : ''}
+                    ${child.grade_level ? `<div>Grade: ${child.grade_level}</div>` : ''}
+                    <div>Location: ${child.district}</div>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    child.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }">
+                    ${child.status}
+                </span>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-slate-300">
+                    ${child.sponsorship_start_date ? new Date(child.sponsorship_start_date).toLocaleDateString() : 'N/A'}
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex space-x-2">
+                    <button onclick="viewChild(${child.id})" 
+                        class="text-indigo-400 hover:text-indigo-300" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${child.is_active ? `
+                        ${child.completed_payments === 0 ? `
+                            <button onclick="openPaymentModal(${child.id}, '${child.full_name}', ${child.monthly_sponsorship_amount})" 
+                                class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors" title="Pay First Installment">
+                                <i class="fas fa-credit-card mr-1"></i>Pay First Installment
+                            </button>
+                        ` : `
+                            <a href="/sponsor/payment-details/?child=${child.id}" 
+                                class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors" title="Manage Payments">
+                                <i class="fas fa-cog mr-1"></i>Manage
+                            </a>
+                        `}
+                        <button onclick="cancelSponsorship(${child.id}, '${child.full_name}')" 
+                            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors" title="Cancel Sponsorship">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                    ` : `
+                        <a href="/sponsor/payment-details/?child=${child.id}" 
+                            class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors" title="View Payment History">
+                            <i class="fas fa-history mr-1"></i>View History
+                        </a>
+                    `}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getStatusColor(status) {
+    const colors = {
+        pending: 'bg-yellow-100 text-yellow-800',
+        approved: 'bg-green-100 text-green-800',
+        rejected: 'bg-red-100 text-red-800',
+        active: 'bg-indigo-100 text-indigo-800',
+        completed: 'bg-gray-100 text-gray-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+}
+
+async function viewChild(id) {
+    try {
+        const response = await fetchAPI(`/api/applications/children/${id}/`);
+        const child = await response.json();
+        
+        const modalBody = document.getElementById('sponsorshipModalBody');
+        modalBody.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Child Information -->
+                <div class="space-y-4">
+                    <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Child Information</h4>
+                    <div class="space-y-2">
+                        <div><span class="text-slate-400">Name:</span> <span class="text-white">${child.full_name}</span></div>
+                        <div><span class="text-slate-400">Age:</span> <span class="text-white">${child.age || 'N/A'} years</span></div>
+                        <div><span class="text-slate-400">Gender:</span> <span class="text-white">${child.gender}</span></div>
+                        <div><span class="text-slate-400">Location:</span> <span class="text-white">${child.district}, ${child.village}</span></div>
+                        <div><span class="text-slate-400">Address:</span> <span class="text-white">${child.address || 'N/A'}</span></div>
+                    </div>
+                </div>
+                
+                <!-- Education -->
+                <div class="space-y-4">
+                    <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Education</h4>
+                    <div class="space-y-2">
+                        ${child.school_name ? `<div><span class="text-slate-400">School:</span> <span class="text-white">${child.school_name}</span></div>` : ''}
+                        ${child.grade_level ? `<div><span class="text-slate-400">Grade:</span> <span class="text-white">${child.grade_level}</span></div>` : ''}
+                        ${child.educational_needs ? `<div><span class="text-slate-400">Educational Needs:</span> <span class="text-white">${child.educational_needs}</span></div>` : ''}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Family Information -->
+            <div class="mt-6 space-y-4">
+                <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Family Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${child.father_name ? `<div><span class="text-slate-400">Father:</span> <span class="text-white">${child.father_name}</span></div>` : ''}
+                    ${child.mother_name ? `<div><span class="text-slate-400">Mother:</span> <span class="text-white">${child.mother_name}</span></div>` : ''}
+                    ${child.guardian_name ? `<div><span class="text-slate-400">Guardian:</span> <span class="text-white">${child.guardian_name}</span></div>` : ''}
+                    ${child.family_income ? `<div><span class="text-slate-400">Family Income:</span> <span class="text-white">Rs. ${child.family_income}</span></div>` : ''}
+                </div>
+                ${child.family_situation ? `<div class="mt-4"><span class="text-slate-400">Family Situation:</span> <p class="text-white mt-2">${child.family_situation}</p></div>` : ''}
+            </div>
+            
+            ${child.story ? `
+                <div class="mt-6 space-y-4">
+                    <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Child's Story</h4>
+                    <p class="text-slate-300">${child.story}</p>
+                </div>
+            ` : ''}
+            
+            ${child.interests_hobbies || child.dreams_aspirations ? `
+                <div class="mt-6 space-y-4">
+                    <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Interests & Dreams</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${child.interests_hobbies ? `<div><span class="text-slate-400">Interests & Hobbies:</span> <p class="text-white mt-1">${child.interests_hobbies}</p></div>` : ''}
+                        ${child.dreams_aspirations ? `<div><span class="text-slate-400">Dreams & Aspirations:</span> <p class="text-white mt-1">${child.dreams_aspirations}</p></div>` : ''}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div class="mt-6 space-y-4">
+                <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Sponsorship Details</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><span class="text-slate-400">Monthly Amount:</span> <span class="text-white">Rs. ${child.monthly_sponsorship_amount}</span></div>
+                    <div><span class="text-slate-400">Status:</span> <span class="text-green-400">Sponsored</span></div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('sponsorshipModal').classList.remove('hidden');
+        document.getElementById('sponsorshipModal').classList.add('flex');
+    } catch (error) {
+        console.error('Error loading child details:', error);
+        alert('Error loading child details');
+    }
+}
+
+function closeSponsorshipModal() {
+    document.getElementById('sponsorshipModal').classList.add('hidden');
+    document.getElementById('sponsorshipModal').classList.remove('flex');
+}
+
+let currentChildId = null;
+
+function openPaymentModal(childId, childName, defaultAmount) {
+    currentChildId = childId;
+    document.getElementById('childName').value = childName;
+    document.getElementById('paymentAmount').value = defaultAmount;
+    document.getElementById('paymentModal').classList.remove('hidden');
+    document.getElementById('paymentModal').classList.add('flex');
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.add('hidden');
+    document.getElementById('paymentModal').classList.remove('flex');
+    currentChildId = null;
+}
+
+document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!currentChildId) {
+        alert('No child selected');
+        return;
+    }
+    
+    const amount = document.getElementById('paymentAmount').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalHTML = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+    
+    try {
+        const response = await fetchAPI(`/api/applications/child-payment/${currentChildId}/initiate/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ amount: parseFloat(amount) })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success && data.payment_url) {
+                // Redirect to Khalti payment page
+                window.location.href = data.payment_url;
+            } else {
+                alert('Failed to initiate payment');
+            }
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.error || 'Payment initiation failed'));
+        }
+    } catch (error) {
+        console.error('Payment error:', error);
+        alert('Error initiating payment');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHTML;
+    }
+});
+
+async function viewPayments(childId) {
+    try {
+        const response = await fetchAPI(`/api/applications/child-payments/${childId}/`);
+        const payments = await response.json();
+        
+        const content = document.getElementById('paymentHistoryContent');
+        
+        if (payments.length === 0) {
+            content.innerHTML = `
+                <div class="text-center text-slate-400 py-8">
+                    <i class="fas fa-receipt text-4xl mb-4 opacity-50"></i>
+                    <p>No payment history found</p>
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div class="space-y-4">
+                    ${payments.map(payment => `
+                        <div class="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
+                            <div>
+                                <div class="font-medium text-white">Installment #${payment.installment_number}</div>
+                                <div class="text-sm text-slate-400">Rs. ${payment.amount}</div>
+                                ${payment.payment_date ? `<div class="text-sm text-slate-400">${new Date(payment.payment_date).toLocaleDateString()}</div>` : ''}
+                                ${payment.transaction_id ? `<div class="text-xs text-slate-500">ID: ${payment.transaction_id}</div>` : ''}
+                            </div>
+                            <div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                }">
+                                    ${payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        document.getElementById('paymentHistoryModal').classList.remove('hidden');
+        document.getElementById('paymentHistoryModal').classList.add('flex');
+    } catch (error) {
+        console.error('Error loading payment history:', error);
+        alert('Error loading payment history');
+    }
+}
+
+function closePaymentHistoryModal() {
+    document.getElementById('paymentHistoryModal').classList.add('hidden');
+    document.getElementById('paymentHistoryModal').classList.remove('flex');
+}
+
+async function cancelSponsorship(childId, childName) {
+    if (confirm(`Are you sure you want to cancel sponsorship for ${childName}? This action cannot be undone.`)) {
+        try {
+            const response = await fetchAPI(`/api/applications/cancel-sponsorship/${childId}/`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                alert('Sponsorship cancelled successfully');
+                loadSponsorships(); // Reload the list
+            } else {
+                const error = await response.json();
+                alert('Error: ' + (error.error || 'Failed to cancel sponsorship'));
+            }
+        } catch (error) {
+            console.error('Error cancelling sponsorship:', error);
+            alert('Error cancelling sponsorship');
+        }
+    }
+}
+</script>
+{% endblock %}

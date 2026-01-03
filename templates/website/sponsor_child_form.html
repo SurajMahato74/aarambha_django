@@ -472,6 +472,9 @@
     <!-- Hidden Config for JS -->
     <script src="{% static 'js/config.js' %}"></script>
     <script>
+        let editMode = false;
+        let editSponsorshipId = null;
+        
         function startApplication() {
             const user = getUser();
             if (!user) {
@@ -481,6 +484,97 @@
 
             document.getElementById("startSection").style.display = "none";
             document.getElementById("sponsorshipForm").style.display = "block";
+        }
+        
+        // Check for edit mode on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+            
+            if (editId) {
+                editMode = true;
+                editSponsorshipId = editId;
+                loadSponsorshipForEdit(editId);
+            }
+            
+            updateNavbarAuth();
+        });
+        
+        async function loadSponsorshipForEdit(id) {
+            try {
+                const response = await fetchAPI(`/api/applications/sponsorships/${id}/`);
+                const sponsorship = await response.json();
+                
+                // Check if user can edit this sponsorship
+                if (sponsorship.status !== 'rejected' || !sponsorship.can_reapply) {
+                    Swal.fire({
+                        title: "Cannot Edit",
+                        text: "This sponsorship application cannot be edited.",
+                        icon: "error"
+                    }).then(() => {
+                        window.location.href = '/guest/profile/#applications';
+                    });
+                    return;
+                }
+                
+                // Show form and populate fields
+                document.getElementById("startSection").style.display = "none";
+                document.getElementById("sponsorshipForm").style.display = "block";
+                
+                // Update form title
+                document.querySelector('h3').textContent = 'Edit Your Sponsorship Application';
+                document.querySelector('button[type="submit"]').textContent = 'Update Sponsorship Application';
+                
+                // Populate form fields
+                document.getElementById('name').value = sponsorship.full_name || '';
+                document.getElementById('email').value = sponsorship.email || '';
+                document.getElementById('phone').value = sponsorship.phone || '';
+                document.getElementById('country').value = sponsorship.country || 'Nepal';
+                document.getElementById('city').value = sponsorship.city || '';
+                document.getElementById('address').value = sponsorship.address || '';
+                document.getElementById('occupation').value = sponsorship.occupation || '';
+                document.getElementById('organization').value = sponsorship.organization || '';
+                
+                // Set radio buttons
+                if (sponsorship.sponsorship_type) {
+                    document.querySelector(`input[name="sponsorship_type"][value="${sponsorship.sponsorship_type}"]`).checked = true;
+                }
+                if (sponsorship.update_frequency) {
+                    document.querySelector(`input[name="update_frequency"][value="${sponsorship.update_frequency}"]`).checked = true;
+                }
+                if (sponsorship.payment_method) {
+                    document.querySelector(`input[name="payment_method"][value="${sponsorship.payment_method}"]`).checked = true;
+                }
+                
+                // Set select fields
+                document.getElementById('child_gender').value = sponsorship.child_gender || '';
+                document.getElementById('child_age').value = sponsorship.child_age || '';
+                document.getElementById('payment_frequency').value = sponsorship.payment_frequency || 'One-time';
+                document.getElementById('tax_deductible').value = sponsorship.tax_deductible ? 'Yes' : 'No';
+                
+                // Set text areas
+                document.getElementById('special_requests').value = sponsorship.special_requests || '';
+                document.getElementById('message').value = sponsorship.message || '';
+                document.getElementById('payment_amount').value = sponsorship.payment_amount || '';
+                
+                // Set communication method checkboxes
+                if (sponsorship.comm_method && Array.isArray(sponsorship.comm_method)) {
+                    sponsorship.comm_method.forEach(method => {
+                        const checkbox = document.querySelector(`input[name="comm_method"][value="${method}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading sponsorship:', error);
+                Swal.fire({
+                    title: "Error",
+                    text: "Failed to load sponsorship data.",
+                    icon: "error"
+                }).then(() => {
+                    window.location.href = '/guest/profile/#applications';
+                });
+            }
         }
 
         // Check User Login Status and Show Modal
@@ -497,16 +591,74 @@
         // Initial check
         document.addEventListener('DOMContentLoaded', updateNavbarAuth);
 
-        document.getElementById("sponsorshipForm").addEventListener("submit", function (e) {
+        document.getElementById("sponsorshipForm").addEventListener("submit", async function (e) {
             e.preventDefault();
-            // Dummy submission - just show success message
-            Swal.fire({
-                title: "Thank You!",
-                text: "Your sponsorship application has been submitted successfully. This is a dummy form for now.",
-                icon: "success"
-            }).then(() => {
-                window.location.href = '/';
+            
+            const user = getUser();
+            if (!user) {
+                Swal.fire({
+                    title: "Login Required",
+                    text: "Please login to submit sponsorship application.",
+                    icon: "warning"
+                });
+                return;
+            }
+            
+            const formData = new FormData(e.target);
+            
+            // Handle multiple communication methods
+            const commMethods = [];
+            document.querySelectorAll('input[name="comm_method"]:checked').forEach(cb => {
+                commMethods.push(cb.value);
             });
+            formData.delete('comm_method');
+            commMethods.forEach(method => {
+                formData.append('comm_method', method);
+            });
+            
+            try {
+                let response;
+                if (editMode && editSponsorshipId) {
+                    // Update existing sponsorship
+                    response = await fetchAPI(`/api/applications/sponsorships/${editSponsorshipId}/update/`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    // Create new sponsorship
+                    response = await fetchAPI('/api/applications/sponsorships/submit/', {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    Swal.fire({
+                        title: "Success!",
+                        text: editMode ? 
+                            `Your sponsorship application has been updated and resubmitted successfully. Application ID: ${data.sponsorship_id}` :
+                            `Your child sponsorship application has been submitted successfully. Application ID: ${data.sponsorship_id}`,
+                        icon: "success"
+                    }).then(() => {
+                        window.location.href = '/guest/profile/#applications';
+                    });
+                } else {
+                    const errorData = await response.json();
+                    Swal.fire({
+                        title: "Error",
+                        text: errorData.error || "Failed to submit application",
+                        icon: "error"
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: "Error",
+                    text: "Network error occurred. Please try again.",
+                    icon: "error"
+                });
+            }
         });
     </script>
 

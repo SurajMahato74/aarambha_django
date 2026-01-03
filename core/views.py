@@ -193,6 +193,12 @@ def volunteer_notices(request):
 def admin_applications(request):
     return render(request, 'admin/applications.html')
 
+def admin_sponsorships(request):
+    return render(request, 'admin/sponsorships.html')
+
+def admin_event_management(request):
+    return render(request, 'admin/event_management.html')
+
 def admin_herosection(request):
     from django.core.serializers import serialize
     import json
@@ -986,6 +992,35 @@ def volunteer_recommendation_letters(request):
     }
     return render(request, 'volunteer/recommendation_letters.html', context)
 
+
+def sponsor_dashboard(request):
+    return render(request, 'sponsor/dashboard.html')
+
+def sponsor_profile(request):
+    return render(request, 'sponsor/profile.html')
+
+def sponsor_children(request):
+    return render(request, 'sponsor/children.html')
+
+def sponsor_payment_details(request):
+    return render(request, 'sponsor/payment_details.html')
+
+def sponsor_notifications(request):
+    return render(request, 'sponsor/notifications.html')
+
+def sponsor_assignments(request):
+    return render(request, 'sponsor/assignments.html')
+
+def admin_children(request):
+    return render(request, 'admin/children.html')
+
+def admin_sponsorship_payments(request):
+    """Admin sponsorship payment details page"""
+    return render(request, 'admin/sponsorship_payments.html')
+
+def admin_one_rupee_campaign(request):
+    """Admin One Rupee Campaign management page"""
+    return render(request, 'admin/one_rupee_campaign.html')
 
 def admin_recommendation_letters(request):
     """Admin recommendation letters management page"""

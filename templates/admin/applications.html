@@ -61,13 +61,15 @@
                     <th class="px-4 py-3 text-left text-white">Country</th>
                     <th class="px-4 py-3 text-left text-white">Phone</th>
                     <th class="px-4 py-3 text-left text-white">Status</th>
+                    <th class="px-4 py-3 text-left text-white">Payment Status</th>
+                    <th class="px-4 py-3 text-left text-white">Amount</th>
                     <th class="px-4 py-3 text-left text-white">Applied</th>
                     <th class="px-4 py-3 text-left text-white">Actions</th>
                 </tr>
             </thead>
             <tbody id="applicationsTable" class="text-slate-300">
                 <tr>
-                    <td colspan="7" class="text-center py-8">Loading...</td>
+                    <td colspan="9" class="text-center py-8">Loading...</td>
                 </tr>
             </tbody>
         </table>
@@ -188,6 +190,17 @@
             <td class="px-4 py-3">${app.phone}</td>
             <td class="px-4 py-3">
                 <span class="px-2 py-1 rounded text-xs ${getStatusColor(app.status)}">${app.status}</span>
+            </td>
+            <td class="px-4 py-3">
+                ${app.application_type === 'member' && app.payment_required ? `
+                    <span class="px-2 py-1 rounded text-xs ${app.payment_completed ? 'bg-green-600' : 'bg-red-600'}">
+                        ${app.payment_completed ? 'Paid' : 'Pending'}
+                    </span>
+                    ${app.payment_completed && app.payment_date ? `<br><small class="text-xs text-slate-400">${new Date(app.payment_date).toLocaleDateString()}</small>` : ''}
+                ` : '<span class="text-slate-500 text-xs">N/A</span>'}
+            </td>
+            <td class="px-4 py-3">
+                ${app.application_type === 'member' && app.payment_required ? `Rs. ${app.payment_amount}` : '<span class="text-slate-500 text-xs">N/A</span>'}
             </td>
             <td class="px-4 py-3">${new Date(app.applied_at).toLocaleDateString()}</td>
             <td class="px-4 py-3">
@@ -399,6 +412,40 @@
             <div class="text-center text-slate-400 text-xs pt-4 border-t border-slate-700">
                 Applied on ${new Date(app.applied_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
+            
+            ${app.application_type === 'member' && app.payment_required ? `
+            <!-- Payment Information -->
+            <div class="bg-slate-700/50 p-4 rounded-lg mt-4">
+                <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-indigo-400" style="font-size:20px">payment</span>
+                    Payment Information
+                </h4>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="text-slate-400 text-xs mb-1">Amount</p>
+                        <p class="text-slate-200">Rs. ${app.payment_amount}</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-400 text-xs mb-1">Status</p>
+                        <span class="px-2 py-1 rounded text-xs ${app.payment_completed ? 'bg-green-600' : 'bg-red-600'}">
+                            ${app.payment_completed ? 'Completed' : 'Pending'}
+                        </span>
+                    </div>
+                    ${app.payment_completed && app.payment_date ? `
+                    <div>
+                        <p class="text-slate-400 text-xs mb-1">Payment Date</p>
+                        <p class="text-slate-200">${new Date(app.payment_date).toLocaleDateString()}</p>
+                    </div>
+                    ` : ''}
+                    ${app.khalti_transaction_id ? `
+                    <div>
+                        <p class="text-slate-400 text-xs mb-1">Transaction ID</p>
+                        <p class="text-slate-200 font-mono text-xs">${app.khalti_transaction_id}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
         </div>
     `;
         document.getElementById('viewModal').classList.remove('hidden');
@@ -506,6 +553,16 @@
     }
 
     async function approveApplication(id) {
+        // First get the application details to check payment status
+        const appResponse = await fetchAPI(`/api/applications/${id}/`);
+        const app = await appResponse.json();
+        
+        // Check if member application requires payment
+        if (app.application_type === 'member' && app.payment_required && !app.payment_completed) {
+            alert('Cannot approve member application: Payment not completed. Member must pay Rs. 1000 membership fee first.');
+            return;
+        }
+        
         if (!confirm('Approve this application? User will receive login credentials via email.')) return;
 
         // Show loading state

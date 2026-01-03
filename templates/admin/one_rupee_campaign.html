@@ -1,0 +1,341 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}One Rupee Campaign{% endblock %}
+{% block page_title %}One Rupee Campaign Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Total Participants</p>
+                    <p class="text-2xl font-bold text-white" id="totalParticipants">0</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-users text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Active Campaigns</p>
+                    <p class="text-2xl font-bold text-green-400" id="activeCampaigns">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Total Collected</p>
+                    <p class="text-2xl font-bold text-yellow-400" id="totalCollected">Rs. 0</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-coins text-yellow-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">This Year Payments</p>
+                    <p class="text-2xl font-bold text-indigo-400" id="thisYearPayments">0</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calendar text-indigo-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-4 rounded-lg">
+        <div class="flex flex-wrap gap-4 items-center">
+            <div class="flex-1 min-w-64">
+                <input type="text" id="searchInput" placeholder="Search by name or email..." 
+                    class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <select id="statusFilter" class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="paused">Paused</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <button onclick="loadCampaigns()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
+        </div>
+    </div>
+
+    <!-- Campaigns Table -->
+    <div class="card rounded-lg overflow-hidden">
+        <div class="p-6 border-b border-slate-700">
+            <h3 class="text-xl font-semibold text-white">Campaign Participants</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-800">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Participant</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Contact</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Total Paid</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Years</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Last Payment</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="campaignsTableBody" class="divide-y divide-slate-700">
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Loading campaigns...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="flex justify-center space-x-2"></div>
+</div>
+
+<!-- Campaign Detail Modal -->
+<div id="campaignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-white">Campaign Details</h3>
+                <button onclick="closeCampaignModal()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="campaignModalBody" class="p-6">
+            <!-- Content loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadStats();
+    loadCampaigns();
+});
+
+async function loadStats() {
+    try {
+        const response = await fetchAPI('/api/applications/admin-campaign-stats/');
+        const stats = await response.json();
+        
+        document.getElementById('totalParticipants').textContent = stats.total_participants;
+        document.getElementById('activeCampaigns').textContent = stats.active_campaigns;
+        document.getElementById('totalCollected').textContent = `Rs. ${stats.total_collected.toLocaleString()}`;
+        document.getElementById('thisYearPayments').textContent = stats.this_year_payments;
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+async function loadCampaigns(page = 1) {
+    try {
+        const search = document.getElementById('searchInput').value;
+        const status = document.getElementById('statusFilter').value;
+        
+        let url = `/api/applications/admin-campaigns/?page=${page}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (status) url += `&status=${status}`;
+        
+        const response = await fetchAPI(url);
+        const data = await response.json();
+        
+        displayCampaigns(data.results);
+        setupPagination(data);
+        currentPage = page;
+    } catch (error) {
+        console.error('Error loading campaigns:', error);
+        document.getElementById('campaignsTableBody').innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-8 text-center text-red-400">
+                    <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                    <p>Error loading campaigns</p>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displayCampaigns(campaigns) {
+    const tbody = document.getElementById('campaignsTableBody');
+    
+    if (campaigns.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-8 text-center text-slate-400">
+                    <i class="fas fa-coins text-4xl mb-4 opacity-50"></i>
+                    <p>No campaign participants found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = campaigns.map(campaign => `
+        <tr class="hover:bg-slate-700/50">
+            <td class="px-6 py-4">
+                <div>
+                    <div class="font-medium text-white">${campaign.full_name}</div>
+                    <div class="text-sm text-slate-400">${campaign.occupation || 'N/A'}</div>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-slate-300">
+                    <div>${campaign.email}</div>
+                    <div class="text-slate-400">${campaign.phone || 'N/A'}</div>
+                    <div class="text-slate-400">${campaign.city || 'N/A'}, ${campaign.country}</div>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}">
+                    ${campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                </span>
+            </td>
+            <td class="px-6 py-4">
+                <div class="font-medium text-white">Rs. ${campaign.total_paid}</div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-white">${campaign.payments_count}</div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-slate-300">
+                    ${campaign.last_payment_date ? new Date(campaign.last_payment_date).toLocaleDateString() : 'Never'}
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex space-x-2">
+                    <button onclick="viewCampaign(${campaign.id})" 
+                        class="text-indigo-400 hover:text-indigo-300" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getStatusColor(status) {
+    const colors = {
+        active: 'bg-green-100 text-green-800',
+        paused: 'bg-yellow-100 text-yellow-800',
+        cancelled: 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+}
+
+function setupPagination(data) {
+    const pagination = document.getElementById('pagination');
+    if (!data.next && !data.previous) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '';
+    
+    if (data.previous) {
+        paginationHTML += `<button onclick="loadCampaigns(${currentPage - 1})" class="px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600">Previous</button>`;
+    }
+    
+    paginationHTML += `<span class="px-4 py-2 text-slate-300">Page ${currentPage}</span>`;
+    
+    if (data.next) {
+        paginationHTML += `<button onclick="loadCampaigns(${currentPage + 1})" class="px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600">Next</button>`;
+    }
+    
+    pagination.innerHTML = paginationHTML;
+}
+
+async function viewCampaign(id) {
+    try {
+        const response = await fetchAPI(`/api/applications/admin-campaign/${id}/`);
+        const campaign = await response.json();
+        
+        const modalBody = document.getElementById('campaignModalBody');
+        modalBody.innerHTML = `
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-lg font-semibold text-white mb-3">Participant Information</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><span class="text-slate-400">Name:</span> <span class="text-white">${campaign.full_name}</span></div>
+                            <div><span class="text-slate-400">Email:</span> <span class="text-white">${campaign.email}</span></div>
+                            <div><span class="text-slate-400">Phone:</span> <span class="text-white">${campaign.phone || 'N/A'}</span></div>
+                            <div><span class="text-slate-400">Location:</span> <span class="text-white">${campaign.city || 'N/A'}, ${campaign.country}</span></div>
+                            <div><span class="text-slate-400">Occupation:</span> <span class="text-white">${campaign.occupation || 'N/A'}</span></div>
+                            <div><span class="text-slate-400">Organization:</span> <span class="text-white">${campaign.organization || 'N/A'}</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-white mb-3">Campaign Summary</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><span class="text-slate-400">Status:</span> <span class="text-white">${campaign.status}</span></div>
+                            <div><span class="text-slate-400">Start Date:</span> <span class="text-white">${new Date(campaign.start_date).toLocaleDateString()}</span></div>
+                            <div><span class="text-slate-400">Total Paid:</span> <span class="text-white">Rs. ${campaign.total_paid}</span></div>
+                            <div><span class="text-slate-400">Payment Count:</span> <span class="text-white">${campaign.payments_count}</span></div>
+                            <div><span class="text-slate-400">Last Payment:</span> <span class="text-white">${campaign.last_payment_date ? new Date(campaign.last_payment_date).toLocaleDateString() : 'Never'}</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-3">Payment History</h4>
+                    <div class="space-y-2 max-h-60 overflow-y-auto">
+                        ${campaign.payments.map(payment => `
+                            <div class="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
+                                <div>
+                                    <div class="font-medium text-white">Year ${payment.year}</div>
+                                    <div class="text-sm text-slate-400">Rs. ${payment.amount}</div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(payment.status)}">
+                                        ${payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                                    </span>
+                                    ${payment.payment_date ? `<div class="text-xs text-slate-400 mt-1">${new Date(payment.payment_date).toLocaleDateString()}</div>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('campaignModal').classList.remove('hidden');
+        document.getElementById('campaignModal').classList.add('flex');
+    } catch (error) {
+        console.error('Error loading campaign details:', error);
+        alert('Error loading campaign details');
+    }
+}
+
+function closeCampaignModal() {
+    document.getElementById('campaignModal').classList.add('hidden');
+    document.getElementById('campaignModal').classList.remove('flex');
+}
+
+// Search on Enter key
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        loadCampaigns();
+    }
+});
+</script>
+{% endblock %}

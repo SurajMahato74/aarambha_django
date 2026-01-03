@@ -1,0 +1,494 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Sponsorship Payment Details{% endblock %}
+{% block page_title %}Sponsorship Payment Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Total Payments</p>
+                    <p class="text-2xl font-bold text-white" id="totalPayments">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Completed</p>
+                    <p class="text-2xl font-bold text-green-400" id="completedPayments">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Pending</p>
+                    <p class="text-2xl font-bold text-yellow-400" id="pendingPayments">0</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Total Amount</p>
+                    <p class="text-2xl font-bold text-indigo-400" id="totalAmount">Rs. 0</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-coins text-indigo-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card p-4 rounded-lg">
+        <div class="flex flex-wrap gap-4 items-center">
+            <div class="flex-1 min-w-64">
+                <input type="text" id="searchInput" placeholder="Search by sponsor name, child name, or transaction ID..."
+                    class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <select id="statusFilter"
+                class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+            </select>
+            <select id="childFilter"
+                class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All Children</option>
+            </select>
+            <select id="sponsorFilter"
+                class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All Sponsors</option>
+            </select>
+            <button onclick="loadPayments()" 
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="card rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-800">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Payment Details</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Sponsor</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Child</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Amount</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Transaction</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsTableBody" class="divide-y divide-slate-700">
+                    <tr>
+                        <td colspan="8" class="px-4 py-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Loading payments...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="flex justify-center items-center space-x-2"></div>
+</div>
+
+<!-- Payment Detail Modal -->
+<div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-white">Payment Details</h3>
+                <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="paymentModalBody" class="p-6">
+            <!-- Content loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadPayments();
+    loadStats();
+    loadChildrenFilter();
+    loadSponsorsFilter();
+    
+    // Check for URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sponsorParam = urlParams.get('sponsor');
+    if (sponsorParam) {
+        document.getElementById('sponsorFilter').value = sponsorParam;
+        loadPayments();
+    }
+    
+    // Setup search on enter
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            loadPayments();
+        }
+    });
+});
+
+async function loadStats() {
+    try {
+        const response = await fetchAPI('/api/applications/child-payments/stats/');
+        if (response.ok) {
+            const stats = await response.json();
+            
+            document.getElementById('totalPayments').textContent = stats.total_payments || 0;
+            document.getElementById('completedPayments').textContent = stats.completed_payments || 0;
+            document.getElementById('pendingPayments').textContent = stats.pending_payments || 0;
+            document.getElementById('totalAmount').textContent = `Rs. ${stats.total_amount || 0}`;
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+async function loadChildrenFilter() {
+    try {
+        const response = await fetchAPI('/api/applications/children/?status=sponsored');
+        if (response.ok) {
+            const children = await response.json();
+            const childFilter = document.getElementById('childFilter');
+            
+            children.forEach(child => {
+                const option = document.createElement('option');
+                option.value = child.id;
+                option.textContent = child.full_name;
+                childFilter.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading children:', error);
+    }
+}
+
+async function loadSponsorsFilter() {
+    try {
+        const response = await fetchAPI('/api/applications/child-payments/');
+        if (response.ok) {
+            const data = await response.json();
+            const sponsors = [...new Set(data.results.map(p => p.sponsor_email))].sort();
+            const sponsorFilter = document.getElementById('sponsorFilter');
+            
+            sponsors.forEach(email => {
+                const option = document.createElement('option');
+                option.value = email;
+                option.textContent = email;
+                sponsorFilter.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading sponsors:', error);
+    }
+}
+
+async function loadPayments(page = 1) {
+    try {
+        const search = document.getElementById('searchInput').value;
+        const status = document.getElementById('statusFilter').value;
+        const childId = document.getElementById('childFilter').value;
+        const sponsorEmail = document.getElementById('sponsorFilter').value;
+        
+        let url = `/api/applications/child-payments/?page=${page}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (status) url += `&status=${status}`;
+        if (childId) url += `&child=${childId}`;
+        if (sponsorEmail) url += `&sponsor=${encodeURIComponent(sponsorEmail)}`;
+        
+        const response = await fetchAPI(url);
+        if (response.ok) {
+            const data = await response.json();
+            displayPayments(data.results || []);
+            setupPagination(data);
+            currentPage = page;
+        } else {
+            throw new Error('Failed to load payments');
+        }
+    } catch (error) {
+        console.error('Error loading payments:', error);
+        document.getElementById('paymentsTableBody').innerHTML = `
+            <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-red-400">
+                    <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                    <p>Error loading payments</p>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displayPayments(payments) {
+    const tbody = document.getElementById('paymentsTableBody');
+    
+    if (payments.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-slate-400">
+                    <i class="fas fa-money-bill-wave text-4xl mb-4 opacity-50"></i>
+                    <p>No payments found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = payments.map(payment => `
+        <tr class="hover:bg-slate-700/50">
+            <td class="px-4 py-4">
+                <div>
+                    <div class="font-medium text-white">Installment #${payment.installment_number}</div>
+                    <div class="text-sm text-slate-400">ID: ${payment.id}</div>
+                    ${payment.notes ? `<div class="text-xs text-slate-500 mt-1">${payment.notes}</div>` : ''}
+                </div>
+            </td>
+            <td class="px-4 py-4">
+                <div>
+                    <div class="font-medium text-white">${payment.sponsor_name}</div>
+                    <div class="text-sm text-slate-400">${payment.sponsor_email}</div>
+                </div>
+            </td>
+            <td class="px-4 py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden">
+                        ${payment.child_photo ? 
+                            `<img src="${payment.child_photo}" alt="${payment.child_name}" class="w-full h-full object-cover">` :
+                            `<div class="w-full h-full bg-indigo-500 flex items-center justify-center text-white font-bold text-sm">${payment.child_name.charAt(0).toUpperCase()}</div>`
+                        }
+                    </div>
+                    <div>
+                        <div class="font-medium text-white">${payment.child_name}</div>
+                        <div class="text-sm text-slate-400">${payment.child_age} years, ${payment.child_district}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-4 py-4">
+                <div class="font-medium text-white">Rs. ${payment.amount}</div>
+            </td>
+            <td class="px-4 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(payment.status)}">
+                    ${payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                </span>
+            </td>
+            <td class="px-4 py-4">
+                <div class="text-sm text-slate-300">
+                    ${payment.khalti_transaction_id ? 
+                        `<div class="font-medium">${payment.khalti_transaction_id}</div>` : 
+                        '<div class="text-slate-500">No transaction ID</div>'
+                    }
+                    ${payment.khalti_payment_token ? 
+                        `<div class="text-xs text-slate-400">Token: ${payment.khalti_payment_token.substring(0, 20)}...</div>` : 
+                        ''
+                    }
+                </div>
+            </td>
+            <td class="px-4 py-4">
+                <div class="text-sm text-slate-300">
+                    <div>Created: ${new Date(payment.created_at).toLocaleDateString()}</div>
+                    ${payment.payment_date ? 
+                        `<div class="text-green-400">Paid: ${new Date(payment.payment_date).toLocaleDateString()}</div>` : 
+                        '<div class="text-slate-500">Not paid</div>'
+                    }
+                </div>
+            </td>
+            <td class="px-4 py-4">
+                <div class="flex space-x-2">
+                    <button onclick="viewPaymentDetails(${payment.id})" 
+                        class="text-indigo-400 hover:text-indigo-300" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${payment.status === 'pending' ? `
+                        <button onclick="markAsCompleted(${payment.id})" 
+                            class="text-green-400 hover:text-green-300" title="Mark as Completed">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    ` : ''}
+                    <button onclick="viewChildPayments(${payment.child_id})" 
+                        class="text-blue-400 hover:text-blue-300" title="View All Child Payments">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getPaymentStatusColor(status) {
+    const colors = {
+        completed: 'bg-green-100 text-green-800',
+        pending: 'bg-yellow-100 text-yellow-800',
+        failed: 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+}
+
+function setupPagination(data) {
+    const pagination = document.getElementById('pagination');
+    if (!data.next && !data.previous) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '';
+    
+    if (data.previous) {
+        paginationHTML += `<button onclick="loadPayments(${currentPage - 1})" class="px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600">Previous</button>`;
+    }
+    
+    paginationHTML += `<span class="px-4 py-2 text-slate-300">Page ${currentPage}</span>`;
+    
+    if (data.next) {
+        paginationHTML += `<button onclick="loadPayments(${currentPage + 1})" class="px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600">Next</button>`;
+    }
+    
+    pagination.innerHTML = paginationHTML;
+}
+
+async function viewPaymentDetails(paymentId) {
+    try {
+        const response = await fetchAPI(`/api/applications/child-payments/${paymentId}/`);
+        if (response.ok) {
+            const payment = await response.json();
+            
+            const modalBody = document.getElementById('paymentModalBody');
+            modalBody.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Payment Information -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Payment Information</h4>
+                        <div class="space-y-2">
+                            <div><span class="text-slate-400">Payment ID:</span> <span class="text-white">${payment.id}</span></div>
+                            <div><span class="text-slate-400">Installment Number:</span> <span class="text-white">#${payment.installment_number}</span></div>
+                            <div><span class="text-slate-400">Amount:</span> <span class="text-white">Rs. ${payment.amount}</span></div>
+                            <div><span class="text-slate-400">Status:</span> 
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(payment.status)}">
+                                    ${payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                                </span>
+                            </div>
+                            <div><span class="text-slate-400">Created:</span> <span class="text-white">${new Date(payment.created_at).toLocaleString()}</span></div>
+                            ${payment.payment_date ? `<div><span class="text-slate-400">Payment Date:</span> <span class="text-white">${new Date(payment.payment_date).toLocaleString()}</span></div>` : ''}
+                            ${payment.notes ? `<div><span class="text-slate-400">Notes:</span> <span class="text-white">${payment.notes}</span></div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Transaction Details -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Transaction Details</h4>
+                        <div class="space-y-2">
+                            ${payment.khalti_transaction_id ? 
+                                `<div><span class="text-slate-400">Transaction ID:</span> <span class="text-white font-mono">${payment.khalti_transaction_id}</span></div>` : 
+                                '<div><span class="text-slate-400">Transaction ID:</span> <span class="text-slate-500">Not available</span></div>'
+                            }
+                            ${payment.khalti_payment_token ? 
+                                `<div><span class="text-slate-400">Payment Token:</span> <span class="text-white font-mono text-sm">${payment.khalti_payment_token}</span></div>` : 
+                                '<div><span class="text-slate-400">Payment Token:</span> <span class="text-slate-500">Not available</span></div>'
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- Sponsor Information -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Sponsor Information</h4>
+                        <div class="space-y-2">
+                            <div><span class="text-slate-400">Name:</span> <span class="text-white">${payment.sponsor_name}</span></div>
+                            <div><span class="text-slate-400">Email:</span> <span class="text-white">${payment.sponsor_email}</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Child Information -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-white border-b border-slate-600 pb-2">Child Information</h4>
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-16 h-16 rounded-full overflow-hidden">
+                                ${payment.child_photo ? 
+                                    `<img src="${payment.child_photo}" alt="${payment.child_name}" class="w-full h-full object-cover">` :
+                                    `<div class="w-full h-full bg-indigo-500 flex items-center justify-center text-white font-bold">${payment.child_name.charAt(0).toUpperCase()}</div>`
+                                }
+                            </div>
+                            <div>
+                                <div class="font-medium text-white">${payment.child_name}</div>
+                                <div class="text-sm text-slate-400">${payment.child_age} years old</div>
+                                <div class="text-sm text-slate-400">${payment.child_district}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('paymentModal').classList.remove('hidden');
+            document.getElementById('paymentModal').classList.add('flex');
+        } else {
+            throw new Error('Failed to load payment details');
+        }
+    } catch (error) {
+        console.error('Error loading payment details:', error);
+        alert('Error loading payment details');
+    }
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.add('hidden');
+    document.getElementById('paymentModal').classList.remove('flex');
+}
+
+async function markAsCompleted(paymentId) {
+    if (!confirm('Are you sure you want to mark this payment as completed?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetchAPI(`/api/applications/child-payments/${paymentId}/mark-completed/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (response.ok) {
+            alert('Payment marked as completed successfully');
+            loadPayments(currentPage);
+            loadStats();
+        } else {
+            const error = await response.json();
+            alert('Error marking payment as completed: ' + (error.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error marking payment as completed:', error);
+        alert('Error marking payment as completed');
+    }
+}
+
+function viewChildPayments(childId) {
+    // Redirect to sponsor payment details page with child filter
+    window.open(`/sponsor/payment-details/?child=${childId}`, '_blank');
+}
+</script>
+{% endblock %}

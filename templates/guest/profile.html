@@ -178,13 +178,14 @@
                                             <tr>
                                                 <th>Type</th>
                                                 <th>Status</th>
+                                                <th>Payment Status</th>
                                                 <th>Applied Date</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="applicationsTableBody">
                                             <tr>
-                                                <td colspan="4" class="text-center py-4">
+                                                <td colspan="5" class="text-center py-4">
                                                     <i class="fas fa-spinner fa-spin me-2"></i>Loading applications...
                                                 </td>
                                             </tr>
@@ -485,15 +486,20 @@
         
         async function loadApplications() {
             try {
+                // Load regular applications
                 const response = await fetchAPI('/api/applications/my-applications/');
                 const applications = await response.json();
                 
+                // Load sponsorship applications
+                const sponsorshipResponse = await fetchAPI('/api/applications/sponsorships/my/');
+                const sponsorships = await sponsorshipResponse.json();
+                
                 const tbody = document.getElementById('applicationsTableBody');
                 
-                if (applications.length === 0) {
+                if (applications.length === 0 && sponsorships.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="4" class="text-center py-4">
+                            <td colspan="5" class="text-center py-4">
                                 <i class="fas fa-file-lines fa-3x text-muted mb-3"></i>
                                 <p class="text-muted mb-4">No applications found.</p>
                                 <div class="d-flex gap-3 justify-content-center">
@@ -503,47 +509,79 @@
                                     <a href="/volunteer-form/" class="btn btn-outline-success btn-sm">
                                         <i class="fas fa-hands-helping me-1"></i>Apply as Volunteer
                                     </a>
+                                    <a href="/sponsor-child-form/" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-heart me-1"></i>Sponsor a Child
+                                    </a>
                                 </div>
                             </td>
                         </tr>
                     `;
                 } else {
-                    tbody.innerHTML = applications.map(app => `
+                    let allApplications = [];
+                    
+                    // Add regular applications
+                    applications.forEach(app => {
+                        allApplications.push({
+                            ...app,
+                            type: 'application',
+                            display_type: app.application_type.toUpperCase()
+                        });
+                    });
+                    
+                    // Add sponsorship applications
+                    sponsorships.forEach(sponsorship => {
+                        allApplications.push({
+                            ...sponsorship,
+                            type: 'sponsorship',
+                            display_type: 'CHILD SPONSORSHIP',
+                            application_type: 'sponsorship'
+                        });
+                    });
+                    
+                    // Sort by creation date
+                    allApplications.sort((a, b) => new Date(b.applied_at || b.created_at) - new Date(a.applied_at || a.created_at));
+                    
+                    tbody.innerHTML = allApplications.map(app => `
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <i class="fas fa-${app.application_type === 'member' ? 'user' : 'hands-helping'} me-2 text-primary"></i>
+                                    <i class="fas fa-${app.type === 'sponsorship' ? 'heart' : app.application_type === 'member' ? 'user' : 'hands-helping'} me-2 text-primary"></i>
                                     <div>
-                                        <div class="fw-bold">${app.application_type.toUpperCase()}</div>
+                                        <div class="fw-bold">${app.display_type}</div>
                                         <small class="text-muted">ID: #${app.id}</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <span class="badge" style="background-color: ${getStatusColor(app.status)}">
+                                <span class="badge" style="background-color: ${getStatusColor(app.status)}; color: #000 !important;">
                                     ${app.status.replace('_', ' ').toUpperCase()}
                                 </span>
-                                ${app.status === 'rejected' && app.rejection_type === 'correction' ? 
+                                ${app.type === 'application' && app.status === 'rejected' && app.rejection_type === 'correction' ? 
                                     '<br><small class="text-warning">Can be edited</small>' : ''}
-                                ${app.status === 'interview_scheduled' ? 
+                                ${app.type === 'application' && app.status === 'interview_scheduled' ? 
                                     `<br><small class="text-info"><i class="fas fa-calendar me-1"></i>Scheduled: ${new Date(app.interview_datetime).toLocaleDateString()}</small>` : ''}
-                                ${app.status === 'interview_scheduled' && app.interview_acknowledged ? 
-                                    '<br><small class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged</small>' : ''}
-                                ${app.status === 'interview_scheduled' && app.interview_attended === true ? 
-                                    '<br><small class="text-primary"><i class="fas fa-user-check me-1"></i>Attended</small>' : ''}
-                                ${app.status === 'interview_scheduled' && app.interview_attended === false ? 
-                                    '<br><small class="text-danger"><i class="fas fa-user-times me-1"></i>Not Attended</small>' : ''}
                             </td>
                             <td>
-                                <div>${new Date(app.applied_at).toLocaleDateString()}</div>
-                                <small class="text-muted">${new Date(app.applied_at).toLocaleTimeString()}</small>
+                                ${app.type === 'application' && app.application_type === 'member' && app.payment_required ? `
+                                    <span class="badge ${app.payment_completed ? 'bg-success' : 'bg-warning'}" style="color: #000 !important;">
+                                        ${app.payment_completed ? 'Paid' : 'Pending'}
+                                    </span>
+                                    ${app.payment_completed ? `<br><small style="color: #000;">Paid Rs. ${app.payment_amount}</small>` : `<br><small class="text-muted">Rs. ${app.payment_amount}</small>`}
+                                    ${app.payment_completed && app.payment_date ? `<br><small class="text-muted">${new Date(app.payment_date).toLocaleDateString()}</small>` : ''}
+                                ` : app.type === 'sponsorship' && app.payment_amount ? `
+                                    <span class="text-success">Rs. ${app.payment_amount}</span>
+                                ` : '<span class="text-muted">N/A</span>'}
+                            </td>
+                            <td>
+                                <div>${new Date(app.applied_at || app.created_at).toLocaleDateString()}</div>
+                                <small class="text-muted">${new Date(app.applied_at || app.created_at).toLocaleTimeString()}</small>
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button class="fs-3" onclick="showApplicationModal(${app.id})" title="Details">
+                                    <button class="fs-3" onclick="${app.type === 'sponsorship' ? 'showSponsorshipModal' : 'showApplicationModal'}(${app.id})" title="Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    ${app.status === 'interview_scheduled' ? `
+                                    ${app.type === 'application' && app.status === 'interview_scheduled' ? `
                                         <button class="fs-3" onclick="viewInterviewDetails(${app.id})" title="Interview Details">
                                             <i class="fas fa-calendar"></i>
                                         </button>
@@ -557,8 +595,13 @@
                                             </span>
                                         `}
                                     ` : ''}
-                                    ${app.status === 'rejected' && app.rejection_type === 'correction' ? `
+                                    ${app.type === 'application' && app.status === 'rejected' && app.rejection_type === 'correction' ? `
                                         <button class="fs-3" onclick="editApplication(${app.id})" title="Edit Application">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${app.type === 'sponsorship' && app.status === 'rejected' && app.can_reapply ? `
+                                        <button class="fs-3" onclick="editSponsorship(${app.id})" title="Edit & Reapply">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                     ` : ''}
@@ -571,7 +614,7 @@
                 console.error('Error loading applications:', error);
                 document.getElementById('applicationsTableBody').innerHTML = `
                     <tr>
-                        <td colspan="4" class="text-center py-4 text-danger">
+                        <td colspan="5" class="text-center py-4 text-danger">
                             <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
                             <p>No applications found.</p>
                         </td>
@@ -588,6 +631,79 @@
                 approved: '#28a745'
             };
             return colors[status] || '#6c757d';
+        }
+        
+        async function showSponsorshipModal(id) {
+            try {
+                const response = await fetchAPI(`/api/applications/sponsorships/${id}/`);
+                const sponsorship = await response.json();
+                
+                const modalBody = document.getElementById('applicationModalBody');
+                modalBody.innerHTML = `
+                    <!-- Profile Header -->
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <h5 class="mb-0" style="color: #E36F1E;">Child Sponsorship Application</h5>
+                            <p class="text-muted mb-0">${sponsorship.email} | ${sponsorship.phone}</p>
+                            <span class="badge fs-6 px-3 py-2" style="background-color: ${getStatusColor(sponsorship.status)}; color: #000 !important;">${sponsorship.status.replace('_', ' ').toUpperCase()}</span>
+                            <p class="small text-muted mb-2">Application #${sponsorship.id} | ${new Date(sponsorship.created_at).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <hr/>
+                    
+                    <!-- Personal Information -->
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <h6 class="text-primary"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                            <p><strong>Full Name:</strong> ${sponsorship.full_name}</p>
+                            <p><strong>Country:</strong> ${sponsorship.country}</p>
+                            <p><strong>City:</strong> ${sponsorship.city}</p>
+                            <p><strong>Address:</strong> ${sponsorship.address}</p>
+                            <p><strong>Occupation:</strong> ${sponsorship.occupation || 'N/A'}</p>
+                            <p><strong>Organization:</strong> ${sponsorship.organization || 'N/A'}</p>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <h6 class="text-primary"><i class="fas fa-heart me-2"></i>Sponsorship Preferences</h6>
+                            <p><strong>Type:</strong> ${sponsorship.sponsorship_type}</p>
+                            <p><strong>Child Gender:</strong> ${sponsorship.child_gender || 'No preference'}</p>
+                            <p><strong>Child Age:</strong> ${sponsorship.child_age || 'No preference'}</p>
+                            ${sponsorship.special_requests ? `<p><strong>Special Requests:</strong> ${sponsorship.special_requests}</p>` : ''}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <h6 class="text-primary"><i class="fas fa-envelope me-2"></i>Communication</h6>
+                            <p><strong>Update Frequency:</strong> ${sponsorship.update_frequency}</p>
+                            <p><strong>Methods:</strong> ${sponsorship.comm_method.join(', ') || 'Not specified'}</p>
+                            ${sponsorship.message ? `<p><strong>Message:</strong> ${sponsorship.message}</p>` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Information -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-credit-card me-2"></i>Payment Information</h6>
+                            <p><strong>Method:</strong> ${sponsorship.payment_method}</p>
+                            <p><strong>Amount:</strong> ${sponsorship.payment_amount ? 'Rs. ' + sponsorship.payment_amount : 'Not specified'}</p>
+                            <p><strong>Frequency:</strong> ${sponsorship.payment_frequency}</p>
+                            <p><strong>Tax Deductible:</strong> ${sponsorship.tax_deductible ? 'Yes' : 'No'}</p>
+                        </div>
+                        
+                        ${sponsorship.admin_notes ? `
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-sticky-note me-2"></i>Admin Notes</h6>
+                            <div class="alert alert-info">${sponsorship.admin_notes}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                // Show modal using Bootstrap 4 syntax
+                $('#applicationModal').modal('show');
+            } catch (error) {
+                console.error('Error loading sponsorship details:', error);
+                alert('Error loading sponsorship details.');
+            }
         }
         
         async function showApplicationModal(id) {
@@ -823,6 +939,11 @@
             loadEditForm(id);
         }
         
+        function editSponsorship(id) {
+            // Redirect to sponsor child form with edit mode
+            window.location.href = `/sponsor-child-form/?edit=${id}`;
+        }
+        
         async function loadEditForm(id) {
             try {
                 const response = await fetchAPI(`/api/applications/${id}/`);
@@ -997,6 +1118,11 @@
         
         async function loadProfile() {
             try {
+                // Check for approved sponsorships but don't redirect - show both options
+                const sponsorshipResponse = await fetchAPI('/api/applications/sponsorships/my/');
+                const sponsorships = await sponsorshipResponse.json();
+                const approvedSponsorships = sponsorships.filter(s => s.status === 'approved' || s.status === 'active');
+                
                 const response = await fetchAPI('/api/applications/my-applications/');
                 const applications = await response.json();
                 const app = applications[0]; // Get first application
@@ -1022,12 +1148,62 @@
                             <h4 style="color: #E36F1E;">${app.full_name || 'N/A'}</h4>
                             <p class="text-muted small">${app.profession || 'N/A'}</p>
                             <p class="text-info small"><strong>Type:</strong> ${app.application_type.toUpperCase()}</p>
+                            ${app.application_type === 'member' && app.payment_required ? `
+                                <p class="small mb-1">
+                                    <strong>Payment:</strong> 
+                                    <span class="badge ${app.payment_completed ? 'bg-success' : 'bg-warning'} ms-1" style="color: #000 !important;">
+                                        ${app.payment_completed ? 'Paid' : 'Pending'}
+                                    </span>
+                                    ${app.payment_completed ? ` <span style="color: #000;">Rs. ${app.payment_amount}</span>` : ` <span class="text-muted">Rs. ${app.payment_amount}</span>`}
+                                </p>
+                            ` : ''}
                             <span class="badge px-2 py-1" style="background-color: ${getStatusColor(app.status)}; font-size: 12px;">${app.status.replace('_', ' ').toUpperCase()}</span>
                             ${app.status === 'approved' ? `
                                 <div class="mt-2">
-                                    <a href="${app.application_type === 'member' ? '/member/dashboard/' : '/dashboard/volunteer/'}" class="btn btn-primary btn-sm py-2 " style="font-size:12px">
-                                        Go to ${app.application_type === 'member' ? 'Member' : 'Volunteer'} Dashboard
-                                    </a>
+                                    ${app.application_type === 'member' && app.payment_completed ? `
+                                        <div class="alert alert-success py-2 mb-2" style="font-size:12px">
+                                            <i class="fas fa-check-circle me-1"></i>Paid for Member (Rs. ${app.payment_amount})
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="/member/dashboard/" class="btn btn-primary btn-sm py-1" style="font-size:11px">
+                                                Member
+                                            </a>
+                                            <a href="/sponsor/dashboard/" class="btn btn-outline-secondary btn-sm py-1" style="font-size:11px">
+                                                Sponsor
+                                            </a>
+                                        </div>
+                                    ` : app.application_type === 'member' && app.payment_required && !app.payment_completed ? `
+                                        <div class="alert alert-warning py-2 mb-2" style="font-size:12px">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Payment Required (Rs. ${app.payment_amount})
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="/member/dashboard/" class="btn btn-secondary btn-sm py-1" style="font-size:11px" disabled>
+                                                Member (Pay)
+                                            </a>
+                                            <a href="/sponsor/dashboard/" class="btn btn-outline-secondary btn-sm py-1" style="font-size:11px">
+                                                Sponsor
+                                            </a>
+                                        </div>
+                                    ` : `
+                                        <div class="d-flex gap-2">
+                                            <a href="${app.application_type === 'member' ? '/member/dashboard/' : '/dashboard/volunteer/'}" class="btn btn-primary btn-sm py-1" style="font-size:11px">
+                                                ${app.application_type === 'member' ? 'Member' : 'Volunteer'}
+                                            </a>
+                                            <a href="/sponsor/dashboard/" class="btn btn-outline-secondary btn-sm py-1" style="font-size:11px">
+                                                Sponsor
+                                            </a>
+                                        </div>
+                                    `}
+                                </div>
+                            ` : ''}
+                            ${app.application_type === 'member' && app.payment_required && !app.payment_completed ? `
+                                <div class="mt-2">
+                                    <div class="alert alert-warning py-2 mb-2" style="font-size:12px">
+                                        <i class="fas fa-credit-card me-1"></i>Payment Required for Member
+                                    </div>
+                                    <button onclick="initiatePayment(${app.id})" class="btn btn-success btn-sm py-2" style="font-size:12px">
+                                        <i class="fas fa-credit-card me-1"></i>Pay Now (Rs. ${app.payment_amount})
+                                    </button>
                                 </div>
                             ` : ''}
                         </div>
@@ -1228,6 +1404,69 @@
                 }
             }
             return cookieValue;
+        }
+        
+        async function initiatePayment(applicationId) {
+            try {
+                const response = await fetchAPI(`/api/applications/${applicationId}/initiate-payment/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.test_mode) {
+                        // Test mode - show message and don't open payment window
+                        alert('Test Mode: Payment initiated successfully. Use "Skip & Confirm Payment" button to complete the payment.');
+                    } else {
+                        // Production/Sandbox mode - redirect to Khalti payment page
+                        window.location.href = data.payment_url;  // Same tab redirect
+                        // Don't show alert since user is being redirected
+                    }
+                    
+                    // Refresh the page after some time
+                    setTimeout(() => {
+                        loadApplications();
+                        loadProfile();
+                    }, 2000);
+                } else {
+                    const errorData = await response.json();
+                    alert('Failed to initiate payment: ' + (errorData.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error initiating payment:', error);
+                alert('Error initiating payment. Please try again.');
+            }
+        }
+        
+        async function confirmTestPayment(applicationId) {
+            if (!confirm('This is for testing purposes only. Confirm payment without actual transaction?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetchAPI(`/api/applications/${applicationId}/confirm-test-payment/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    alert('Test payment confirmed successfully!');
+                    loadApplications();
+                    loadProfile();
+                } else {
+                    const errorData = await response.json();
+                    alert('Failed to confirm payment: ' + (errorData.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error confirming test payment:', error);
+                alert('Error confirming payment. Please try again.');
+            }
         }
     </script>
 </body>

@@ -1,0 +1,269 @@
+{% extends 'sponsor/base.html' %}
+
+{% block title %}Sponsor Profile{% endblock %}
+{% block page_title %}Profile{% endblock %}
+{% block page_subtitle %}Manage your sponsor account information{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Profile Information -->
+    <div class="card p-6 rounded-lg">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-white">Profile Information</h3>
+            <button onclick="toggleEdit()" id="editBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-edit mr-2"></i>Edit Profile
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">First Name</label>
+                <input type="text" id="firstName" readonly class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Last Name</label>
+                <input type="text" id="lastName" readonly class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                <input type="email" id="email" readonly class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Phone</label>
+                <input type="text" id="phone" readonly class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Address</label>
+                <textarea id="address" readonly rows="3" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+        </div>
+        
+        <div id="editActions" class="hidden mt-6 flex space-x-3">
+            <button onclick="saveProfile()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+            <button onclick="cancelEdit()" class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-times mr-2"></i>Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Account Statistics -->
+    <div class="card p-6 rounded-lg">
+        <h3 class="text-xl font-semibold text-white mb-6">Account Statistics</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-heart text-green-400 text-2xl"></i>
+                </div>
+                <p class="text-2xl font-bold text-white" id="totalSponsorships">0</p>
+                <p class="text-slate-400">Total Sponsorships</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-donate text-blue-400 text-2xl"></i>
+                </div>
+                <p class="text-2xl font-bold text-white" id="totalDonated">Rs. 0</p>
+                <p class="text-slate-400">Total Donated</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-calendar text-purple-400 text-2xl"></i>
+                </div>
+                <p class="text-2xl font-bold text-white" id="memberSince">-</p>
+                <p class="text-slate-400">Member Since</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="card p-6 rounded-lg">
+        <h3 class="text-xl font-semibold text-white mb-6">Change Password</h3>
+        <form id="passwordForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Current Password</label>
+                <input type="password" id="currentPassword" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">New Password</label>
+                <input type="password" id="newPassword" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Confirm New Password</label>
+                <input type="password" id="confirmPassword" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-key mr-2"></i>Update Password
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+let isEditing = false;
+let originalData = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadProfile();
+    loadStats();
+    
+    document.getElementById('passwordForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        changePassword();
+    });
+});
+
+async function loadProfile() {
+    try {
+        const response = await fetchAPI('/api/auth/user/');
+        const user = await response.json();
+        
+        document.getElementById('firstName').value = user.first_name || '';
+        document.getElementById('lastName').value = user.last_name || '';
+        document.getElementById('email').value = user.email || '';
+        document.getElementById('phone').value = user.phone || '';
+        document.getElementById('address').value = user.address || '';
+        
+        // Store original data
+        originalData = {
+            firstName: user.first_name || '',
+            lastName: user.last_name || '',
+            phone: user.phone || '',
+            address: user.address || ''
+        };
+        
+        // Set member since date
+        const memberSince = new Date(user.date_joined).getFullYear();
+        document.getElementById('memberSince').textContent = memberSince;
+        
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
+
+async function loadStats() {
+    try {
+        const response = await fetchAPI('/api/applications/sponsorships/my/');
+        const data = await response.json();
+        const sponsorships = data.results || [];
+        
+        const totalAmount = sponsorships.reduce((sum, s) => sum + (parseFloat(s.payment_amount) || 0), 0);
+        
+        document.getElementById('totalSponsorships').textContent = sponsorships.length;
+        document.getElementById('totalDonated').textContent = `Rs. ${totalAmount.toLocaleString()}`;
+        
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+function toggleEdit() {
+    isEditing = !isEditing;
+    const fields = ['firstName', 'lastName', 'phone', 'address'];
+    const editBtn = document.getElementById('editBtn');
+    const editActions = document.getElementById('editActions');
+    
+    if (isEditing) {
+        fields.forEach(field => {
+            document.getElementById(field).readOnly = false;
+            document.getElementById(field).classList.remove('bg-slate-700');
+            document.getElementById(field).classList.add('bg-slate-600');
+        });
+        editBtn.classList.add('hidden');
+        editActions.classList.remove('hidden');
+    } else {
+        fields.forEach(field => {
+            document.getElementById(field).readOnly = true;
+            document.getElementById(field).classList.add('bg-slate-700');
+            document.getElementById(field).classList.remove('bg-slate-600');
+        });
+        editBtn.classList.remove('hidden');
+        editActions.classList.add('hidden');
+    }
+}
+
+function cancelEdit() {
+    // Restore original data
+    document.getElementById('firstName').value = originalData.firstName;
+    document.getElementById('lastName').value = originalData.lastName;
+    document.getElementById('phone').value = originalData.phone;
+    document.getElementById('address').value = originalData.address;
+    
+    toggleEdit();
+}
+
+async function saveProfile() {
+    try {
+        const profileData = {
+            first_name: document.getElementById('firstName').value,
+            last_name: document.getElementById('lastName').value,
+            phone: document.getElementById('phone').value,
+            address: document.getElementById('address').value
+        };
+        
+        const response = await fetchAPI('/api/auth/user/', {
+            method: 'PATCH',
+            body: JSON.stringify(profileData)
+        });
+        
+        if (response.ok) {
+            alert('Profile updated successfully!');
+            originalData = {
+                firstName: profileData.first_name,
+                lastName: profileData.last_name,
+                phone: profileData.phone,
+                address: profileData.address
+            };
+            toggleEdit();
+        } else {
+            alert('Error updating profile');
+        }
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        alert('Error updating profile');
+    }
+}
+
+async function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        alert('Please fill in all password fields');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        alert('New passwords do not match');
+        return;
+    }
+    
+    if (newPassword.length < 8) {
+        alert('New password must be at least 8 characters long');
+        return;
+    }
+    
+    try {
+        const response = await fetchAPI('/api/auth/change-password/', {
+            method: 'POST',
+            body: JSON.stringify({
+                old_password: currentPassword,
+                new_password: newPassword
+            })
+        });
+        
+        if (response.ok) {
+            alert('Password changed successfully!');
+            document.getElementById('passwordForm').reset();
+        } else {
+            const error = await response.json();
+            alert('Error changing password: ' + (error.detail || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error changing password:', error);
+        alert('Error changing password');
+    }
+}
+</script>
+{% endblock %}

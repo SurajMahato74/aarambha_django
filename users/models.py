@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
         ('branchadmin', 'Branch Admin'),
         ('member', 'Member'),
         ('volunteer', 'Volunteer'),
+        ('sponsor', 'Sponsor'),
         ('guest', 'Guest'),
     )
     
@@ -23,3 +24,4 @@ class CustomUser(AbstractUser):
     def is_branchadmin(self): return self.user_type == 'branchadmin'
     def is_member(self): return self.user_type == 'member'
     def is_volunteer(self): return self.user_type == 'volunteer'
+    def is_sponsor(self): return self.user_type == 'sponsor'

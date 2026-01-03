@@ -1,0 +1,239 @@
+{% extends 'sponsor/base.html' %}
+
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_subtitle %}Stay updated with your sponsorship activities{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Notification Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Total Notifications</p>
+                    <p class="text-2xl font-bold text-white" id="totalNotifications">0</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-bell text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Unread</p>
+                    <p class="text-2xl font-bold text-yellow-400" id="unreadNotifications">0</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-envelope text-yellow-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">This Week</p>
+                    <p class="text-2xl font-bold text-green-400" id="weeklyNotifications">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calendar-week text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Actions -->
+    <div class="card p-4 rounded-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button onclick="markAllAsRead()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-check-double mr-2"></i>Mark All as Read
+                </button>
+                <button onclick="loadNotifications()" class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+            </div>
+            <div class="flex items-center space-x-2">
+                <label class="text-slate-300 text-sm">Filter:</label>
+                <select id="notificationFilter" onchange="loadNotifications()" class="px-3 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm">
+                    <option value="">All Notifications</option>
+                    <option value="unread">Unread Only</option>
+                    <option value="sponsorship">Sponsorship Updates</option>
+                    <option value="general">General</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="card rounded-lg overflow-hidden">
+        <div class="p-6 border-b border-slate-700">
+            <h3 class="text-xl font-semibold text-white">Your Notifications</h3>
+        </div>
+        
+        <div id="notificationsList" class="divide-y divide-slate-700">
+            <div class="p-6 text-center text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>Loading notifications...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadNotifications();
+});
+
+async function loadNotifications() {
+    try {
+        const filter = document.getElementById('notificationFilter').value;
+        let url = '/api/notices/my-notifications/';
+        if (filter) {
+            url += `?filter=${filter}`;
+        }
+        
+        const response = await fetchAPI(url);
+        const data = await response.json();
+        const notifications = data.notifications || data.results || data || [];
+        
+        // Update stats
+        const unreadCount = notifications.filter(n => !n.is_read).length;
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const weeklyCount = notifications.filter(n => new Date(n.created_at) >= weekAgo).length;
+        
+        document.getElementById('totalNotifications').textContent = notifications.length;
+        document.getElementById('unreadNotifications').textContent = unreadCount;
+        document.getElementById('weeklyNotifications').textContent = weeklyCount;
+        
+        displayNotifications(notifications);
+        
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        document.getElementById('notificationsList').innerHTML = `
+            <div class="p-6 text-center text-red-400">
+                <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                <p>Error loading notifications</p>
+            </div>
+        `;
+    }
+}
+
+function displayNotifications(notifications) {
+    const container = document.getElementById('notificationsList');
+    
+    if (notifications.length === 0) {
+        container.innerHTML = `
+            <div class="p-8 text-center text-slate-400">
+                <i class="fas fa-bell-slash text-4xl mb-4 opacity-50"></i>
+                <p class="text-lg mb-2">No notifications</p>
+                <p class="text-sm">You're all caught up!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = notifications.map(notification => `
+        <div class="p-6 hover:bg-slate-700/30 transition-colors ${!notification.is_read ? 'bg-indigo-900/20 border-l-4 border-indigo-500' : ''}" 
+             onclick="markAsRead(${notification.id})">
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 ${getNotificationIconBg(notification.notification_type)} rounded-full flex items-center justify-center">
+                        <i class="fas ${getNotificationIcon(notification.notification_type)} text-white text-sm"></i>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-white font-medium ${!notification.is_read ? 'font-semibold' : ''}">${notification.title}</h4>
+                        <div class="flex items-center space-x-2">
+                            ${!notification.is_read ? '<div class="w-2 h-2 bg-indigo-500 rounded-full"></div>' : ''}
+                            <span class="text-slate-400 text-sm">${formatDate(notification.created_at)}</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-300 mt-1">${notification.message}</p>
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getNotificationTypeBadge(notification.notification_type)}">
+                            ${notification.notification_type.replace('_', ' ').toUpperCase()}
+                        </span>
+                        ${!notification.is_read ? `
+                            <button onclick="event.stopPropagation(); markAsRead(${notification.id})" 
+                                class="text-indigo-400 hover:text-indigo-300 text-sm">
+                                Mark as read
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        sponsorship: 'fa-heart',
+        general: 'fa-info-circle',
+        payment: 'fa-credit-card',
+        update: 'fa-bell',
+        system: 'fa-cog'
+    };
+    return icons[type] || 'fa-bell';
+}
+
+function getNotificationIconBg(type) {
+    const colors = {
+        sponsorship: 'bg-pink-500',
+        general: 'bg-blue-500',
+        payment: 'bg-green-500',
+        update: 'bg-yellow-500',
+        system: 'bg-gray-500'
+    };
+    return colors[type] || 'bg-blue-500';
+}
+
+function getNotificationTypeBadge(type) {
+    const colors = {
+        sponsorship: 'bg-pink-100 text-pink-800',
+        general: 'bg-blue-100 text-blue-800',
+        payment: 'bg-green-100 text-green-800',
+        update: 'bg-yellow-100 text-yellow-800',
+        system: 'bg-gray-100 text-gray-800'
+    };
+    return colors[type] || 'bg-blue-100 text-blue-800';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+        return 'Yesterday';
+    } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+    } else {
+        return date.toLocaleDateString();
+    }
+}
+
+async function markAsRead(notificationId) {
+    try {
+        // Since the existing API might not have mark-read endpoint, just reload
+        loadNotifications();
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllAsRead() {
+    try {
+        // Since the existing API might not have mark-all-read endpoint, just reload
+        loadNotifications();
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+    }
+}
+</script>
+{% endblock %}

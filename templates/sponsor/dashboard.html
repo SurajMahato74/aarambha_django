@@ -1,0 +1,281 @@
+{% extends 'sponsor/base.html' %}
+
+{% block title %}Sponsor Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Overview of your sponsorship activities{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Active Sponsorships</p>
+                    <p class="text-3xl font-bold text-white" id="activeSponsorships">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-heart text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card p-6 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Total Contributions</p>
+                    <p class="text-3xl font-bold text-white" id="totalContributions">Rs. 0</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-donate text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card p-6 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">Children Helped</p>
+                    <p class="text-3xl font-bold text-white" id="childrenHelped">0</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-child text-purple-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- My Sponsorships -->
+        <div class="card p-6 rounded-lg">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white">Pending Assignments</h3>
+                <span class="text-indigo-400 text-sm" id="pendingCount">0</span>
+            </div>
+            <div id="pendingAssignments" class="space-y-3">
+                <div class="text-center py-8 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Loading assignments...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Updates -->
+        <div class="card p-6 rounded-lg">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white">Recent Updates</h3>
+                <a href="{% url 'sponsor_notifications' %}" class="text-indigo-400 hover:text-indigo-300 text-sm">View All</a>
+            </div>
+            <div id="recentUpdates" class="space-y-3">
+                <div class="text-center py-8 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Loading updates...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card p-6 rounded-lg">
+        <h3 class="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="{% url 'sponsor_children' %}" class="flex items-center p-4 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">
+                <i class="fas fa-child text-purple-400 text-xl mr-3"></i>
+                <div>
+                    <p class="font-medium text-white">View Sponsored Children</p>
+                    <p class="text-sm text-slate-400">See your sponsored children</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'sponsor_profile' %}" class="flex items-center p-4 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">
+                <i class="fas fa-user text-blue-400 text-xl mr-3"></i>
+                <div>
+                    <p class="font-medium text-white">Update Profile</p>
+                    <p class="text-sm text-slate-400">Manage your information</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'website_sponsor_child_form' %}" class="flex items-center p-4 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">
+                <i class="fas fa-plus text-green-400 text-xl mr-3"></i>
+                <div>
+                    <p class="font-medium text-white">Sponsor Another Child</p>
+                    <p class="text-sm text-slate-400">Expand your impact</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+});
+
+async function loadDashboardData() {
+    try {
+        // Load assignments
+        const assignmentsResponse = await fetchAPI('/api/applications/my-assignments/');
+        const assignments = await assignmentsResponse.json();
+        
+        // Load sponsored children
+        const childrenResponse = await fetchAPI('/api/applications/my-sponsored-children/');
+        const sponsoredChildren = await childrenResponse.json();
+        
+        // Update stats
+        const pendingAssignments = assignments.filter(a => a.status === 'pending').length;
+        const activeSponsors = sponsoredChildren.length;
+        const totalAmount = sponsoredChildren.reduce((sum, child) => sum + (parseFloat(child.monthly_sponsorship_amount) || 0), 0);
+        
+        document.getElementById('activeSponsorships').textContent = activeSponsors;
+        document.getElementById('totalContributions').textContent = `Rs. ${totalAmount.toLocaleString()}`;
+        document.getElementById('childrenHelped').textContent = activeSponsors;
+        document.getElementById('pendingCount').textContent = pendingAssignments;
+        
+        // Display pending assignments
+        displayPendingAssignments(assignments.filter(a => a.status === 'pending').slice(0, 3));
+        
+        // Load recent notifications
+        loadRecentUpdates();
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        document.getElementById('pendingAssignments').innerHTML = `
+            <div class="text-center py-4 text-red-400">
+                <i class="fas fa-exclamation-triangle mb-2"></i>
+                <p>Error loading data</p>
+            </div>
+        `;
+    }
+}
+
+async function loadRecentUpdates() {
+    try {
+        const response = await fetchAPI('/api/notices/my-notifications/');
+        const data = await response.json();
+        const notifications = data.notifications || data.results || data || [];
+        
+        displayRecentUpdates(notifications.slice(0, 5));
+        
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        document.getElementById('recentUpdates').innerHTML = `
+            <div class="text-center py-8 text-slate-400">
+                <i class="fas fa-bell-slash text-4xl mb-4 opacity-50"></i>
+                <p>No recent updates</p>
+            </div>
+        `;
+    }
+}
+
+function displayRecentUpdates(notifications) {
+    const container = document.getElementById('recentUpdates');
+    
+    if (notifications.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-slate-400">
+                <i class="fas fa-bell-slash text-4xl mb-4 opacity-50"></i>
+                <p>No recent updates</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = notifications.map(notification => `
+        <div class="flex items-start space-x-3 p-3 bg-slate-700 rounded-lg">
+            <div class="w-8 h-8 ${getNotificationIconBg(notification.notification_type)} rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas ${getNotificationIcon(notification.notification_type)} text-white text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="font-medium text-white text-sm">${notification.title}</p>
+                <p class="text-slate-400 text-xs mt-1">${notification.message.substring(0, 80)}${notification.message.length > 80 ? '...' : ''}</p>
+                <p class="text-slate-500 text-xs mt-1">${formatDate(notification.created_at)}</p>
+            </div>
+            ${!notification.is_read ? '<div class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0 mt-2"></div>' : ''}
+        </div>
+    `).join('');
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        sponsorship: 'fa-heart',
+        general: 'fa-info-circle',
+        payment: 'fa-credit-card',
+        update: 'fa-bell',
+        system: 'fa-cog'
+    };
+    return icons[type] || 'fa-bell';
+}
+
+function getNotificationIconBg(type) {
+    const colors = {
+        sponsorship: 'bg-pink-500',
+        general: 'bg-blue-500',
+        payment: 'bg-green-500',
+        update: 'bg-yellow-500',
+        system: 'bg-gray-500'
+    };
+    return colors[type] || 'bg-blue-500';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+        return 'Yesterday';
+    } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+    } else {
+        return date.toLocaleDateString();
+    }
+}
+
+function displayPendingAssignments(assignments) {
+    const container = document.getElementById('pendingAssignments');
+    
+    if (assignments.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-slate-400">
+                <i class="fas fa-clock text-4xl mb-4 opacity-50"></i>
+                <p>No pending assignments</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg cursor-pointer hover:bg-yellow-500/20 transition-colors" onclick="window.location.href='/sponsor/assignments/'">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-exclamation text-yellow-400 text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-white">You have ${assignments.length} pending assignment${assignments.length > 1 ? 's' : ''}</p>
+                        <p class="text-sm text-slate-400">Click here to review and approve sponsorships</p>
+                    </div>
+                </div>
+                <i class="fas fa-arrow-right text-slate-400"></i>
+            </div>
+        </div>
+    `;
+}
+
+async function viewAssignment(assignmentId) {
+    // Redirect to assignments page with specific assignment
+    window.location.href = `/sponsor/assignments/?id=${assignmentId}`;
+}
+function getStatusColor(status) {
+    const colors = {
+        pending: 'bg-yellow-100 text-yellow-800',
+        approved: 'bg-green-100 text-green-800',
+        active: 'bg-indigo-100 text-indigo-800',
+        completed: 'bg-gray-100 text-gray-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+}
+</script>
+{% endblock %}
