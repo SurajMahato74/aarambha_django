@@ -1,0 +1,30 @@
+/* Khalti Payment Button Styles */
+.khalti-btn {
+    background: linear-gradient(135deg, #5C2D91 0%, #7B3F98 100%) !important;
+    border: none !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(92, 45, 145, 0.3) !important;
+}
+
+.khalti-btn:hover {
+    background: linear-gradient(135deg, #4A2577 0%, #693285 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(92, 45, 145, 0.4) !important;
+}
+
+.khalti-btn:active {
+    transform: translateY(0) !important;
+}
+
+.khalti-logo {
+    height: 20px;
+    width: auto;
+    filter: brightness(0) invert(1); /* Makes logo white */
+}
