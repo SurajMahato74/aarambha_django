@@ -29,6 +29,7 @@ class GoogleAuthSyncMiddleware:
             }
             
             # Add JavaScript to set localStorage and ensure session consistency
+            user_json = json.dumps(user_data)
             script = f"""
             <script>
                 // Clear any existing auth data first
@@ -39,7 +40,7 @@ class GoogleAuthSyncMiddleware:
                 // Set new auth data
                 localStorage.setItem('access_token', '{str(refresh.access_token)}');
                 localStorage.setItem('refresh_token', '{str(refresh)}');
-                localStorage.setItem('user', '{json.dumps(user_data).replace("'", "\\'")}');
+                localStorage.setItem('user', JSON.stringify({user_json}));
                 
                 // Update navbar auth state
                 if (typeof updateNavbarAuth === 'function') {{
