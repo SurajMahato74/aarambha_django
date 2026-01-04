@@ -26,9 +26,12 @@
     transform: translateY(0) !important;
 }
 
-.khalti-logo {
-    height: 20px;
+.khalti-logo-img {
+    height: 24px;
     width: auto;
+    background: white;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 </style>
 <div id="donationModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="donationModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
@@ -116,10 +119,7 @@
       <div class="modal-footer" style="border-top: 1px solid #334155; padding: 20px; display: flex; justify-content: flex-end; gap: 10px;">
         <button type="button" class="btn btn-secondary" onclick="closeDonationModal()">Cancel</button>
         <button type="button" class="btn khalti-btn" onclick="processDonation()">
-          <svg width="80" height="24" viewBox="0 0 80 24" class="khalti-logo">
-            <rect width="80" height="24" rx="4" fill="white"/>
-            <text x="40" y="16" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#5C2D91">Khalti</text>
-          </svg>
+          <img src="/static/website/images/kh.png" alt="Khalti" class="khalti-logo-img">
           Pay with Khalti
         </button>
       </div>
@@ -271,10 +271,7 @@ async function processDonation() {
     // Reset button
     const submitBtn = document.querySelector('#donationModal .khalti-btn');
     submitBtn.innerHTML = `
-      <svg width="80" height="24" viewBox="0 0 80 24" class="khalti-logo">
-        <rect width="80" height="24" rx="4" fill="white"/>
-        <text x="40" y="16" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#5C2D91">Khalti</text>
-      </svg>
+      <img src="/static/website/images/kh.png" alt="Khalti" class="khalti-logo-img">
       Pay with Khalti
     `;
     submitBtn.disabled = false;
