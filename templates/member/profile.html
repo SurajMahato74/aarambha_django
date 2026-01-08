@@ -6,20 +6,20 @@
 {% block header_title %}My Profile{% endblock %}
 
 {% block content %}
-<div class="bg-slate-800 rounded-lg shadow-sm">
+<div class="rounded-lg shadow">
     <!-- Tab Navigation -->
-    <div class="border-b border-slate-700">
+    <div class="border-b border-slate-300">
         <nav class="flex space-x-8 px-6">
-            <button class="profile-tab active py-3 px-1 border-b-2 border-indigo-500 text-indigo-400 font-medium" data-tab="details">
+            <button class="profile-tab active py-3 px-2 font-medium text-white" data-tab="details">
                 <i class="fas fa-user mr-2"></i>Details
             </button>
-            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="payments">
+            <button class="profile-tab py-3 px-2  text-slate-400 hover:text-slate-300" data-tab="payments">
                 <i class="fas fa-credit-card mr-2"></i>Payments
             </button>
-            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="certificates">
+            <button class="profile-tab py-3 px-2  text-slate-400 hover:text-slate-300" data-tab="certificates">
                 <i class="fas fa-certificate mr-2"></i>Certificates
             </button>
-            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="reviews">
+            <button class="profile-tab py-3 px-2 text-slate-400 hover:text-slate-300" data-tab="reviews">
                 <i class="fas fa-star mr-2"></i>Reviews
             </button>
         </nav>
@@ -83,10 +83,10 @@
             
             // Update tab buttons
             document.querySelectorAll('.profile-tab').forEach(tab => {
-                tab.classList.remove('active', 'border-indigo-500', 'text-indigo-400');
+                tab.classList.remove('active', 'border-indigo-500', 'text-white');
                 tab.classList.add('border-transparent', 'text-slate-400');
             });
-            e.target.classList.add('active', 'border-indigo-500', 'text-indigo-400');
+            e.target.classList.add('active', 'border-indigo-500', 'text-white');
             e.target.classList.remove('border-transparent', 'text-slate-400');
             
             // Update tab content
@@ -117,24 +117,24 @@
                             <div class="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
                                 ${(profile.first_name || profile.email || 'U').charAt(0).toUpperCase()}
                             </div>
-                            <h3 class="text-xl font-semibold text-white">${profile.first_name || ''} ${profile.last_name || ''}</h3>
+                            <h3 class="text-xl font-semibold text-blue">${profile.first_name || ''} ${profile.last_name || ''}</h3>
                             <p class="text-slate-400">${profile.email}</p>
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-slate-700/50 p-4 rounded-lg">
-                                <h4 class="font-semibold text-white mb-2">Account Information</h4>
-                                <p class="text-slate-300"><strong>User Type:</strong> ${profile.user_type}</p>
-                                <p class="text-slate-300"><strong>Branch:</strong> ${profile.branch || 'Not assigned'}</p>
-                                <p class="text-slate-300"><strong>Joined:</strong> ${new Date(profile.date_joined).toLocaleDateString()}</p>
-                                <p class="text-slate-300"><strong>Status:</strong> ${profile.is_active ? 'Active' : 'Inactive'}</p>
+                            <div class="bg-indigo-400 p-4 rounded-lg">
+                                <h4 class="font-bold text-white mb-2">Account Information</h4>
+                                <p class="text-slate-100"><strong>User Type:</strong> ${profile.user_type}</p>
+                                <p class="text-slate-100"><strong>Branch:</strong> ${profile.branch || 'Not assigned'}</p>
+                                <p class="text-slate-100"><strong>Joined:</strong> ${new Date(profile.date_joined).toLocaleDateString()}</p>
+                                <p class="text-slate-100"><strong>Status:</strong> ${profile.is_active ? 'Active' : 'Inactive'}</p>
                             </div>
                             
-                            <div class="bg-slate-700/50 p-4 rounded-lg">
-                                <h4 class="font-semibold text-white mb-2">Contact Information</h4>
-                                <p class="text-slate-300"><strong>Email:</strong> ${profile.email}</p>
-                                <p class="text-slate-300"><strong>Phone:</strong> ${profile.phone || 'Not provided'}</p>
-                                <p class="text-slate-300"><strong>Address:</strong> ${profile.address || 'Not provided'}</p>
+                            <div class="bg-indigo-400 p-4 rounded-lg">
+                                <h4 class="font-bold text-white mb-2">Contact Information</h4>
+                                <p class="text-slate-100"><strong>Email:</strong> ${profile.email}</p>
+                                <p class="text-slate-100"><strong>Phone:</strong> ${profile.phone || 'Not provided'}</p>
+                                <p class="text-slate-100"><strong>Address:</strong> ${profile.address || 'Not provided'}</p>
                             </div>
                         </div>
                     </div>

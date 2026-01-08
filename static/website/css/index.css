@@ -40,6 +40,9 @@ a {
 .text-white{
   color: #fff !important;
 }
+.text-orange{
+  color: var(--main-color) !important;
+}
 
 h1,
 h2,

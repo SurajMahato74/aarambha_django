@@ -471,18 +471,20 @@
           </li>
           {% endfor %}
         </ul>
-        <div class="col-md-12 mb-3 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.9s">
-          <div class="d-flex justify-content-center mt-2">
-            <a href="{% url 'website_events' %}" class="py-1 px-4 align-content-center btn" style="
-                  background: transparent !important;
-                  color: #000;
-                  border: 1px solid #000;
-                  font-weight: 400;
-                  text-transform: capitalize;
-                ">&nbsp; &nbsp; View All Events <i class="bi bi-arrow-right"></i>
-            </a>
+        {% if events|length > 6 %}
+          <div class="col-md-12 mb-3 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.9s">
+            <div class="d-flex justify-content-center mt-2">
+              <a href="{% url 'website_events' %}" class="py-1 px-4 align-content-center btn" style="
+                    background: transparent !important;
+                    color: #000;
+                    border: 1px solid #000;
+                    font-weight: 400;
+                    text-transform: capitalize;
+                  ">&nbsp; &nbsp; View All Events <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
           </div>
-        </div>
+        {% endif %}
       </div>
     </div>
   </section>

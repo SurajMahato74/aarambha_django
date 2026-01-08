@@ -6,59 +6,60 @@
 {% block header_title %}Member Dashboard{% endblock %}
 
 {% block content %}
-<div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-4 mb-6 text-white">
+
+<div class="rounded-lg px-4 mb-6 text-black">
     <h2 class="text-xl font-bold mb-1">Welcome, <span id="welcomeName">Member</span>!</h2>
-    <p class="text-indigo-100 text-sm">Let's make a difference together!</p>
+    <p class="text-black-100 text-sm">Let's make a difference together!</p>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/member/tasks/'">
+    <div class="shadow p-4 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors hover:text-white" onclick="window.location.href='/member/tasks/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">My Tasks</p>
-                <p class="text-2xl font-bold text-white" id="taskCount">0</p>
+                <p class="text-black-700 text-sm">My Tasks</p>
+                <p class="text-2xl font-bold text-blue" id="taskCount">0</p>
             </div>
             <i class="fas fa-tasks text-3xl text-green-500"></i>
         </div>
     </div>
-    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/member/notifications/'">
+    <div class="shadow p-4 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors hover:text-white" onclick="window.location.href='/member/notifications/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">Notices</p>
-                <p class="text-2xl font-bold text-white" id="noticeCount">0</p>
+                <p class="text-black-700 text-sm">Notices</p>
+                <p class="text-2xl font-bold text-blue" id="noticeCount">0</p>
             </div>
             <i class="fas fa-bell text-3xl text-yellow-500"></i>
         </div>
     </div>
-    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/messaging/conversations/'">
+    <div class="shadow p-4 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors hover:text-white" onclick="window.location.href='/messaging/conversations/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">Messages</p>
-                <p class="text-2xl font-bold text-white" id="messageCount">0</p>
+                <p class="text-black-700 text-sm">Messages</p>
+                <p class="text-2xl font-bold text-blue" id="messageCount">0</p>
             </div>
             <i class="fas fa-comments text-3xl text-blue-500"></i>
         </div>
     </div>
-    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/events/'">
+    <div class="shadow p-4 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors hover:text-white" onclick="window.location.href='/events/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">My Events</p>
-                <p class="text-2xl font-bold text-white" id="eventCount">0</p>
+                <p class="text-black-700 text-sm">My Events</p>
+                <p class="text-2xl font-bold text-blue" id="eventCount">0</p>
             </div>
             <i class="fas fa-calendar text-3xl text-purple-500"></i>
         </div>
     </div>
 </div>
 
-<div class="bg-slate-800 rounded-lg p-6">
+<div class="rounded-lg p-6">
     <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold text-white">Recent Notices</h3>
+        <h3 class="text-xl font-bold text-blue">Recent Notices</h3>
         <a href="/member/notifications/" class="text-orange-500 hover:text-orange-400 text-sm font-medium">View All</a>
     </div>
     <div id="noticesContainer">
         <div class="text-center py-4">
             <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
-            <p class="text-slate-400">Loading notices...</p>
+            <p class="text-slate-700">Loading notices...</p>
         </div>
     </div>
 </div>
@@ -157,7 +158,7 @@
                 container.innerHTML = `
                     <div class="text-center py-4">
                         <i class="fas fa-bell-slash fa-3x text-slate-400 mb-3"></i>
-                        <p class="text-slate-400">No notices available.</p>
+                        <p class="text-slate-700">No notices available.</p>
                     </div>
                 `;
             } else {
@@ -166,12 +167,12 @@
                     const isUnread = !notification.is_read;
                     
                     return `
-                        <div class="p-3 bg-slate-700/50 rounded mb-3 ${isUnread ? 'border-l-4 border-blue-500' : ''}">
+                        <div class="p-3 bg-slate-300/50 rounded mb-3 ${isUnread ? 'border-l-4 border-blue-500' : ''}">
                             <div class="flex justify-between items-start">
-                                <h6 class="text-white font-medium">${notification.title}${isUnread ? ' <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded">New</span>' : ''}</h6>
-                                <span class="text-xs text-slate-400">${createdDate}</span>
+                                <h6 class="text-blue font-medium">${notification.title}${isUnread ? ' <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded">New</span>' : ''}</h6>
+                                <span class="text-xs text-slate-700">${createdDate}</span>
                             </div>
-                            <p class="text-slate-300 text-sm mt-1">${notification.message}</p>
+                            <p class="text-slate-600 text-sm mt-1">${notification.message}</p>
                         </div>
                     `;
                 }).join('');
