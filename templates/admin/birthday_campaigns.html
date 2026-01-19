@@ -9,9 +9,14 @@
     <h2 class="text-xl font-semibold text-white flex items-center gap-2">
       <i class="fas fa-birthday-cake"></i>Birthday Campaigns Management
     </h2>
-    <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg" onclick="location.reload()">
-      <i class="fas fa-sync-alt mr-2"></i>Refresh
-    </button>
+    <div class="flex gap-2">
+      <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onclick="showCreateForm()">
+        <i class="fas fa-plus mr-2"></i>Create Campaign
+      </button>
+      <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg" onclick="location.reload()">
+        <i class="fas fa-sync-alt mr-2"></i>Refresh
+      </button>
+    </div>
   </div>
 
   <!-- Statistics Cards -->
@@ -93,4 +98,127 @@
     </div>
   </div>
 </div>
+
+<!-- Create Campaign Modal -->
+<div id="createCampaignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-slate-800 rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-white">🎂 Create Birthday Campaign</h3>
+          <button onclick="hideCreateForm()" class="text-slate-400 hover:text-white">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        
+        <form id="campaignForm" class="space-y-4">
+          {% csrf_token %}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-slate-300 text-sm font-medium mb-2">Full Name *</label>
+              <input type="text" name="full_name" required class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-slate-300 text-sm font-medium mb-2">Email *</label>
+              <input type="email" name="email" required class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500">
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-slate-300 text-sm font-medium mb-2">Phone *</label>
+              <input type="tel" name="phone" required class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-slate-300 text-sm font-medium mb-2">Birthday Date *</label>
+              <input type="date" name="birthday_date" required class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500">
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-slate-300 text-sm font-medium mb-2">Campaign Title *</label>
+            <input type="text" name="title" required placeholder="e.g., Help me celebrate by supporting education" class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500">
+          </div>
+          
+          <div>
+            <label class="block text-slate-300 text-sm font-medium mb-2">Target Amount (NPR) *</label>
+            <input type="number" name="target_amount" min="1000" step="100" required class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500">
+          </div>
+          
+          <div>
+            <label class="block text-slate-300 text-sm font-medium mb-2">Campaign Description *</label>
+            <textarea name="description" rows="4" required placeholder="Tell the story and why this cause matters..." class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500"></textarea>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-slate-300 text-sm font-medium mb-2">Profile Photo</label>
+              <input type="file" name="profile_photo" accept="image/*" class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-slate-300 text-sm font-medium mb-2">Campaign Photo</label>
+              <input type="file" name="photo" accept="image/*" class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-indigo-500">
+            </div>
+          </div>
+          
+          <div class="flex justify-end gap-3 pt-4">
+            <button type="button" onclick="hideCreateForm()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded">
+              Cancel
+            </button>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+              <i class="fas fa-rocket mr-2"></i>Create Campaign
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showCreateForm() {
+  document.getElementById('createCampaignModal').classList.remove('hidden');
+}
+
+function hideCreateForm() {
+  document.getElementById('createCampaignModal').classList.add('hidden');
+  document.getElementById('campaignForm').reset();
+}
+
+document.getElementById('campaignForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const submitBtn = this.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+  
+  try {
+    const response = await fetch('/api/applications/birthday-campaign/create/', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      hideCreateForm();
+      alert('Campaign created successfully!');
+      location.reload();
+    } else {
+      alert('Error: ' + (data.error || 'Failed to create campaign'));
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+  }
+});
+</script>
 {% endblock %}

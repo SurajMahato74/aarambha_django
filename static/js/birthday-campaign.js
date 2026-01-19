@@ -6,112 +6,13 @@ let campaignData = null;
 $(document).ready(function() {
     console.log('Birthday campaign page loaded');
     console.log('Campaign ID:', campaignId);
-    console.log('Current URL:', window.location.href);
-    console.log('URL parameters:', window.location.search);
     
     if (campaignId && campaignId !== '0') {
         loadCampaignDetails();
     } else {
         showError('Invalid campaign ID');
     }
-    checkPaymentStatus();
-    initializeDonationForm();
 });
-
-function initializeDonationForm() {
-    // Check if user is logged in and pre-fill form
-    if (window.djangoUser && window.djangoUser.isAuthenticated) {
-        $('input[name="donor_name"]').val(window.djangoUser.full_name || window.djangoUser.username || '');
-        $('input[name="donor_email"]').val(window.djangoUser.email || '');
-    }
-}
-
-function selectAmount(amount, element) {
-    $('.amount-btn').removeClass('active');
-    element.classList.add('active');
-    $('#donation-amount').val(amount);
-}
-
-function checkPaymentStatus() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const pidx = urlParams.get('pidx');
-    const status = urlParams.get('status');
-    const error = urlParams.get('error');
-    
-    console.log('Checking payment status:', { pidx, status, error });
-    
-    if (pidx && status === 'Completed') {
-        // Payment completed, verify it
-        console.log('Payment completed, verifying...');
-        verifyPayment(pidx);
-        // Clean URL after verification
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-    } else if (error === 'payment_failed') {
-        Swal.fire({
-            icon: 'error',
-            title: 'Payment Failed',
-            text: 'Your donation could not be processed. Please try again.'
-        });
-        // Clean URL after showing error
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-    }
-}
-
-async function verifyPayment(pidx) {
-    try {
-        console.log('Verifying payment with pidx:', pidx);
-        
-        // Show loading indicator
-        Swal.fire({
-            title: 'Verifying Payment...',
-            text: 'Please wait while we confirm your donation.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-        
-        const response = await fetch('/api/applications/verify-birthday-donation/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ pidx: pidx })
-        });
-        
-        const data = await response.json();
-        console.log('Verification response:', data);
-        
-        if (data.success && data.status === 'completed') {
-            // Payment verified successfully, reload campaign data
-            await loadCampaignDetails();
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Thank You!',
-                text: `Your donation of Rs. ${parseInt(data.amount).toLocaleString()} has been processed successfully!`,
-                confirmButtonText: 'Great!'
-            });
-        } else {
-            console.error('Verification failed:', data);
-            Swal.fire({
-                icon: 'error',
-                title: 'Verification Failed',
-                text: 'There was an issue verifying your payment. Please contact support if the amount was deducted.'
-            });
-        }
-    } catch (error) {
-        console.error('Payment verification error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Verification Error',
-            text: 'Unable to verify payment. Please contact support if the amount was deducted.'
-        });
-    }
-}
 
 async function loadCampaignDetails() {
     try {
@@ -139,7 +40,10 @@ function showLoading() {
     $('#target-amount').text('0');
     $('#donors-count').text('0');
     $('#full-description').text('Loading story...');
-    $('#donations-list').html('<p class="text-muted">Loading donations...</p>');
+    $('#target-display').text('0');
+    $('#current-display').text('0');
+    $('#birthday-date').text('Loading...');
+    $('#organizer-name').text('Loading...');
 }
 
 function showError(message) {
@@ -150,10 +54,10 @@ function showError(message) {
     $('#target-amount').text('0');
     $('#donors-count').text('0');
     $('#full-description').text('This campaign is not available.');
-    $('#donations-list').html('<p class="text-muted">No donations available.</p>');
-    
-    // Hide donation form
-    $('.donation-card').hide();
+    $('#target-display').text('0');
+    $('#current-display').text('0');
+    $('#birthday-date').text('N/A');
+    $('#organizer-name').text('N/A');
     
     Swal.fire({
         icon: 'error',
@@ -177,25 +81,19 @@ function displayCampaignDetails(campaign) {
     
     console.log('Parsed amounts:', { currentAmount, targetAmount, donorsCount });
     
-    $('#current-amount').text(`Rs. ${currentAmount.toLocaleString()}`);
-    $('#target-amount').text(`Rs. ${targetAmount.toLocaleString()}`);
+    $('#current-amount').text(currentAmount.toLocaleString());
+    $('#target-amount').text(targetAmount.toLocaleString());
     $('#donors-count').text(donorsCount);
     
-    // Update progress bar if it exists
-    const progressBar = $('#progress-bar');
-    const progressText = $('#progress-text');
-    if (progressBar.length) {
-        progressBar.css('width', campaign.progress_percentage + '%');
-    }
-    if (progressText.length) {
-        progressText.text(`${Math.round(campaign.progress_percentage)}% of goal reached`);
-    }
+    // Update additional display elements
+    $('#target-display').text(targetAmount.toLocaleString());
+    $('#current-display').text(currentAmount.toLocaleString());
+    $('#birthday-date').text(new Date(campaign.birthday_date).toLocaleDateString());
+    $('#organizer-name').text(campaign.full_name);
     
     if (campaign.photo) {
         $('#campaign-photo').attr('src', campaign.photo);
     }
-
-    displayDonations(campaign.donations);
 }
 
 function displayDonations(donations) {

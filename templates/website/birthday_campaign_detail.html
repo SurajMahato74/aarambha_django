@@ -75,10 +75,10 @@
     </div>
   </section>
 
-  <!-- Donation Section -->
+  <!-- Campaign Details -->
   <section class="py-5">
     <div class="container">
-      <div class="row">
+      <div class="row justify-content-center">
         <div class="col-lg-8">
           <!-- Campaign Story -->
           <div class="card mb-4">
@@ -88,59 +88,20 @@
             </div>
           </div>
 
-          <!-- Recent Donations -->
+          <!-- Campaign Info -->
           <div class="card">
             <div class="card-body">
-              <h3 class="card-title">Recent Donations</h3>
-              <div id="donations-list">
-                <p class="text-muted">Loading donations...</p>
+              <h3 class="card-title">Campaign Information</h3>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Birthday Date:</strong> <span id="birthday-date">Loading...</span></p>
+                  <p><strong>Organizer:</strong> <span id="organizer-name">Loading...</span></p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Target Amount:</strong> NPR <span id="target-display">0</span></p>
+                  <p><strong>Current Amount:</strong> NPR <span id="current-display">0</span></p>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-4">
-          <!-- Donation Form -->
-          <div class="card donation-card" style="position: sticky; top: 20px;">
-            <div class="card-body">
-              <h4 class="card-title text-center mb-3">
-                <i class="fas fa-heart text-danger me-2"></i>Make a Donation
-              </h4>
-
-              <form id="donationForm">
-                <div class="mb-3">
-                  <label class="form-label">Amount (NPR) *</label>
-                  <div class="row mb-2">
-                    <div class="col-4"><button type="button" class="btn btn-outline-primary btn-sm w-100 amount-btn" onclick="selectAmount(500, this)">500</button></div>
-                    <div class="col-4"><button type="button" class="btn btn-outline-primary btn-sm w-100 amount-btn" onclick="selectAmount(1000, this)">1000</button></div>
-                    <div class="col-4"><button type="button" class="btn btn-outline-primary btn-sm w-100 amount-btn" onclick="selectAmount(2000, this)">2000</button></div>
-                  </div>
-                  <input type="number" class="form-control" name="amount" id="donation-amount" min="100" placeholder="Custom amount" required>
-                </div>
-
-                <div class="mb-3">
-                  <input type="text" class="form-control" name="donor_name" placeholder="Your Name *" required>
-                </div>
-
-                <div class="mb-3">
-                  <input type="email" class="form-control" name="donor_email" placeholder="Email *" required>
-                </div>
-
-                <div class="mb-3">
-                  <textarea class="form-control" name="message" rows="2" placeholder="Message (optional)"></textarea>
-                </div>
-
-                <div class="mb-3 form-check">
-                  <input type="checkbox" class="form-check-input" name="is_anonymous" id="anonymous">
-                  <label class="form-check-label" for="anonymous">Donate anonymously</label>
-                </div>
-
-                <input type="hidden" name="payment_method" value="khalti">
-                
-                <button type="button" class="btn btn--orange-white w-100" onclick="makeDonation()">
-                  <i class="fas fa-heart me-2"></i>Donate with Khalti
-                </button>
-              </form>
             </div>
           </div>
         </div>

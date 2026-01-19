@@ -84,11 +84,8 @@
             </div>
           </div>
           <div class="d-flex gap-3 flex-wrap">
-            <a href="javascript:void(0)" onclick="showCreateCampaignModal()" class="btn btn--orange-white">
-              <i class="fas fa-gift me-2"></i>Start Your Campaign
-            </a>
-            <a href="javascript:void(0)" onclick="scrollToActiveCampaigns()" class="btn btn--white-blue">
-              <i class="fas fa-heart me-2"></i>Support Others
+            <a href="javascript:void(0)" onclick="scrollToActiveCampaigns()" class="btn btn--orange-white">
+              <i class="fas fa-heart me-2"></i>Support Active Campaigns
             </a>
           </div>
         </div>
@@ -123,67 +120,8 @@
   </section>
 
   <!-- Create Campaign Modal -->
-  <div class="modal fade" id="createCampaignModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">🎂 Create Your Birthday Campaign</h5>
-          <button type="button" class="close" onclick="hideCreateCampaignModal()">
-            <span>&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form id="campaignForm">
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Full Name *</label>
-                <input type="text" class="form-control" name="full_name" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Email *</label>
-                <input type="email" class="form-control" name="email" required>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Phone *</label>
-                <input type="tel" class="form-control" name="phone" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Birthday Date *</label>
-                <input type="date" class="form-control" name="birthday_date" required>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Campaign Title *</label>
-              <input type="text" class="form-control" name="title" placeholder="e.g., Help me celebrate by supporting education" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Target Amount (NPR) *</label>
-              <input type="number" class="form-control" name="target_amount" min="1000" step="100" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Campaign Description *</label>
-              <textarea class="form-control" name="description" rows="4" placeholder="Tell your story and why this cause matters to you..." required></textarea>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Profile Photo (Optional)</label>
-              <input type="file" class="form-control" name="profile_photo" accept="image/*">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Campaign Photo (Optional)</label>
-              <input type="file" class="form-control" name="photo" accept="image/*">
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="hideCreateCampaignModal()">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="createCampaign()">
-            <i class="fas fa-rocket me-2"></i>Launch Campaign
-          </button>
-        </div>
-      </div>
-    </div>
+  <div class="modal fade" id="createCampaignModal" tabindex="-1" style="display: none;">
+    <!-- Modal content removed - campaigns now created from admin -->
   </div>
 
   {% include "website/includes/login_modal.html" %}
@@ -312,8 +250,8 @@
                         <i class="fas fa-birthday-cake me-1"></i>
                         ${new Date(campaign.birthday_date).toLocaleDateString()}
                       </small>
-                      <a href="javascript:void(0)" onclick="donateToCampaign(${campaign.id})" class="btn btn--orange-white btn-sm">
-                        <i class="fas fa-heart me-1"></i>Donate
+                      <a href="/birthday-campaign/${campaign.id}/" class="btn btn--orange-white btn-sm">
+                        <i class="fas fa-eye me-1"></i>Details
                       </a>
                     </div>
                   </div>
@@ -376,10 +314,6 @@
         submitButton.innerHTML = originalButtonText;
         inputs.forEach(input => input.disabled = false);
       }
-    }
-
-    function donateToCampaign(campaignId) {
-      window.location.href = `/birthday-campaign/${campaignId}/`;
     }
 
     function getCookie(name) {
