@@ -1,0 +1,256 @@
+<!-- Navbar Login Modal -->
+{% load static %}
+<div id="navbarLoginModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center;">
+    <div
+        style="background: white; padding: 2rem; border-radius: 10px; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div  style="display: flex; justify-content: center; margin-bottom: 5px;">
+            <img src="{% static 'website/images/logo.png' %}" style="width: 190px;" alt="logo"/>
+        </div>
+        <p class="text-center text-muted mb-4" style="font-size: 0.9rem;">Please sign in to continue.</p>
+
+        <button onclick="document.getElementById('navbarLoginModal').style.display = 'none'"
+            style="position: absolute; top: 0px; right: 15px; background: none; border: none; font-size: 2.5rem; cursor: pointer;">&times;</button>
+
+        <!-- Username/Password Login -->
+        <form id="navbarModalLoginForm" onsubmit="handleNavbarModalLogin(event)">
+            <div class="mb-3">
+                <input type="text" id="navbarModalUsername" class="form-control" required placeholder="Username"
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="mb-3">
+                <input type="password" id="navbarModalPassword" class="form-control" required placeholder="Password"
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div id="navbarModalLoginError" class="text-danger text-center mb-3"
+                style="color: #dc3545; font-size: 0.9rem;"></div>
+            <button type="submit" class="btn btn-primary w-100 mt-2"
+                style="background: #2d3b5b; color: white; border: none; padding: 8px; border-radius: 5px; width: 100%; font-weight: 600;">Login</button>
+        </form>
+
+        <div id="navbarModalSeparator" style="display: flex; align-items: center; margin: 10px 0;">
+            <div style="flex-grow: 1; height: 1px; background: #e0e0e0;"></div>
+            <span style="padding: 0 10px; color: #666; font-size: 0.8rem;">OR</span>
+            <div style="flex-grow: 1; height: 1px; background: #e0e0e0;"></div>
+        </div>
+
+       <div class="d-flex justify-content-evenly align-items-center">
+         <!-- Google Login -->
+        <a href="/accounts/google/login/?process=login" class="">
+            <img src="{% static 'website/images/google.png' %}" style="width: 45px;" alt="google"/>
+        </a>
+
+        <!-- OTP Trigger -->
+        <button onclick="toggleNavbarModalOtpLogin()" id="navbarOtpToggleBtn">
+           <img src="{% static 'website/images/gmail.png' %}" style="width: 60px;" alt="gmail"/>
+        </button>
+       </div>
+
+        <!-- OTP Form (Hidden) -->
+        <div id="navbarModalOtpForm" style="display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+            <!-- Email Step -->
+            <div id="navbarModalEmailStep">
+                <div class="mb-3">
+                    <label style="font-weight: 500; margin-bottom: 5px; display: block; text-transform: capitalize;">Email Address</label>
+                    <input type="email" id="navbarModalEmail" class="form-control" placeholder="Enter your email"
+                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <button type="button" onclick="sendNavbarModalOTP(this)"
+                    style="background: #2d3b5b; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%;">Send
+                    OTP</button>
+                <button type="button" onclick="showNavbarUsernameLogin()" class="mt-2"
+                    style="background: none; border: none; color: #666; width: 100%; font-size: 0.9rem; text-decoration: underline;">Back
+                    to Username Login</button>
+            </div>
+
+            <!-- OTP Step -->
+            <div id="navbarModalOtpStep" style="display: none;">
+                <div class="mb-3">
+                    <label style="font-weight: 500; margin-bottom: 5px; display: block;">Enter OTP</label>
+                    <input type="text" id="navbarModalotpInput" class="form-control" placeholder="6-digit OTP" maxlength="6"
+                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <button type="button" onclick="verifyNavbarModalOTP(this)"
+                    style="background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%;">Verify
+                    & Login</button>
+                <button onclick="resetNavbarModalOtp()"
+                    style="background: none; border: none; color: #666; font-size: 0.8rem; margin-top: 10px; text-decoration: underline; width: 100%;">Change
+                    Email</button>
+            </div>
+            <div id="navbarModalOtpError" class="text-center mt-2" style="color: #dc3545; font-size: 0.9rem;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleNavbarModalOtpLogin() {
+        document.getElementById('navbarModalLoginForm').style.display = 'none';
+        document.getElementById('navbarModalSeparator').style.display = 'none';
+        document.getElementById('navbarOtpToggleBtn').style.display = 'none';
+        document.getElementById('navbarModalOtpForm').style.display = 'block';
+    }
+
+    function showNavbarUsernameLogin() {
+        document.getElementById('navbarModalLoginForm').style.display = 'block';
+        document.getElementById('navbarModalSeparator').style.display = 'flex';
+        document.getElementById('navbarOtpToggleBtn').style.display = 'block';
+        document.getElementById('navbarModalOtpForm').style.display = 'none';
+    }
+
+    async function handleNavbarModalLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('navbarModalUsername').value;
+        const password = document.getElementById('navbarModalPassword').value;
+        const errorDiv = document.getElementById('navbarModalLoginError');
+        const btn = e.submitter || e.target.querySelector('button[type="submit"]');
+
+        btn.disabled = true;
+        btn.innerHTML = 'Logging in...';
+        errorDiv.textContent = '';
+
+        try {
+            const response = await fetch('/api/users/login/', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include',
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                setToken(data.access, data.refresh);
+                setUser(data.user);
+                document.getElementById('navbarLoginModal').style.display = 'none';
+                
+                // Check for pending payments first
+                if (data.has_pending_payment) {
+                    window.location.href = '/guest/profile/';
+                    return;
+                }
+                
+                // Redirect based on user type
+                if (data.user.is_superuser || data.user.user_type === 'superadmin') {
+                    window.location.href = '/admin/dashboard/';
+                } else if (data.user.user_type === 'member') {
+                    window.location.href = '/member/dashboard/';
+                } else if (data.user.user_type === 'volunteer') {
+                    window.location.href = '/volunteer/dashboard/';
+                } else {
+                    window.location.href = '/guest/welcome/';
+                }
+            } else {
+                errorDiv.textContent = data.non_field_errors?.[0] || data.error || 'Login failed. Please check credentials.';
+            }
+        } catch (error) {
+            console.error(error);
+            errorDiv.textContent = 'Network error. Please try again.';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Login';
+        }
+    }
+
+    async function sendNavbarModalOTP(btn) {
+        const email = document.getElementById('navbarModalEmail').value;
+        const errorDiv = document.getElementById('navbarModalOtpError');
+
+        if (!email) {
+            errorDiv.textContent = 'Please enter email';
+            return;
+        }
+
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Sending...';
+        errorDiv.textContent = '';
+
+        try {
+            const response = await fetch('/api/users/send-otp/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('navbarModalEmailStep').style.display = 'none';
+                document.getElementById('navbarModalOtpStep').style.display = 'block';
+                errorDiv.style.color = 'green';
+                errorDiv.textContent = 'OTP Sent!';
+            } else {
+                errorDiv.style.color = '#dc3545';
+                errorDiv.textContent = data.error || 'Failed to send OTP';
+            }
+        } catch (e) {
+            errorDiv.style.color = '#dc3545';
+            errorDiv.textContent = 'Network error';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    async function verifyNavbarModalOTP(btn) {
+        const email = document.getElementById('navbarModalEmail').value;
+        const otp = document.getElementById('navbarModalotpInput').value;
+        const errorDiv = document.getElementById('navbarModalOtpError');
+
+        if (!otp || otp.length < 6) {
+            errorDiv.textContent = 'Invalid OTP';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = 'Verifying...';
+
+        try {
+            const response = await fetch('/api/users/verify-otp/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                setToken(data.access, data.refresh);
+                setUser(data.user);
+                document.getElementById('navbarLoginModal').style.display = 'none';
+                
+                // Check for pending payments first
+                if (data.has_pending_payment) {
+                    window.location.href = '/guest/profile/';
+                    return;
+                }
+                
+                // Redirect based on user type
+                if (data.user.is_superuser || data.user.user_type === 'superadmin') {
+                    window.location.href = '/admin/dashboard/';
+                } else if (data.user.user_type === 'member') {
+                    window.location.href = '/member/dashboard/';
+                } else if (data.user.user_type === 'volunteer') {
+                    window.location.href = '/volunteer/dashboard/';
+                } else {
+                    window.location.href = '/guest/welcome/';
+                }
+            } else {
+                errorDiv.style.color = '#dc3545';
+                errorDiv.textContent = data.error || 'Invalid OTP';
+            }
+        } catch (e) {
+            errorDiv.style.color = '#dc3545';
+            errorDiv.textContent = 'Error verifying OTP';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Verify & Login';
+        }
+    }
+
+    function resetNavbarModalOtp() {
+        document.getElementById('navbarModalEmailStep').style.display = 'block';
+        document.getElementById('navbarModalOtpStep').style.display = 'none';
+        document.getElementById('navbarModalOtpError').textContent = '';
+    }
+</script>
