@@ -80,105 +80,77 @@
   </section>
   <!-- END FIXED HERO SECTION -->
 
-  <!--start Need your support -->
+  <!--start Get Involved -->
   <section class="card-group card-group--blue-dark mt-3 mt-md-0">
     <div class="container">
       <ul class="grid--3-col card-group__items">
-        {% for card in support_cards %}
-        <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s"
-          data-wow-delay="{{ forloop.counter0|add:1|floatformat:1|stringformat:'0.%ss' }}">
-          <div>
-            <div class="event-image">
-            {% if card.image %}
-            <img src="{{ card.image.url }}" alt="{{ card.title }}" loading="lazy" fetchpriority="auto" decoding="async"
-              onerror="this.src='{% static 'website/images/logo.png' %}'" />
-            {% else %}
-            <img src="{% static 'website/images/logo.png' %}" alt="{{ card.title }}" loading="lazy" fetchpriority="auto"
-              decoding="async" />
-            {% endif %}
-            </div>
-            <div class="card__text">
-              <div>
-                <h3 class="card__title">
-                  <span>{{ card.title }}</span>
-                </h3>
-                <div class="card__blurb">
-                  {{ card.description|safe }}
-                  <div><a href="javascript:void(0)" onclick="openDonationModal('{{ card.title|escapejs }}', '{{ card.description|striptags|truncatewords:20|escapejs }}', '{{ card.image.url|default:''|escapejs }}', 'database')"
-                      class="btn btn--orange-white">{{ card.button_text }}</a></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </li>
-        {% empty %}
-        <!-- Fallback cards if no cards in database -->
         <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
-          <div>
-            <div class="event-image">
-            <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="" loading="lazy"
-              fetchpriority="auto" decoding="async" />
-            </div>
-            <div class="event-image">
-            <div class="card__text">
-              <div>
-                <h3 class="card__title"><span>Aarambha: A New Beginning</span></h3>
-                <div class="card__blurb">
-                  <p>A movement dedicated to helping motivated children return to school by providing the resources,
-                    support, and educational spaces they deserve, ensuring no child is left behind in their learning
-                    journey.</p>
-                 <div><a href="javascript:void(0)" onclick="openDonationModal('Aarambha: A New Beginning', 'A movement dedicated to helping motivated children return to school by providing the resources, support, and educational spaces they deserve, ensuring no child is left behind in their learning journey.', '{% static 'website/images/Computer-Lab-1024x683.jpg' %}', 'fallback')"
-                      class="btn btn--orange-white">Donate</a></div>
+          <a href="{% url 'website_enrollDayCamping' %}" class="text-decoration-none">
+            <div>
+              <div class="event-image">
+                <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="Enroll One Rupee" loading="lazy"
+                  fetchpriority="auto" decoding="async" />
+              </div>
+              <div class="card__text">
+                <div>
+                  <h3 class="card__title">
+                    <span>Enroll in One Rupee a Day Campaign</span>
+                  </h3>
+                  <div class="card__blurb">
+                    <p>Join our One Rupee a Day Campaign and make a meaningful impact with just one rupee daily. Your small contribution can help transform lives and support our mission.</p>
+                    <div><span class="btn btn--orange-white">Join Campaign</span></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </a>
         </li>
         <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.4s">
-          <div>
-            <div class="event-image">
-            <img src="{% static 'website/images/plantation-1024x683.jpg' %}" alt="" loading="lazy" fetchpriority="auto"
-              decoding="async" />
-            </div>
-            <div class="card__text">
-              <div>
-                <h3 class="card__title"><span>Bridging Gaps, Building Futures</span></h3>
-                <div class="card__blurb">
-                  <p>Through libraries, digital classrooms, fellowships, and community support, we work to strengthen
-                    public schools and empower students with opportunities that inspire confidence, curiosity, and
-                    lifelong learning.</p>
-                  <div><a href="javascript:void(0)" onclick="openDonationModal('Bridging Gaps, Building Futures', 'Through libraries, digital classrooms, fellowships, and community support, we work to strengthen public schools and empower students with opportunities that inspire confidence, curiosity, and lifelong learning.', '{% static 'website/images/plantation-1024x683.jpg' %}', 'fallback')"
-                      class="btn btn--orange-white">Donate</a></div>
+          <a href="{% url 'website_celebratebirthday' %}" class="text-decoration-none">
+            <div>
+              <div class="event-image">
+                <img src="{% static 'website/images/plantation-1024x683.jpg' %}" alt="Celebrate Birthday" loading="lazy" fetchpriority="auto"
+                  decoding="async" />
+              </div>
+              <div class="card__text">
+                <div>
+                  <h3 class="card__title">
+                    <span>Celebrate Your Birthday</span>
+                  </h3>
+                  <div class="card__blurb">
+                    <p>Make your birthday special by sponsoring a big dream. Celebrate your special day while making a difference in a child's life and supporting their education.</p>
+                    <div><span class="btn btn--orange-white">Celebrate</span></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </a>
         </li>
         <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.6s">
-          <div>
-            <div class="event-image">
-            <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="" loading="lazy"
-              fetchpriority="auto" decoding="async" />
-            </div>
-            <div class="card__text">
-              <div>
-                <h3 class="card__title"><span>One Step at a Time</span></h3>
-                <div class="card__blurb">
-                  <p>Committed to transforming education by understanding student challenges, engaging communities, and
-                    creating sustainable solutions that help every child access quality learning and explore their
-                    fullest potential.</p>
-                  <div><a href="javascript:void(0)" onclick="openDonationModal('One Step at a Time', 'Committed to transforming education by understanding student challenges, engaging communities, and creating sustainable solutions that help every child access quality learning and explore their fullest potential.', '{% static 'website/images/Computer-Lab-1024x683.jpg' %}', 'fallback')"
-                      class="btn btn--orange-white">Donate</a></div>
+          <a href="{% url 'website_sponsor_child_form' %}" class="text-decoration-none">
+            <div>
+              <div class="event-image">
+                <img src="{% static 'website/images/Computer-Lab-1024x683.jpg' %}" alt="Sponsor Child" loading="lazy"
+                  fetchpriority="auto" decoding="async" />
+              </div>
+              <div class="card__text">
+                <div>
+                  <h3 class="card__title">
+                    <span>Sponsor a Child</span>
+                  </h3>
+                  <div class="card__blurb">
+                    <p>Sponsor a child's education and be part of their journey towards a brighter future. Your support can provide them with the resources they need to succeed.</p>
+                    <div><span class="btn btn--orange-white">Sponsor Now</span></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </a>
         </li>
-        {% endfor %}
       </ul>
     </div>
   </section>
-  <!--end Need your support -->
+  <!--end Get Involved -->
   <!-- START Who we are SECTION -->
   <section id="who_we_are" class="who-section py-1 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
     <div class="container">
