@@ -9,44 +9,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="{% static 'js/config.js' %}"></script>
     <style>
-        body {font-family: 'Inter', sans-serif; }
-        .sidebar { background: var(--secondary-color); }
-        .active { background: var(--main-color);}
-        .hover-bg:hover { background: var(--main-color); }
-
-         :root {
-            --main-color: #d6692a;
-            --secondary-color: #2d3b5b;
-            --dark-brown: #8f5556;
-            --text-color: #3e3c44;
-            --bg-color: #f8f9fa;
-            --light-bg-color: #ffffff;
-            }
-            .bg-orange{
-            background: var(--main-color) !important;
-            }
-            .bg-blue{
-            background: var(--secondary-color) !important;
-            }
-            .text-white{
-            color: #fff !important;
-            }
-            .text-orange{
-            color: var(--main-color) !important;
-            }
+        body { background: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #1e293b; }
+        .active { background: #312e81; border-left: 3px solid #818cf8; }
+        .hover-bg:hover { background: #293548; }
     </style>
 </head>
-
-<body class="text-sm bg-white">
+<body class="text-sm">
 <div class="flex h-screen">
     <aside class="w-56 sidebar flex flex-col fixed h-screen">
         <div class="p-5 border-b border-slate-700">
-            <h2 class="font-semibold text-white flex justify-center items-center gap-2">
-                <img src="{% static 'website/images/favicon.png' %}" style="width: 100px; height: 70px;" alt="" srcset="">
+            <h2 class="font-semibold text-white flex items-center gap-2">
+                <span class="text-xl">Aarambha</span>
             </h2>
-            <p class="text-xs text-indigo-400 text-center mt-1">Member Dashboard</p>
+            <p class="text-xs text-indigo-400">Member Dashboard</p>
         </div>
-        <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             <a href="/member/dashboard/" class="hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300">
                 <i class="fas fa-home w-4"></i> Dashboard
             </a>
@@ -88,14 +66,14 @@
         </div>
     </aside>
     <main class="flex-1 overflow-y-auto ml-56">
-        <div class="flex justify-between items-center mb-6 sticky top-0 bg-orange py-4 px-6 z-10">
+        <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-900/95 backdrop-blur-sm py-4 px-6 z-10">
             <h1 class="text-2xl font-semibold text-white">{% block header_title %}Member{% endblock %}</h1>
             <div class="flex items-center gap-3">
                 <span id="userName" class="text-sm font-medium text-slate-300"></span>
                 <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white" id="userInitial">M</div>
             </div>
         </div>
-        <div class="px-4">
+        <div class="p-6">
             {% block content %}
             {% endblock %}
         </div>
