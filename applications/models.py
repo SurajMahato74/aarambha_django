@@ -370,6 +370,19 @@ class BirthdayCampaign(models.Model):
             return min(100, (float(self.current_amount) / float(self.target_amount)) * 100)
         return 0
 
+class BirthdayDonationRecord(models.Model):
+    campaign = models.ForeignKey(BirthdayCampaign, on_delete=models.CASCADE, related_name='donation_records')
+    participant_name = models.CharField(max_length=255)
+    donation_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    donation_description = models.TextField()
+    donation_photo = models.ImageField(upload_to='birthday_donations/', blank=True, null=True)
+    donation_date = models.DateField()
+    added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='added_donation_records', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.participant_name} - Rs. {self.donation_amount} ({self.campaign.title})"
+
 class BirthdayDonation(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),

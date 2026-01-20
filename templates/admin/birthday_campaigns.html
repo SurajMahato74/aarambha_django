@@ -13,6 +13,7 @@
       <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onclick="showCreateForm()">
         <i class="fas fa-plus mr-2"></i>Create Campaign
       </button>
+
       <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg" onclick="location.reload()">
         <i class="fas fa-sync-alt mr-2"></i>Refresh
       </button>
@@ -60,7 +61,7 @@
                 </span>
               </div>
               <p class="text-slate-300 text-sm mb-2">by {{ campaign.full_name }}</p>
-              <p class="text-slate-400 text-xs mb-3">{{ campaign.description|truncatechars:80 }}</p>
+              <p class="text-slate-400 text-xs mb-3">{{ campaign.description|striptags|truncatechars:80 }}</p>
               
               <div class="mb-3">
                 <div class="flex justify-between text-xs text-slate-300 mb-1">
@@ -76,7 +77,7 @@
                 </div>
               </div>
               
-              <div class="flex justify-between items-center">
+              <div class="flex justify-between items-center mb-2">
                 <small class="text-slate-400">
                   <i class="fas fa-calendar mr-1"></i>
                   {{ campaign.birthday_date }}
@@ -84,6 +85,13 @@
                 <a href="/birthday-campaign/{{ campaign.id }}/" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
                   <i class="fas fa-eye mr-1"></i>View
                 </a>
+              </div>
+              
+              <!-- Donate Button -->
+              <div class="mt-2">
+                <button onclick="showDonateModal({{ campaign.id }}, '{{ campaign.title|escapejs }}', '{{ campaign.full_name|escapejs }}')" class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-medium">
+                  <i class="fas fa-heart mr-2"></i>Donate to Campaign
+                </button>
               </div>
             </div>
           {% endfor %}
@@ -175,6 +183,71 @@
   </div>
 </div>
 
+<!-- Donate to Campaign Modal -->
+<div id="donateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-slate-800 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-white">💝 Donate to Campaign</h3>
+          <button onclick="hideDonateModal()" class="text-slate-400 hover:text-white">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        
+        <div class="mb-4 p-3 bg-slate-700 rounded">
+          <h4 id="donate-campaign-title" class="text-white font-medium">Campaign Title</h4>
+          <p id="donate-campaign-organizer" class="text-slate-300 text-sm">by Campaign Organizer</p>
+        </div>
+        
+        <form id="donateForm" class="space-y-4">
+          {% csrf_token %}
+          <input type="hidden" id="donate-campaign-id" name="campaign_id" value="">
+          
+          <div>
+            <label class="block text-slate-300 text-sm font-medium mb-2">Your Name *</label>
+            <input type="text" name="donor_name" required placeholder="Enter your full name" class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-green-500">
+          </div>
+          
+          <div>
+            <label class="block text-slate-300 text-sm font-medium mb-2">Email Address *</label>
+            <input type="email" name="donor_email" required placeholder="Enter your email" class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-green-500">
+          </div>
+          
+          <div>
+            <label class="block text-slate-300 text-sm font-medium mb-2">Phone Number</label>
+            <input type="tel" name="donor_phone" placeholder="Enter your phone number" class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-green-500">
+          </div>
+          
+          <div>
+            <label class="block text-slate-300 text-sm font-medium mb-2">Donation Amount (NPR) *</label>
+            <input type="number" name="amount" min="100" step="10" required placeholder="Minimum Rs. 100" class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-green-500">
+          </div>
+          
+          <div>
+            <label class="block text-slate-300 text-sm font-medium mb-2">Message (Optional)</label>
+            <textarea name="message" rows="3" placeholder="Leave a message for the birthday person..." class="w-full p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-green-500"></textarea>
+          </div>
+          
+          <div class="flex items-center">
+            <input type="checkbox" name="is_anonymous" id="is_anonymous" class="mr-2">
+            <label for="is_anonymous" class="text-slate-300 text-sm">Donate anonymously</label>
+          </div>
+          
+          <div class="flex justify-end gap-3 pt-4">
+            <button type="button" onclick="hideDonateModal()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded">
+              Cancel
+            </button>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+              <i class="fas fa-save mr-2"></i>Save Donation
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 function showCreateForm() {
   document.getElementById('createCampaignModal').classList.remove('hidden');
@@ -183,6 +256,28 @@ function showCreateForm() {
 function hideCreateForm() {
   document.getElementById('createCampaignModal').classList.add('hidden');
   document.getElementById('campaignForm').reset();
+}
+
+function showDonateModal(campaignId, campaignTitle, campaignOrganizer) {
+  document.getElementById('donateModal').classList.remove('hidden');
+  document.getElementById('donate-campaign-id').value = campaignId;
+  document.getElementById('donate-campaign-title').textContent = campaignTitle;
+  document.getElementById('donate-campaign-organizer').textContent = 'by ' + campaignOrganizer;
+  
+  // Fetch campaign details to auto-fill form
+  fetch(`/api/applications/birthday-campaign/${campaignId}/`)
+    .then(response => response.json())
+    .then(data => {
+      document.querySelector('input[name="donor_name"]').value = data.full_name || '';
+      document.querySelector('input[name="donor_email"]').value = data.email || '';
+      document.querySelector('input[name="donor_phone"]').value = data.phone || '';
+    })
+    .catch(error => console.log('Could not fetch campaign details'));
+}
+
+function hideDonateModal() {
+  document.getElementById('donateModal').classList.add('hidden');
+  document.getElementById('donateForm').reset();
 }
 
 document.getElementById('campaignForm').addEventListener('submit', async function(e) {
@@ -220,5 +315,54 @@ document.getElementById('campaignForm').addEventListener('submit', async functio
     submitBtn.innerHTML = originalText;
   }
 });
+
+document.getElementById('donateForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const campaignId = document.getElementById('donate-campaign-id').value;
+  const submitBtn = this.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  
+  // Validate minimum amount
+  const amount = parseFloat(formData.get('amount'));
+  if (amount < 100) {
+    alert('Minimum donation amount is Rs. 100');
+    return;
+  }
+  
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+  
+  try {
+    const response = await fetch('/api/applications/donation-record/create/', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      hideDonateModal();
+      alert('Donation recorded successfully!');
+      location.reload();
+    } else {
+      alert('Error: ' + (data.error || 'Failed to record donation'));
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+  }
+});
+
+// Auto-refresh campaign data every 30 seconds to show updated amounts
+setInterval(function() {
+  location.reload();
+}, 30000);
 </script>
 {% endblock %}

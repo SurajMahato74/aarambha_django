@@ -73,4 +73,7 @@ urlpatterns = [
     # Admin Birthday Campaign URLs
     path('admin-birthday-campaign-stats/', views.admin_birthday_campaign_stats, name='admin_birthday_campaign_stats'),
     path('admin-birthday-campaigns/', views.admin_birthday_campaign_list, name='admin_birthday_campaign_list'),
+    
+    # Donation Record URLs
+    path('donation-record/create/', views.create_donation_record, name='create_donation_record'),
 ]

@@ -2754,6 +2754,8 @@ def get_birthday_campaign(request, campaign_id):
         data = {
             'id': campaign.id,
             'full_name': campaign.full_name,
+            'email': campaign.email,
+            'phone': campaign.phone,
             'title': campaign.title,
             'description': campaign.description,
             'birthday_date': campaign.birthday_date.isoformat(),
@@ -2779,63 +2781,39 @@ def get_birthday_campaign(request, campaign_id):
 def donate_to_birthday_campaign(request, campaign_id):
     """Make a donation to birthday campaign"""
     try:
-        from .models import BirthdayCampaign, BirthdayDonation
-        import requests
-        from django.conf import settings
+        from .models import BirthdayCampaign, BirthdayDonationRecord
+        from django.utils import timezone
         
         campaign = BirthdayCampaign.objects.get(id=campaign_id)
         data = request.data
         
-        # Create donation record
-        donation = BirthdayDonation.objects.create(
+        # Map form fields to model fields
+        participant_name = data.get('donor_name')
+        donation_amount = data.get('amount')
+        donation_description = data.get('message', 'Birthday donation')
+        
+        if not participant_name or not donation_amount:
+            return Response({'error': 'All required fields must be provided'}, status=400)
+        
+        # Create donation record directly
+        donation_record = BirthdayDonationRecord.objects.create(
             campaign=campaign,
-            donor_name=data.get('donor_name'),
-            donor_email=data.get('donor_email'),
-            donor_phone=data.get('donor_phone', ''),
-            amount=data.get('amount'),
-            message=data.get('message', ''),
-            is_anonymous=data.get('is_anonymous', False)
+            participant_name=participant_name,
+            donation_amount=donation_amount,
+            donation_description=donation_description,
+            donation_date=timezone.now().date(),
+            added_by=request.user if request.user.is_authenticated else None
         )
         
-        # Initiate Khalti payment
-        khalti_data = {
-            'return_url': f'{getattr(settings, "FRONTEND_URL", "http://127.0.0.1:8000")}/birthday-campaign/{campaign_id}/',
-            'website_url': getattr(settings, 'FRONTEND_URL', 'http://127.0.0.1:8000'),
-            'amount': int(float(donation.amount) * 100),
-            'purchase_order_id': f'BD_{donation.id}_{timezone.now().strftime("%Y%m%d%H%M%S")}',
-            'purchase_order_name': f'Birthday Donation - {campaign.title}',
-            'customer_info': {
-                'name': donation.donor_name,
-                'email': donation.donor_email,
-                'phone': donation.donor_phone or '9800000000'
-            }
-        }
+        # Update campaign totals
+        campaign.current_amount += float(donation_amount)
+        campaign.donors_count += 1
+        campaign.save()
         
-        # Use sandbox credentials for testing
-        khalti_secret_key = "05bf95cc57244045b8df5fad06748dab"  # Test key from docs
-        
-        response = requests.post(
-            'https://dev.khalti.com/api/v2/epayment/initiate/',
-            json=khalti_data,
-            headers={
-                'Authorization': f'key {khalti_secret_key}',
-                'Content-Type': 'application/json',
-            },
-            timeout=30
-        )
-        
-        if response.status_code == 200:
-            khalti_response = response.json()
-            donation.khalti_payment_token = khalti_response.get('pidx')
-            donation.save()
-            
-            return Response({
-                'success': True,
-                'payment_url': khalti_response.get('payment_url'),
-                'donation_id': donation.id
-            })
-        else:
-            return Response({'error': 'Failed to initiate payment'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'success': True,
+            'message': 'Donation recorded successfully!'
+        })
             
     except BirthdayCampaign.DoesNotExist:
         return Response({'error': 'Campaign not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -3073,3 +3051,105 @@ def admin_birthday_campaign_list(request):
         })
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_donation_record(request):
+    try:
+        from .models import BirthdayCampaign, BirthdayDonationRecord
+        from django.utils import timezone
+        from decimal import Decimal
+        
+        campaign_id = request.data.get('campaign_id')
+        donor_name = request.data.get('donor_name')
+        amount = request.data.get('amount')
+        message = request.data.get('message', 'Birthday donation')
+        
+        if not all([campaign_id, donor_name, amount]):
+            return Response({'error': 'All required fields must be provided'}, status=400)
+        
+        campaign = BirthdayCampaign.objects.get(id=campaign_id)
+        
+        donation_record = BirthdayDonationRecord.objects.create(
+            campaign=campaign,
+            participant_name=donor_name,
+            donation_amount=amount,
+            donation_description=message,
+            donation_date=timezone.now().date(),
+            added_by=request.user if request.user.is_authenticated else None
+        )
+        
+        # Update campaign totals
+        campaign.current_amount += Decimal(str(amount))
+        campaign.donors_count += 1
+        campaign.save()
+        
+        return Response({'success': True, 'message': 'Donation record created successfully'})
+        
+    except BirthdayCampaign.DoesNotExist:
+        return Response({'error': 'Campaign not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+    try:
+        from .models import BirthdayCampaign, BirthdayDonationRecord
+        from django.utils import timezone
+        
+        campaign_id = request.data.get('campaign_id')
+        donor_name = request.data.get('donor_name')
+        amount = request.data.get('amount')
+        message = request.data.get('message', 'Birthday donation')
+        
+        if not all([campaign_id, donor_name, amount]):
+            return Response({'error': 'All required fields must be provided'}, status=400)
+        
+        campaign = BirthdayCampaign.objects.get(id=campaign_id)
+        
+        donation_record = BirthdayDonationRecord.objects.create(
+            campaign=campaign,
+            participant_name=donor_name,
+            donation_amount=amount,
+            donation_description=message,
+            donation_date=timezone.now().date(),
+            added_by=request.user if request.user.is_authenticated else None
+        )
+        
+        # Update campaign totals
+        campaign.current_amount += float(amount)
+        campaign.donors_count += 1
+        campaign.save()
+        
+        return Response({'success': True, 'message': 'Donation record created successfully'})
+        
+    except BirthdayCampaign.DoesNotExist:
+        return Response({'error': 'Campaign not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+    try:
+        campaign_id = request.data.get('campaign_id')
+        participant_name = request.data.get('participant_name')
+        donation_amount = request.data.get('donation_amount')
+        donation_description = request.data.get('donation_description')
+        donation_date = request.data.get('donation_date')
+        donation_photo = request.FILES.get('donation_photo')
+        
+        if not all([campaign_id, participant_name, donation_amount, donation_description, donation_date]):
+            return Response({'error': 'All required fields must be provided'}, status=400)
+        
+        campaign = BirthdayCampaign.objects.get(id=campaign_id)
+        
+        donation_record = BirthdayDonationRecord.objects.create(
+            campaign=campaign,
+            participant_name=participant_name,
+            donation_amount=donation_amount,
+            donation_description=donation_description,
+            donation_date=donation_date,
+            donation_photo=donation_photo,
+            added_by=request.user if request.user.is_authenticated else None
+        )
+        
+        return Response({'success': True, 'message': 'Donation record created successfully'})
+        
+    except BirthdayCampaign.DoesNotExist:
+        return Response({'error': 'Campaign not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
