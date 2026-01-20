@@ -7,45 +7,45 @@
 <div class="max-w-2xl mx-auto space-y-6">
     <!-- Header -->
     <div class="flex items-center space-x-3">
-        <a href="{% url 'member_list' %}" class="text-slate-400 hover:text-white">
+        <a href="{% url 'member_list' %}" class="text-gray-600 hover:text-gray-800">
             <i class="fas fa-arrow-left"></i>
         </a>
-        <h2 class="text-xl font-semibold text-white">Create Group</h2>
+        <h2 class="text-xl font-semibold text-gray-800">Create Group</h2>
     </div>
 
     <!-- Form -->
-    <div class="bg-slate-800 rounded-lg p-6">
+    <div class="bg-white rounded-xl shadow-lg p-6">
         <form method="POST">
             {% csrf_token %}
             
             <!-- Group Name -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-300 mb-2">Group Name *</label>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Group Name *</label>
                 <input type="text" name="name" required placeholder="Enter group name..." 
-                       class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <!-- Description -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-300 mb-2">Description</label>
+                <label class="block text-sm font-medium text-gray-700 mb-3">Description</label>
                 <textarea name="description" rows="3" placeholder="Optional group description..." 
-                          class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
 
             <!-- Search and Filters -->
-            <div class="mb-4">
+            <div class="mb-6">
                 <div class="mb-3">
                     <input type="text" id="memberSearch" placeholder="Search members..." 
-                           class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="flex gap-2">
-                    <select id="branchFilter" class="px-3 py-2 bg-slate-700 border-0 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="flex gap-3">
+                    <select id="branchFilter" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">All Branches</option>
                         {% for branch in branches %}
                             <option value="{{ branch }}">{{ branch }}</option>
                         {% endfor %}
                     </select>
-                    <select id="typeFilter" class="px-3 py-2 bg-slate-700 border-0 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="typeFilter" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">All Types</option>
                         <option value="member">Members</option>
                         <option value="volunteer">Volunteers</option>
@@ -55,15 +55,15 @@
 
             <!-- Members Selection -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-300 mb-3">Select Members</label>
-                <div class="max-h-64 overflow-y-auto bg-slate-700 rounded p-3 space-y-2">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Select Members</label>
+                <div class="max-h-64 overflow-y-auto bg-gray-50 rounded-lg p-3 space-y-2 border border-gray-200">
                     {% for user in users %}
-                    <label class="flex items-center space-x-3 p-2 hover:bg-slate-600 rounded cursor-pointer user-item"
+                    <label class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer user-item transition-colors"
                            data-branch="{{ user.branch.name|default:'N/A' }}" 
                            data-type="{{ user.user_type }}"
                            data-name="{{ user.get_full_name|default:user.email|lower }}">
                         <input type="checkbox" name="members" value="{{ user.id }}" 
-                               class="w-4 h-4 text-blue-600 bg-slate-600 border-slate-500 rounded focus:ring-blue-500">
+                               class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500">
                         <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium
                             {% if user.is_superuser %}bg-yellow-600{% elif user.user_type == 'member' %}bg-blue-600{% else %}bg-green-600{% endif %}">
                             {% if user.is_superuser %}
@@ -73,8 +73,8 @@
                             {% endif %}
                         </div>
                         <div class="flex-1">
-                            <div class="text-white text-sm">{{ user.get_full_name|default:user.email }}</div>
-                            <div class="text-slate-400 text-xs">
+                            <div class="text-gray-800 text-sm font-medium">{{ user.get_full_name|default:user.email }}</div>
+                            <div class="text-gray-600 text-xs">
                                 {% if user.is_superuser %}Admin{% else %}{{ user.user_type|title }}{% endif %}
                                 {% if user.branch %} • {{ user.branch.name }}{% endif %}
                             </div>
@@ -86,10 +86,10 @@
 
             <!-- Buttons -->
             <div class="flex justify-end gap-3">
-                <a href="{% url 'member_list' %}" class="px-4 py-2 text-slate-400 hover:text-white">
+                <a href="{% url 'member_list' %}" class="px-4 py-2 text-gray-600 hover:text-gray-800">
                     Cancel
                 </a>
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
                     Create Group
                 </button>
             </div>

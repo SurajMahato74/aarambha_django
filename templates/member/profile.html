@@ -6,20 +6,20 @@
 {% block header_title %}My Profile{% endblock %}
 
 {% block content %}
-<div class="bg-slate-800 rounded-lg shadow-sm">
+<div class="bg-white rounded-xl shadow-lg">
     <!-- Tab Navigation -->
-    <div class="border-b border-slate-700">
+    <div class="border-b border-gray-200">
         <nav class="flex space-x-8 px-6">
-            <button class="profile-tab active py-3 px-1 border-b-2 border-indigo-500 text-indigo-400 font-medium" data-tab="details">
+            <button class="profile-tab active py-4 px-1 border-b-2 border-orange-500 bg-orange-600 text-white font-medium hover:text-white hover:bg-orange-700" data-tab="details">
                 <i class="fas fa-user mr-2"></i>Details
             </button>
-            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="payments">
+            <button class="profile-tab py-4 px-1 border-b-2 border-transparent text-gray-600 hover:text-orange-600 hover:border-orange-300" data-tab="payments">
                 <i class="fas fa-credit-card mr-2"></i>Payments
             </button>
-            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="certificates">
+            <button class="profile-tab py-4 px-1 border-b-2 border-transparent text-gray-600 hover:text-orange-600 hover:border-orange-300" data-tab="certificates">
                 <i class="fas fa-certificate mr-2"></i>Certificates
             </button>
-            <button class="profile-tab py-3 px-1 border-b-2 border-transparent text-slate-400 hover:text-slate-300" data-tab="reviews">
+            <button class="profile-tab py-4 px-1 border-b-2 border-transparent text-gray-600 hover:text-orange-600 hover:border-orange-300" data-tab="reviews">
                 <i class="fas fa-star mr-2"></i>Reviews
             </button>
         </nav>
@@ -31,8 +31,8 @@
         <div id="details-tab" class="tab-content">
             <div id="profileDetails">
                 <div class="text-center py-8">
-                    <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
-                    <p class="text-slate-400">Loading profile details...</p>
+                    <i class="fas fa-spinner fa-spin fa-2x text-gray-400 mb-3"></i>
+                    <p class="text-gray-500">Loading profile details...</p>
                 </div>
             </div>
         </div>
@@ -41,8 +41,8 @@
         <div id="payments-tab" class="tab-content hidden">
             <div id="paymentsContent">
                 <div class="text-center py-8">
-                    <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
-                    <p class="text-slate-400">Loading payments...</p>
+                    <i class="fas fa-spinner fa-spin fa-2x text-gray-400 mb-3"></i>
+                    <p class="text-gray-500">Loading payments...</p>
                 </div>
             </div>
         </div>
@@ -51,8 +51,8 @@
         <div id="certificates-tab" class="tab-content hidden">
             <div id="certificatesContent">
                 <div class="text-center py-8">
-                    <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
-                    <p class="text-slate-400">Loading certificates...</p>
+                    <i class="fas fa-spinner fa-spin fa-2x text-gray-400 mb-3"></i>
+                    <p class="text-gray-500">Loading certificates...</p>
                 </div>
             </div>
         </div>
@@ -61,8 +61,8 @@
         <div id="reviews-tab" class="tab-content hidden">
             <div id="reviewsContent">
                 <div class="text-center py-8">
-                    <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
-                    <p class="text-slate-400">Loading reviews...</p>
+                    <i class="fas fa-spinner fa-spin fa-2x text-gray-400 mb-3"></i>
+                    <p class="text-gray-500">Loading reviews...</p>
                 </div>
             </div>
         </div>
@@ -83,11 +83,11 @@
             
             // Update tab buttons
             document.querySelectorAll('.profile-tab').forEach(tab => {
-                tab.classList.remove('active', 'border-indigo-500', 'text-indigo-400');
-                tab.classList.add('border-transparent', 'text-slate-400');
+                tab.classList.remove('active', 'border-orange-500', 'bg-orange-600', 'text-white', 'font-medium');
+                tab.classList.add('border-transparent', 'text-gray-600');
             });
-            e.target.classList.add('active', 'border-indigo-500', 'text-indigo-400');
-            e.target.classList.remove('border-transparent', 'text-slate-400');
+            e.target.classList.add('active', 'border-orange-500', 'bg-orange-600', 'text-white', 'font-medium');
+            e.target.classList.remove('border-transparent', 'text-gray-600');
             
             // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => {
@@ -113,27 +113,31 @@
                 document.getElementById('profileDetails').innerHTML = `
                     <div class="space-y-6">
                         <div class="text-center">
-                            <div class="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                            <div class="w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
                                 ${(profile.first_name || profile.email || 'U').charAt(0).toUpperCase()}
                             </div>
-                            <h3 class="text-xl font-semibold text-white">${profile.first_name || ''} ${profile.last_name || ''}</h3>
-                            <p class="text-slate-400">${profile.email}</p>
+                            <h3 class="text-xl font-semibold text-gray-800">${profile.first_name || ''} ${profile.last_name || ''}</h3>
+                            <p class="text-gray-600">${profile.email}</p>
                         </div>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-slate-700/50 p-4 rounded-lg">
-                                <h4 class="font-semibold text-white mb-2">Account Information</h4>
-                                <p class="text-slate-300"><strong>User Type:</strong> ${profile.user_type}</p>
-                                <p class="text-slate-300"><strong>Branch:</strong> ${profile.branch || 'Not assigned'}</p>
-                                <p class="text-slate-300"><strong>Joined:</strong> ${new Date(profile.date_joined).toLocaleDateString()}</p>
-                                <p class="text-slate-300"><strong>Status:</strong> ${profile.is_active ? 'Active' : 'Inactive'}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-gray-50 p-6 rounded-lg border">
+                                <h4 class="font-semibold text-gray-800 mb-4">Account Information</h4>
+                                <div class="space-y-2">
+                                    <p class="text-gray-700"><strong>User Type:</strong> ${profile.user_type}</p>
+                                    <p class="text-gray-700"><strong>Branch:</strong> ${profile.branch || 'Not assigned'}</p>
+                                    <p class="text-gray-700"><strong>Joined:</strong> ${new Date(profile.date_joined).toLocaleDateString()}</p>
+                                    <p class="text-gray-700"><strong>Status:</strong> <span class="${profile.is_active ? 'text-green-600' : 'text-red-600'} font-medium">${profile.is_active ? 'Active' : 'Inactive'}</span></p>
+                                </div>
                             </div>
                             
-                            <div class="bg-slate-700/50 p-4 rounded-lg">
-                                <h4 class="font-semibold text-white mb-2">Contact Information</h4>
-                                <p class="text-slate-300"><strong>Email:</strong> ${profile.email}</p>
-                                <p class="text-slate-300"><strong>Phone:</strong> ${profile.phone || 'Not provided'}</p>
-                                <p class="text-slate-300"><strong>Address:</strong> ${profile.address || 'Not provided'}</p>
+                            <div class="bg-gray-50 p-6 rounded-lg border">
+                                <h4 class="font-semibold text-gray-800 mb-4">Contact Information</h4>
+                                <div class="space-y-2">
+                                    <p class="text-gray-700"><strong>Email:</strong> ${profile.email}</p>
+                                    <p class="text-gray-700"><strong>Phone:</strong> ${profile.phone || 'Not provided'}</p>
+                                    <p class="text-gray-700"><strong>Address:</strong> ${profile.address || 'Not provided'}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -141,8 +145,8 @@
             } else {
                 document.getElementById('profileDetails').innerHTML = `
                     <div class="text-center py-8">
-                        <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
-                        <p class="text-red-400">Error loading profile: ${response.status}</p>
+                        <i class="fas fa-exclamation-triangle fa-2x text-red-500 mb-3"></i>
+                        <p class="text-red-600 font-medium">Error loading profile: ${response.status}</p>
                     </div>
                 `;
             }
@@ -150,8 +154,8 @@
             console.error('Error loading profile details:', error);
             document.getElementById('profileDetails').innerHTML = `
                 <div class="text-center py-8">
-                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
-                    <p class="text-red-400">Network error loading profile</p>
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-500 mb-3"></i>
+                    <p class="text-red-600 font-medium">Network error loading profile</p>
                 </div>
             `;
         }
@@ -171,24 +175,27 @@
                 if (paymentsList.length === 0) {
                     document.getElementById('paymentsContent').innerHTML = `
                         <div class="text-center py-8">
-                            <i class="fas fa-credit-card fa-3x text-slate-400 mb-3"></i>
-                            <p class="text-slate-400">No payments found</p>
+                            <i class="fas fa-credit-card fa-3x text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 font-medium">No payments found</p>
+                            <p class="text-gray-500 text-sm mt-1">Your payment history will appear here</p>
                         </div>
                     `;
                 } else {
                     document.getElementById('paymentsContent').innerHTML = `
                         <div class="space-y-4">
                             ${paymentsList.map(payment => `
-                                <div class="bg-slate-700/50 rounded-lg p-4">
+                                <div class="bg-gray-50 rounded-lg p-6 border hover:shadow-md transition-shadow">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <h4 class="font-semibold text-white">Payment #${payment.id}</h4>
-                                            <p class="text-slate-300">Amount: $${payment.amount}</p>
-                                            <p class="text-slate-300">Method: ${payment.payment_method}</p>
-                                            <p class="text-slate-300">Date: ${new Date(payment.paid_at).toLocaleDateString()}</p>
+                                            <h4 class="font-semibold text-gray-800 mb-2">Payment #${payment.id}</h4>
+                                            <div class="space-y-1">
+                                                <p class="text-gray-700"><strong>Amount:</strong> $${payment.amount}</p>
+                                                <p class="text-gray-700"><strong>Method:</strong> ${payment.payment_method}</p>
+                                                <p class="text-gray-700"><strong>Date:</strong> ${new Date(payment.paid_at).toLocaleDateString()}</p>
+                                            </div>
                                         </div>
-                                        <span class="px-2 py-1 rounded text-sm ${
-                                            payment.is_verified ? 'bg-green-600 text-green-100' : 'bg-yellow-600 text-yellow-100'
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium ${
+                                            payment.is_verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                         }">
                                             ${payment.is_verified ? 'Verified' : 'Pending'}
                                         </span>
@@ -203,8 +210,8 @@
             console.error('Error loading payments:', error);
             document.getElementById('paymentsContent').innerHTML = `
                 <div class="text-center py-8">
-                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
-                    <p class="text-red-400">Error loading payments</p>
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-500 mb-3"></i>
+                    <p class="text-red-600 font-medium">Error loading payments</p>
                 </div>
             `;
         }
@@ -224,24 +231,24 @@
                 if (certList.length === 0) {
                     document.getElementById('certificatesContent').innerHTML = `
                         <div class="text-center py-8">
-                            <i class="fas fa-certificate fa-3x text-slate-400 mb-3"></i>
-                            <p class="text-slate-400">No certificates earned yet</p>
-                            <p class="text-sm text-slate-500">Attend events to earn certificates</p>
+                            <i class="fas fa-certificate fa-3x text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 font-medium">No certificates earned yet</p>
+                            <p class="text-gray-500 text-sm mt-1">Attend events to earn certificates</p>
                         </div>
                     `;
                 } else {
                     document.getElementById('certificatesContent').innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             ${certList.map(cert => `
-                                <div class="bg-slate-700/50 rounded-lg p-4 hover:bg-slate-700/70 transition-colors">
-                                    <div class="flex items-center mb-3">
-                                        <i class="fas fa-certificate text-yellow-400 text-2xl mr-3"></i>
+                                <div class="bg-gray-50 rounded-lg p-6 border hover:shadow-md transition-all">
+                                    <div class="flex items-center mb-4">
+                                        <i class="fas fa-certificate text-yellow-500 text-3xl mr-4"></i>
                                         <div>
-                                            <h4 class="font-semibold text-white">${cert.event_title}</h4>
-                                            <p class="text-sm text-slate-400">Issued: ${new Date(cert.issued_at).toLocaleDateString()}</p>
+                                            <h4 class="font-semibold text-gray-800">${cert.event_title}</h4>
+                                            <p class="text-sm text-gray-600">Issued: ${new Date(cert.issued_at).toLocaleDateString()}</p>
                                         </div>
                                     </div>
-                                    <button onclick="viewCertificate('${cert.id}')" class="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors">
+                                    <button onclick="viewCertificate('${cert.id}')" class="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors">
                                         <i class="fas fa-eye mr-2"></i>View Certificate
                                     </button>
                                 </div>
@@ -254,8 +261,8 @@
             console.error('Error loading certificates:', error);
             document.getElementById('certificatesContent').innerHTML = `
                 <div class="text-center py-8">
-                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
-                    <p class="text-red-400">Error loading certificates</p>
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-500 mb-3"></i>
+                    <p class="text-red-600 font-medium">Error loading certificates</p>
                 </div>
             `;
         }
@@ -275,27 +282,27 @@
                 if (reviewsList.length === 0) {
                     document.getElementById('reviewsContent').innerHTML = `
                         <div class="text-center py-8">
-                            <i class="fas fa-star fa-3x text-slate-400 mb-3"></i>
-                            <p class="text-slate-400">No reviews submitted yet</p>
-                            <p class="text-sm text-slate-500">Attend events and leave reviews</p>
+                            <i class="fas fa-star fa-3x text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 font-medium">No reviews submitted yet</p>
+                            <p class="text-gray-500 text-sm mt-1">Attend events and leave reviews</p>
                         </div>
                     `;
                 } else {
                     document.getElementById('reviewsContent').innerHTML = `
                         <div class="space-y-4">
                             ${reviewsList.map(review => `
-                                <div class="bg-slate-700/50 rounded-lg p-4">
-                                    <div class="flex justify-between items-start mb-3">
-                                        <h4 class="font-semibold text-white">${review.event_title}</h4>
+                                <div class="bg-gray-50 rounded-lg p-6 border">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <h4 class="font-semibold text-gray-800">${review.event_title}</h4>
                                         <div class="flex items-center">
                                             ${Array.from({length: 5}, (_, i) => `
-                                                <i class="fas fa-star ${i < review.rating ? 'text-yellow-400' : 'text-slate-600'}"></i>
+                                                <i class="fas fa-star ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}"></i>
                                             `).join('')}
-                                            <span class="ml-2 text-sm text-slate-400">${review.rating}/5</span>
+                                            <span class="ml-2 text-sm text-gray-600 font-medium">${review.rating}/5</span>
                                         </div>
                                     </div>
-                                    <p class="text-slate-300 mb-2">${review.review}</p>
-                                    <p class="text-sm text-slate-500">Reviewed on: ${new Date(review.created_at).toLocaleDateString()}</p>
+                                    <p class="text-gray-700 mb-3 leading-relaxed">${review.review}</p>
+                                    <p class="text-sm text-gray-500">Reviewed on: ${new Date(review.created_at).toLocaleDateString()}</p>
                                 </div>
                             `).join('')}
                         </div>
@@ -306,8 +313,8 @@
             console.error('Error loading reviews:', error);
             document.getElementById('reviewsContent').innerHTML = `
                 <div class="text-center py-8">
-                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
-                    <p class="text-red-400">Error loading reviews</p>
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-500 mb-3"></i>
+                    <p class="text-red-600 font-medium">Error loading reviews</p>
                 </div>
             `;
         }

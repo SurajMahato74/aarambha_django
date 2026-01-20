@@ -7,27 +7,27 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h2 class="text-xl font-semibold text-white">Messages</h2>
+        <h2 class="text-xl font-semibold text-gray-800">Messages</h2>
         <a href="{% url 'create_group' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
             <i class="fas fa-users"></i> Create Group
         </a>
     </div>
 
     <!-- Universal Search -->
-    <div class="bg-slate-800 rounded-lg p-3">
+    <div class="bg-white rounded-xl shadow-lg p-4">
         <input type="text" id="universalSearch" placeholder="Search conversations, groups, or messages..." 
-               class="w-full px-3 py-2 bg-slate-700 border-0 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="performSearch()">
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="performSearch()">
     </div>
 
     <!-- Tabs -->
-    <div class="flex space-x-1 bg-slate-800 p-1 rounded-lg">
-        <button onclick="showTab('direct')" id="directTab" class="flex-1 py-2 px-4 rounded text-sm font-medium transition-colors bg-blue-600 text-white">
+    <div class="flex space-x-1 bg-white p-1 rounded-xl shadow-lg">
+        <button onclick="showTab('direct')" id="directTab" class="flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors bg-blue-600 text-white">
             <i class="fas fa-comment mr-2"></i>Direct Messages
         </button>
-        <button onclick="showTab('groups')" id="groupsTab" class="flex-1 py-2 px-4 rounded text-sm font-medium transition-colors text-slate-400 hover:text-white">
+        <button onclick="showTab('groups')" id="groupsTab" class="flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:text-gray-800">
             <i class="fas fa-users mr-2"></i>Groups
         </button>
-        <button onclick="showTab('requests')" id="requestsTab" class="flex-1 py-2 px-4 rounded text-sm font-medium transition-colors text-slate-400 hover:text-white">
+        <button onclick="showTab('requests')" id="requestsTab" class="flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:text-gray-800">
             <i class="fas fa-inbox mr-2"></i>Requests {% if message_requests %}({{ message_requests|length }}){% endif %}
         </button>
     </div>
@@ -35,7 +35,7 @@
     <!-- Direct Messages Tab -->
     <div id="directContent" class="space-y-3">
         {% for item in conversations %}
-        <a href="{% url 'chat' 'conversation' item.conversation.id %}" class="block bg-slate-800 hover:bg-slate-700 rounded-lg p-4 transition-colors conversation-item" 
+        <a href="{% url 'chat' 'conversation' item.conversation.id %}" class="block bg-white hover:bg-gray-50 rounded-xl shadow-lg p-4 transition-colors conversation-item border border-gray-200" 
            data-username="{{ item.other_user.get_full_name|default:item.other_user.email|lower }}" 
            data-lastmessage="{% with last_message=item.conversation.messages.last %}{% if last_message %}{{ last_message.content|lower }}{% endif %}{% endwith %}">
             <div class="flex items-center space-x-3">
@@ -47,8 +47,8 @@
                     {% endif %}
                 </div>
                 <div class="flex-1">
-                    <div class="text-white font-medium cursor-pointer hover:text-blue-400" onclick="showUserProfile({{ item.other_user.id }})">{{ item.other_user.get_full_name|default:item.other_user.email }}</div>
-                    <div class="text-slate-400 text-sm">
+                    <div class="text-gray-800 font-medium cursor-pointer hover:text-blue-600" onclick="showUserProfile({{ item.other_user.id }})">{{ item.other_user.get_full_name|default:item.other_user.email }}</div>
+                    <div class="text-gray-600 text-sm">
                         {% with last_message=item.conversation.messages.last %}
                         {% if last_message %}
                             {{ last_message.content|truncatechars:40 }}
@@ -58,16 +58,16 @@
                         {% endwith %}
                     </div>
                 </div>
-                <div class="text-slate-400 text-xs">
+                <div class="text-gray-500 text-xs">
                     {{ item.conversation.updated_at|timesince }} ago
                 </div>
             </div>
         </a>
         {% empty %}
-        <div class="text-center py-8 text-slate-400">
+        <div class="text-center py-8 text-gray-500 bg-white rounded-xl shadow-lg">
             <i class="fas fa-comment text-4xl mb-4"></i>
-            <p>No conversations yet</p>
-            <a href="{% url 'member_list' %}" class="text-blue-400 hover:text-blue-300 text-sm">Start a conversation</a>
+            <p class="font-medium">No conversations yet</p>
+            <a href="{% url 'member_list' %}" class="text-blue-600 hover:text-blue-700 text-sm">Start a conversation</a>
         </div>
         {% endfor %}
     </div>
@@ -75,7 +75,7 @@
     <!-- Groups Tab -->
     <div id="groupsContent" class="space-y-3 hidden">
         {% for group in groups %}
-        <a href="{% url 'chat' 'group' group.id %}" class="block bg-slate-800 hover:bg-slate-700 rounded-lg p-4 transition-colors group-item" 
+        <a href="{% url 'chat' 'group' group.id %}" class="block bg-white hover:bg-gray-50 rounded-xl shadow-lg p-4 transition-colors group-item border border-gray-200" 
            data-groupname="{{ group.name|lower }}" 
            data-lastmessage="{% with last_message=group.messages.last %}{% if last_message %}{{ last_message.content|lower }}{% endif %}{% endwith %}">
             <div class="flex items-center space-x-3">
@@ -83,8 +83,8 @@
                     <i class="fas fa-users text-white"></i>
                 </div>
                 <div class="flex-1">
-                    <div class="text-white font-medium">{{ group.name }}</div>
-                    <div class="text-slate-400 text-sm">
+                    <div class="text-gray-800 font-medium">{{ group.name }}</div>
+                    <div class="text-gray-600 text-sm">
                         {{ group.members.count }} members
                         {% with last_message=group.messages.last %}
                         {% if last_message %}
@@ -93,16 +93,16 @@
                         {% endwith %}
                     </div>
                 </div>
-                <div class="text-slate-400 text-xs">
+                <div class="text-gray-500 text-xs">
                     {{ group.updated_at|timesince }} ago
                 </div>
             </div>
         </a>
         {% empty %}
-        <div class="text-center py-8 text-slate-400">
+        <div class="text-center py-8 text-gray-500 bg-white rounded-xl shadow-lg">
             <i class="fas fa-users text-4xl mb-4"></i>
-            <p>No groups yet</p>
-            <a href="{% url 'create_group' %}" class="text-green-400 hover:text-green-300 text-sm">Create your first group</a>
+            <p class="font-medium">No groups yet</p>
+            <a href="{% url 'create_group' %}" class="text-green-600 hover:text-green-700 text-sm">Create your first group</a>
         </div>
         {% endfor %}
     </div>
@@ -110,7 +110,7 @@
     <!-- Message Requests Tab -->
     <div id="requestsContent" class="space-y-3 hidden">
         {% for request in message_requests %}
-        <div class="bg-slate-800 rounded-lg p-4 request-item" 
+        <div class="bg-white rounded-xl shadow-lg p-4 request-item border border-gray-200" 
              data-username="{{ request.from_user.get_full_name|default:request.from_user.email|lower }}" 
              data-message="{{ request.message|lower }}">
             <div class="flex items-center justify-between">
@@ -119,9 +119,9 @@
                         <i class="fas fa-user text-white"></i>
                     </div>
                     <div>
-                        <div class="text-white font-medium">{{ request.from_user.get_full_name|default:request.from_user.email }}</div>
-                        <div class="text-slate-300 text-sm">{{ request.message|truncatechars:50 }}</div>
-                        <div class="text-slate-400 text-xs">{{ request.created_at|timesince }} ago</div>
+                        <div class="text-gray-800 font-medium">{{ request.from_user.get_full_name|default:request.from_user.email }}</div>
+                        <div class="text-gray-700 text-sm">{{ request.message|truncatechars:50 }}</div>
+                        <div class="text-gray-500 text-xs">{{ request.created_at|timesince }} ago</div>
                     </div>
                 </div>
                 <div class="flex space-x-2">
@@ -129,7 +129,7 @@
                         {% csrf_token %}
                         <input type="hidden" name="request_id" value="{{ request.id }}">
                         <input type="hidden" name="action" value="accept">
-                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm">
                             Accept
                         </button>
                     </form>
@@ -137,7 +137,7 @@
                         {% csrf_token %}
                         <input type="hidden" name="request_id" value="{{ request.id }}">
                         <input type="hidden" name="action" value="reject">
-                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm">
                             Decline
                         </button>
                     </form>
@@ -145,9 +145,9 @@
             </div>
         </div>
         {% empty %}
-        <div class="text-center py-8 text-slate-400">
+        <div class="text-center py-8 text-gray-500 bg-white rounded-xl shadow-lg">
             <i class="fas fa-inbox text-4xl mb-4"></i>
-            <p>No message requests</p>
+            <p class="font-medium">No message requests</p>
         </div>
         {% endfor %}
     </div>
@@ -162,25 +162,25 @@ function showTab(tab) {
     
     // Reset all tabs
     document.getElementById('directTab').classList.remove('bg-blue-600', 'text-white');
-    document.getElementById('directTab').classList.add('text-slate-400', 'hover:text-white');
+    document.getElementById('directTab').classList.add('text-gray-600', 'hover:text-gray-800');
     document.getElementById('groupsTab').classList.remove('bg-blue-600', 'text-white');
-    document.getElementById('groupsTab').classList.add('text-slate-400', 'hover:text-white');
+    document.getElementById('groupsTab').classList.add('text-gray-600', 'hover:text-gray-800');
     document.getElementById('requestsTab').classList.remove('bg-blue-600', 'text-white');
-    document.getElementById('requestsTab').classList.add('text-slate-400', 'hover:text-white');
+    document.getElementById('requestsTab').classList.add('text-gray-600', 'hover:text-gray-800');
     
     // Show selected content and activate tab
     if (tab === 'direct') {
         document.getElementById('directContent').classList.remove('hidden');
         document.getElementById('directTab').classList.add('bg-blue-600', 'text-white');
-        document.getElementById('directTab').classList.remove('text-slate-400', 'hover:text-white');
+        document.getElementById('directTab').classList.remove('text-gray-600', 'hover:text-gray-800');
     } else if (tab === 'groups') {
         document.getElementById('groupsContent').classList.remove('hidden');
         document.getElementById('groupsTab').classList.add('bg-blue-600', 'text-white');
-        document.getElementById('groupsTab').classList.remove('text-slate-400', 'hover:text-white');
+        document.getElementById('groupsTab').classList.remove('text-gray-600', 'hover:text-gray-800');
     } else if (tab === 'requests') {
         document.getElementById('requestsContent').classList.remove('hidden');
         document.getElementById('requestsTab').classList.add('bg-blue-600', 'text-white');
-        document.getElementById('requestsTab').classList.remove('text-slate-400', 'hover:text-white');
+        document.getElementById('requestsTab').classList.remove('text-gray-600', 'hover:text-gray-800');
     }
 }
 </script>
@@ -188,11 +188,11 @@ function showTab(tab) {
 
 <!-- User Profile Modal -->
 <div id="userProfileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-slate-800 rounded-lg w-full max-w-md mx-4">
+    <div class="bg-white rounded-xl w-full max-w-md mx-4 shadow-2xl">
         <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-white">User Profile</h3>
-                <button onclick="closeUserProfile()" class="text-slate-400 hover:text-white">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">User Profile</h3>
+                <button onclick="closeUserProfile()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -218,20 +218,20 @@ function showUserProfile(userId) {
                                 `<span class="text-white text-lg font-medium">${data.user.name.charAt(0).toUpperCase()}</span>`
                             }
                         </div>
-                        <h4 class="text-white font-semibold text-lg">${data.user.name}</h4>
-                        <p class="text-slate-400">${data.user.user_type}</p>
-                        ${data.user.branch ? `<p class="text-slate-400 text-sm">${data.user.branch}</p>` : ''}
+                        <h4 class="text-gray-800 font-semibold text-lg">${data.user.name}</h4>
+                        <p class="text-gray-600">${data.user.user_type}</p>
+                        ${data.user.branch ? `<p class="text-gray-600 text-sm">${data.user.branch}</p>` : ''}
                     </div>
                     <div class="space-y-2 text-left">
-                        <div><span class="text-slate-400">Email:</span> <span class="text-white">${data.user.email}</span></div>
-                        ${data.user.phone ? `<div><span class="text-slate-400">Phone:</span> <span class="text-white">${data.user.phone}</span></div>` : ''}
-                        ${data.user.address ? `<div><span class="text-slate-400">Address:</span> <span class="text-white">${data.user.address}</span></div>` : ''}
+                        <div><span class="text-gray-600">Email:</span> <span class="text-gray-800">${data.user.email}</span></div>
+                        ${data.user.phone ? `<div><span class="text-gray-600">Phone:</span> <span class="text-gray-800">${data.user.phone}</span></div>` : ''}
+                        ${data.user.address ? `<div><span class="text-gray-600">Address:</span> <span class="text-gray-800">${data.user.address}</span></div>` : ''}
                     </div>
                     <div class="mt-4 flex gap-2">
-                        <button onclick="startDirectChat(${userId}, '${data.user.name.replace(/'/g, "\\'")}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+                        <button onclick="startDirectChat(${userId}, '${data.user.name.replace(/'/g, "\\'")}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg">
                             Message
                         </button>
-                        <button onclick="closeUserProfile()" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-2 rounded">
+                        <button onclick="closeUserProfile()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg">
                             Close
                         </button>
                     </div>

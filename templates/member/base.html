@@ -9,10 +9,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="{% static 'js/config.js' %}"></script>
     <style>
-        body { background: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
-        .sidebar { background: #1e293b; }
-        .active { background: #312e81; border-left: 3px solid #818cf8; }
-        .hover-bg:hover { background: #293548; }
+        body { background: #f8f6f4; color: #2D3B5B; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #2D3B5B; }
+        .active { background: #E36F1E; border-left: 3px solid #E36F1E; }
+        .hover-bg:hover { background: #E36F1E; }
+        .main-content { background: #f8f6f4; color: #2D3B5B; }
+        .card-bg { background: white; border: 1px solid #e5e7eb; }
+        .text-primary { color: #2D3B5B !important; }
+        .text-secondary { color: #6b7280 !important; }
+        .text-orange { color: #E36F1E !important; }
+        .bg-orange { background: #E36F1E !important; }
+        .bg-blue { background: #2D3B5B !important; }
     </style>
 </head>
 <body class="text-sm">
@@ -65,15 +72,15 @@
             </form>
         </div>
     </aside>
-    <main class="flex-1 overflow-y-auto ml-56">
-        <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-900/95 backdrop-blur-sm py-4 px-6 z-10">
-            <h1 class="text-2xl font-semibold text-white">{% block header_title %}Member{% endblock %}</h1>
+    <main class="flex-1 overflow-y-auto ml-56 main-content">
+        <div class="flex justify-between items-center mb-6 sticky top-0 backdrop-blur-sm py-4 px-6 z-10" style="background: #f8f6f4; color: #2D3B5B;">
+            <h1 class="text-2xl font-semibold text-gray-800">{% block header_title %}Member{% endblock %}</h1>
             <div class="flex items-center gap-3">
-                <span id="userName" class="text-sm font-medium text-slate-300"></span>
-                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white" id="userInitial">M</div>
+                <span id="userName" class="text-sm font-medium" style="color: #f8f6f4;"></span>
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" id="userInitial" style="background: #E36F1E;">M</div>
             </div>
         </div>
-        <div class="p-6">
+        <div class="p-6" style="background: #f8f6f4; min-height: calc(100vh - 80px);">
             {% block content %}
             {% endblock %}
         </div>

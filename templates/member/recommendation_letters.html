@@ -8,61 +8,62 @@
     <!-- Header -->
     <div class="flex justify-between items-center">
         <div>
-            <h2 class="text-xl font-semibold text-white">Recommendation Letters</h2>
-            <p class="text-slate-400">Request recommendation letters for various purposes</p>
+            <h2 class="text-xl font-semibold text-gray-800">Recommendation Letters</h2>
+            <p class="text-gray-600">Request recommendation letters for various purposes</p>
         </div>
-        <button onclick="openRequestModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+        <button onclick="openRequestModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg">
             <i class="fas fa-plus"></i> Request Letter
         </button>
     </div>
 
     <!-- Letters Table -->
-    <div class="card rounded-lg p-6">
+    <div class="bg-white rounded-xl shadow-lg p-6">
         <table id="lettersTable" class="w-full text-sm">
             <thead>
-                <tr class="border-b border-slate-700">
-                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Purpose</th>
-                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Status</th>
-                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Requested</th>
-                    <th class="text-left py-3 px-4 text-slate-300 font-medium">Actions</th>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-4 px-4 text-gray-700 font-semibold">Purpose</th>
+                    <th class="text-left py-4 px-4 text-gray-700 font-semibold">Status</th>
+                    <th class="text-left py-4 px-4 text-gray-700 font-semibold">Requested</th>
+                    <th class="text-left py-4 px-4 text-gray-700 font-semibold">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for letter in letters %}
-                <tr class="border-b border-slate-700 hover:bg-slate-700/30">
-                    <td class="py-3 px-4">
-                        <div class="text-white font-medium">{{ letter.purpose }}</div>
-                        <div class="text-slate-400 text-xs mt-1">{{ letter.description|safe|truncatechars:100 }}</div>
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-4 px-4">
+                        <div class="text-gray-800 font-medium">{{ letter.purpose }}</div>
+                        <div class="text-gray-600 text-xs mt-1">{{ letter.description|safe|truncatechars:100 }}</div>
                     </td>
-                    <td class="py-3 px-4">
+                    <td class="py-4 px-4">
                         {% if letter.status == 'pending' %}
-                            <span class="badge bg-yellow-900 text-yellow-300">Pending</span>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Pending</span>
                         {% elif letter.status == 'approved' %}
-                            <span class="badge bg-green-900 text-green-300">Approved</span>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Approved</span>
                         {% elif letter.status == 'rejected' %}
-                            <span class="badge bg-red-900 text-red-300">Rejected</span>
+                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Rejected</span>
                         {% endif %}
                     </td>
-                    <td class="py-3 px-4 text-slate-400">
+                    <td class="py-4 px-4 text-gray-600">
                         <div>{{ letter.created_at|date:"M d, Y" }}</div>
                         <div class="text-xs">{{ letter.created_at|time:"H:i" }}</div>
                     </td>
-                    <td class="py-3 px-4">
+                    <td class="py-4 px-4">
                         {% if letter.status == 'approved' and letter.signed_letter %}
-                            <a href="{{ letter.signed_letter.url }}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs mr-2">
+                            <a href="{{ letter.signed_letter.url }}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs mr-2">
                                 <i class="fas fa-download"></i> Download
                             </a>
                         {% endif %}
-                        <button onclick="viewDetails({{ letter.id }}, '{{ letter.purpose|escapejs }}', '{{ letter.description|escapejs }}', '{{ letter.admin_notes|escapejs }}', '{{ letter.status }}', '{{ letter.created_at|date:"M d, Y H:i" }}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">
+                        <button onclick="viewDetails({{ letter.id }}, '{{ letter.purpose|escapejs }}', '{{ letter.description|escapejs }}', '{{ letter.admin_notes|escapejs }}', '{{ letter.status }}', '{{ letter.created_at|date:"M d, Y H:i" }}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs">
                             <i class="fas fa-eye"></i> View
                         </button>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="py-8 text-center text-slate-400">
-                        <i class="fas fa-file-alt text-2xl mb-2"></i>
-                        <div>No recommendation letters found</div>
+                    <td colspan="4" class="py-8 text-center text-gray-500">
+                        <i class="fas fa-file-alt text-2xl mb-3"></i>
+                        <div class="font-medium">No recommendation letters found</div>
+                        <div class="text-sm mt-1">Request your first letter using the button above</div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -73,30 +74,30 @@
 
 <!-- Request Modal -->
 <div id="requestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-md">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-white">Request Recommendation Letter</h3>
-            <button onclick="closeRequestModal()" class="text-slate-400 hover:text-white">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-800">Request Recommendation Letter</h3>
+            <button onclick="closeRequestModal()" class="text-gray-500 hover:text-gray-700">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
         <form method="POST">
             {% csrf_token %}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-300 mb-2">Purpose *</label>
-                <input type="text" name="purpose" required placeholder="e.g., Job Application, University Admission" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Purpose *</label>
+                <input type="text" name="purpose" required placeholder="e.g., Job Application, University Admission" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
             </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-300 mb-2">Description *</label>
-                <div id="quillEditor" style="height: 150px; background: #334155; color: white;"></div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Description *</label>
+                <div id="quillEditor" style="height: 150px; background: white; color: black;"></div>
                 <input type="hidden" name="description" id="descriptionInput" required>
             </div>
 
             <div class="flex justify-end gap-3">
-                <button type="button" onclick="closeRequestModal()" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg">
+                <button type="button" onclick="closeRequestModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg">
                     Submit Request
                 </button>
             </div>
@@ -127,19 +128,19 @@
 
 <!-- Details Modal -->
 <div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-slate-800 rounded-lg p-6 w-full max-w-2xl">
-        <div class="flex justify-between items-center mb-4">
-            <h3 id="detailsTitle" class="text-lg font-semibold text-white">Letter Details</h3>
-            <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-white">
+    <div class="bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 id="detailsTitle" class="text-lg font-semibold text-gray-800">Letter Details</h3>
+            <button onclick="closeDetailsModal()" class="text-gray-500 hover:text-gray-700">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         
-        <div class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">User Details</label>
-                    <div class="p-3 bg-slate-700 rounded-lg text-slate-300 space-y-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">User Details</label>
+                    <div class="p-4 bg-gray-50 rounded-lg border text-gray-700 space-y-2">
                         <div><strong>Name:</strong> <span id="detailsUserName"></span></div>
                         <div><strong>Type:</strong> <span id="detailsUserType"></span></div>
                         <div><strong>Joined:</strong> <span id="detailsDateJoined"></span></div>
@@ -148,8 +149,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Request Details</label>
-                    <div class="p-3 bg-slate-700 rounded-lg text-slate-300 space-y-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Request Details</label>
+                    <div class="p-4 bg-gray-50 rounded-lg border text-gray-700 space-y-2">
                         <div><strong>Purpose:</strong> <span id="detailsPurpose"></span></div>
                         <div><strong>Status:</strong> <span id="detailsStatus"></span></div>
                         <div><strong>Requested:</strong> <span id="detailsRequested"></span></div>
@@ -158,18 +159,18 @@
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Description</label>
-                <div id="detailsDescription" class="p-3 bg-slate-700 rounded-lg text-slate-300"></div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">Description</label>
+                <div id="detailsDescription" class="p-4 bg-gray-50 rounded-lg border text-gray-700"></div>
             </div>
             
             <div id="adminNotesSection" class="hidden">
-                <label class="block text-sm font-medium text-slate-300 mb-2">Admin Notes</label>
-                <div id="detailsAdminNotes" class="p-3 bg-slate-700 rounded-lg text-slate-300"></div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">Admin Notes</label>
+                <div id="detailsAdminNotes" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700"></div>
             </div>
         </div>
         
         <div class="flex justify-end mt-6">
-            <button onclick="closeDetailsModal()" class="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg">
+            <button onclick="closeDetailsModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
                 Close
             </button>
         </div>
@@ -179,9 +180,9 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
-.ql-editor { color: white !important; }
-.ql-toolbar { border-top: 1px solid #475569 !important; border-left: 1px solid #475569 !important; border-right: 1px solid #475569 !important; background: #475569 !important; }
-.ql-container { border-bottom: 1px solid #475569 !important; border-left: 1px solid #475569 !important; border-right: 1px solid #475569 !important; }
+.ql-editor { color: black !important; }
+.ql-toolbar { border-top: 1px solid #d1d5db !important; border-left: 1px solid #d1d5db !important; border-right: 1px solid #d1d5db !important; background: #f9fafb !important; }
+.ql-container { border-bottom: 1px solid #d1d5db !important; border-left: 1px solid #d1d5db !important; border-right: 1px solid #d1d5db !important; }
 </style>
 <script>
 let quill;

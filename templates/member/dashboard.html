@@ -6,59 +6,67 @@
 {% block header_title %}Member Dashboard{% endblock %}
 
 {% block content %}
-<div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-4 mb-6 text-white">
-    <h2 class="text-xl font-bold mb-1">Welcome, <span id="welcomeName">Member</span>!</h2>
-    <p class="text-indigo-100 text-sm">Let's make a difference together!</p>
+<div class="p-6 mb-6 text-white rounded-lg shadow-lg" style="background: linear-gradient(135deg, #2D3B5B 0%, #E36F1E 100%);">
+    <h2 class="text-2xl font-bold mb-2">Welcome, <span id="welcomeName">Member</span>!</h2>
+    <p class="text-base opacity-90">Let's make a difference together!</p>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/member/tasks/'">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-xl cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 border-orange-500 hover:scale-105" onclick="window.location.href='/member/tasks/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">My Tasks</p>
-                <p class="text-2xl font-bold text-white" id="taskCount">0</p>
+                <p class="text-gray-600 text-sm font-medium">My Tasks</p>
+                <p class="text-3xl font-bold text-gray-800 mt-1" id="taskCount">0</p>
             </div>
-            <i class="fas fa-tasks text-3xl text-green-500"></i>
+            <div class="bg-orange-100 p-3 rounded-full">
+                <i class="fas fa-tasks text-2xl text-orange-600"></i>
+            </div>
         </div>
     </div>
-    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/member/notifications/'">
+    <div class="bg-white p-6 rounded-xl cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 border-blue-500 hover:scale-105" onclick="window.location.href='/member/notifications/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">Notices</p>
-                <p class="text-2xl font-bold text-white" id="noticeCount">0</p>
+                <p class="text-gray-600 text-sm font-medium">Notices</p>
+                <p class="text-3xl font-bold text-gray-800 mt-1" id="noticeCount">0</p>
             </div>
-            <i class="fas fa-bell text-3xl text-yellow-500"></i>
+            <div class="bg-blue-100 p-3 rounded-full">
+                <i class="fas fa-bell text-2xl text-blue-600"></i>
+            </div>
         </div>
     </div>
-    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/messaging/conversations/'">
+    <div class="bg-white p-6 rounded-xl cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 border-green-500 hover:scale-105" onclick="window.location.href='/messaging/conversations/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">Messages</p>
-                <p class="text-2xl font-bold text-white" id="messageCount">0</p>
+                <p class="text-gray-600 text-sm font-medium">Messages</p>
+                <p class="text-3xl font-bold text-gray-800 mt-1" id="messageCount">0</p>
             </div>
-            <i class="fas fa-comments text-3xl text-blue-500"></i>
+            <div class="bg-green-100 p-3 rounded-full">
+                <i class="fas fa-comments text-2xl text-green-600"></i>
+            </div>
         </div>
     </div>
-    <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors" onclick="window.location.href='/events/'">
+    <div class="bg-white p-6 rounded-xl cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 border-purple-500 hover:scale-105" onclick="window.location.href='/events/'">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-slate-400 text-sm">My Events</p>
-                <p class="text-2xl font-bold text-white" id="eventCount">0</p>
+                <p class="text-gray-600 text-sm font-medium">My Events</p>
+                <p class="text-3xl font-bold text-gray-800 mt-1" id="eventCount">0</p>
             </div>
-            <i class="fas fa-calendar text-3xl text-purple-500"></i>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class="fas fa-calendar text-2xl text-purple-600"></i>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="bg-slate-800 rounded-lg p-6">
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold text-white">Recent Notices</h3>
-        <a href="/member/notifications/" class="text-orange-500 hover:text-orange-400 text-sm font-medium">View All</a>
+<div class="bg-white rounded-xl p-6 shadow-lg">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-bold text-gray-800">Recent Notices</h3>
+        <a href="/member/notifications/" class="text-orange-600 hover:text-orange-700 hover:underline text-sm font-medium transition-colors">View All →</a>
     </div>
     <div id="noticesContainer">
-        <div class="text-center py-4">
-            <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
-            <p class="text-slate-400">Loading notices...</p>
+        <div class="text-center py-8">
+            <i class="fas fa-spinner fa-spin fa-2x text-gray-400 mb-3"></i>
+            <p class="text-gray-500">Loading notices...</p>
         </div>
     </div>
 </div>
@@ -145,10 +153,10 @@
             
             if (!response.ok) {
                 container.innerHTML = `
-                    <div class="text-center py-4">
-                        <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
-                        <p class="text-red-400">Authentication Error: ${response.status}</p>
-                        <p class="text-slate-400 text-sm">Please check your login status</p>
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle fa-2x text-red-500 mb-3"></i>
+                        <p class="text-red-600 font-medium">Authentication Error: ${response.status}</p>
+                        <p class="text-gray-500 text-sm mt-1">Please check your login status</p>
                     </div>
                 `;
                 return;
@@ -163,9 +171,10 @@
             
             if (notificationsList.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-4">
-                        <i class="fas fa-bell-slash fa-3x text-slate-400 mb-3"></i>
-                        <p class="text-slate-400">No notices available.</p>
+                    <div class="text-center py-8">
+                        <i class="fas fa-bell-slash fa-3x text-gray-400 mb-4"></i>
+                        <p class="text-gray-500 font-medium">No notices available.</p>
+                        <p class="text-gray-400 text-sm mt-1">Check back later for updates</p>
                     </div>
                 `;
             } else {
@@ -174,12 +183,12 @@
                     const isUnread = !notification.is_read;
                     
                     return `
-                        <div class="p-3 bg-slate-700/50 rounded mb-3 ${isUnread ? 'border-l-4 border-blue-500' : ''}">
-                            <div class="flex justify-between items-start">
-                                <h6 class="text-white font-medium">${notification.title}${isUnread ? ' <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded">New</span>' : ''}</h6>
-                                <span class="text-xs text-slate-400">${createdDate}</span>
+                        <div class="p-4 bg-gray-50 rounded-lg mb-3 border-l-4 ${isUnread ? 'border-blue-500 bg-blue-50' : 'border-gray-300'} hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h6 class="text-gray-800 font-semibold">${notification.title}${isUnread ? ' <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded-full ml-2">New</span>' : ''}</h6>
+                                <span class="text-xs text-gray-500 font-medium">${createdDate}</span>
                             </div>
-                            <p class="text-slate-300 text-sm mt-1">${notification.message}</p>
+                            <p class="text-gray-600 text-sm leading-relaxed">${notification.message}</p>
                         </div>
                     `;
                 }).join('');
@@ -187,10 +196,10 @@
         } catch (error) {
             console.error('Error loading notices:', error);
             document.getElementById('noticesContainer').innerHTML = `
-                <div class="text-center py-4">
-                    <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
-                    <p class="text-red-400">Network Error</p>
-                    <p class="text-slate-400 text-sm">${error.message}</p>
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle fa-2x text-red-500 mb-3"></i>
+                    <p class="text-red-600 font-medium">Network Error</p>
+                    <p class="text-gray-500 text-sm mt-1">${error.message}</p>
                 </div>
             `;
         }
