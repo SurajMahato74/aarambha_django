@@ -190,6 +190,9 @@
             <td class="px-4 py-3">${app.phone}</td>
             <td class="px-4 py-3">
                 <span class="px-2 py-1 rounded text-xs ${getStatusColor(app.status)}">${app.status}</span>
+                ${app.status === 'interview_scheduled' && app.interview_attended !== null ? `
+                    <br><small class="${app.interview_attended ? 'text-green-400' : 'text-red-400'}">Interview: ${app.interview_attended ? 'Attended' : 'Not Attended'}</small>
+                ` : ''}
             </td>
             <td class="px-4 py-3">
                 ${app.application_type === 'member' && app.payment_required ? `
@@ -221,12 +224,18 @@
                         <button onclick="openInterviewModal(${app.id}, true)" class="text-yellow-400 hover:text-yellow-300" title="Update Interview">
                             <span class="material-symbols-outlined" style="font-size:20px">edit_calendar</span>
                         </button>
-                        <button onclick="markAttendance(${app.id}, true)" class="text-green-400 hover:text-green-300" title="Mark Attended">
-                            <span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
-                        </button>
-                        <button onclick="markAttendance(${app.id}, false)" class="text-red-400 hover:text-red-300" title="Mark Not Attended">
-                            <span class="material-symbols-outlined" style="font-size:20px">cancel</span>
-                        </button>
+                        ${app.interview_attended === null ? `
+                            <button onclick="markAttendance(${app.id}, true)" class="text-green-400 hover:text-green-300" title="Mark Attended">
+                                <span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
+                            </button>
+                            <button onclick="markAttendance(${app.id}, false)" class="text-red-400 hover:text-red-300" title="Mark Not Attended">
+                                <span class="material-symbols-outlined" style="font-size:20px">cancel</span>
+                            </button>
+                        ` : `
+                            <span class="${app.interview_attended ? 'text-green-400' : 'text-red-400'}" title="${app.interview_attended ? 'Attended' : 'Not Attended'}">
+                                <span class="material-symbols-outlined" style="font-size:20px">${app.interview_attended ? 'task_alt' : 'event_busy'}</span>
+                            </span>
+                        `}
                     ` : ''}
                     <button onclick="approveApplication(${app.id})" class="text-emerald-400 hover:text-emerald-300" title="Approve">
                         <span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
@@ -536,33 +545,39 @@
     async function markAttendance(id, attended) {
         if (!confirm(`Mark as ${attended ? 'attended' : 'not attended'}?`)) return;
 
-        const response = await fetchAPI(`/api/applications/${id}/update-status/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                interview_attended: attended
-            })
-        });
+        // Show loading state
+        const attendedBtn = document.querySelector(`button[onclick="markAttendance(${id}, true)"]`);
+        const notAttendedBtn = document.querySelector(`button[onclick="markAttendance(${id}, false)"]`);
+        
+        if (attendedBtn) attendedBtn.disabled = true;
+        if (notAttendedBtn) notAttendedBtn.disabled = true;
 
-        if (response.ok) {
-            alert(`Marked as ${attended ? 'attended' : 'not attended'}`);
-            loadApplications();
-        } else {
-            alert('Failed to update attendance');
+        try {
+            const response = await fetchAPI(`/api/applications/${id}/update-status/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    interview_attended: attended
+                })
+            });
+
+            if (response.ok) {
+                alert(`Successfully marked as ${attended ? 'attended' : 'not attended'}`);
+                loadApplications();
+            } else {
+                const data = await response.json();
+                alert('Failed to update attendance: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Network error occurred while updating attendance');
+        } finally {
+            // Reset button states
+            if (attendedBtn) attendedBtn.disabled = false;
+            if (notAttendedBtn) notAttendedBtn.disabled = false;
         }
     }
 
     async function approveApplication(id) {
-        // First get the application details to check payment status
-        const appResponse = await fetchAPI(`/api/applications/${id}/`);
-        const app = await appResponse.json();
-        
-        // Check if member application requires payment
-        if (app.application_type === 'member' && app.payment_required && !app.payment_completed) {
-            alert('Cannot approve member application: Payment not completed. Member must pay Rs. 1000 membership fee first.');
-            return;
-        }
-        
         if (!confirm('Approve this application? User will receive login credentials via email.')) return;
 
         // Show loading state

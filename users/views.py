@@ -211,34 +211,26 @@ def logout(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@authentication_classes([])  # Disable authentication for this endpoint
 def auth_status(request):
     """
     Check current authentication status and sync if needed
     """
-    from .auth_utils import check_auth_consistency, sync_auth_state
+    from .auth_utils import sync_auth_state
     
     if request.user.is_authenticated:
-        # User has Django session
+        # User has Django session (works for all login types)
         user_data = UserSerializer(request.user).data
         
-        # Check if we need to provide JWT tokens for consistency
-        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-        if not auth_header.startswith('Bearer '):
-            # No JWT token, provide one for consistency
-            sync_data = sync_auth_state(request, request.user)
-            return Response({
-                'authenticated': True,
-                'user': user_data,
-                'access': sync_data['access'],
-                'refresh': sync_data['refresh'],
-                'session_active': True
-            })
-        else:
-            return Response({
-                'authenticated': True,
-                'user': user_data,
-                'session_active': True
-            })
+        # Always provide JWT tokens for consistency
+        sync_data = sync_auth_state(request, request.user)
+        return Response({
+            'authenticated': True,
+            'user': user_data,
+            'access': sync_data['access'],
+            'refresh': sync_data['refresh'],
+            'session_active': True
+        })
     else:
         return Response({
             'authenticated': False,

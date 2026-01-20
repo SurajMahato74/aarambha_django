@@ -503,29 +503,6 @@
   <script src="{% static 'website/js/min.js' %}"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <!-- jquery  start-->
-  <!-- Payment Modal -->
-  <div id="paymentModal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
-    <div
-      style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 100%; text-align: center;">
-      <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: #111827;">Complete
-        Payment</h2>
-      <div style="background: #f3f4f6; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
-        <p style="color: #4b5563; font-size: 0.875rem; margin-bottom: 0.5rem;">Membership Fee</p>
-        <p style="font-size: 1.875rem; font-weight: bold; color: #111827;">Rs. 1,000</p>
-      </div>
-      <p style="color: #4b5563; font-size: 0.875rem; margin-bottom: 1rem;">You will be redirected to
-        Khalti payment gateway to complete your membership payment.</p>
-      <div style="display: flex; gap: 0.5rem; justify-content: center;">
-        <button onclick="proceedToPayment()"
-          style="background-color: #5d2e8e; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600;">Pay
-          with Khalti</button>
-        <button onclick="closePaymentModal()"
-          style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-left: 10px; cursor: pointer;">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Upgrade Confirmation Modal -->
   <div id="upgradeModal"
     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
@@ -551,6 +528,7 @@
   </div>
 
   {% include 'website/includes/login_modal.html' %}
+  {% include 'website/includes/navbar_login_modal.html' %}
 
   <!-- Hidden Config for JS -->
   <script src="{% static 'js/config.js' %}"></script>
@@ -577,6 +555,8 @@
       const isDjangoAuthenticated = window.djangoUser && window.djangoUser.isAuthenticated;
       
       if (!user && !isDjangoAuthenticated) {
+        // Store flag to show form after login
+        localStorage.setItem('showMemberFormAfterLogin', 'true');
         document.getElementById('loginModal').style.display = 'flex';
         return;
       }
@@ -618,6 +598,14 @@
       
       if (user || isDjangoAuthenticated) {
         await checkApplicationStatus();
+        
+        // Check if form should be shown after login
+        if (localStorage.getItem('showMemberFormAfterLogin') === 'true') {
+          localStorage.removeItem('showMemberFormAfterLogin');
+          if (document.getElementById('startSection').style.display !== 'none') {
+            showMemberForm();
+          }
+        }
       }
     });
 
@@ -896,20 +884,14 @@
         const data = await response.json();
 
         if (response.ok) {
-          if (data.payment_required) {
-            window.applicationId = data.application.id;
-            document.getElementById('paymentModal').classList.remove('hidden');
-            // Fix modal class for flex display (tailwind 'hidden' vs 'flex')
-            document.getElementById('paymentModal').style.display = 'flex';
-          } else {
-            Swal.fire({
-              title: "Success!",
-              text: "Application submitted successfully!",
-              icon: "success"
-            }).then(() => {
-              window.location.href = '/guest/welcome/';
-            });
-          }
+          // Always show success message without payment modal
+          Swal.fire({
+            title: "Success!",
+            text: "Application submitted successfully! You can view your application status in your profile.",
+            icon: "success"
+          }).then(() => {
+            window.location.href = '/guest/profile/#applications';
+          });
         } else {
           console.error(data);
           let errorMsg = 'Submission failed.';
@@ -934,10 +916,6 @@
         submitBtn.disabled = false;
       }
     });
-
-    function closePaymentModal() {
-      document.getElementById('paymentModal').style.display = 'none';
-    }
 
     function showUpgradeModal() {
       document.getElementById('upgradeModal').style.display = 'flex';
@@ -1011,23 +989,6 @@
       }
     }
 
-    async function proceedToPayment() {
-      try {
-        const response = await fetchAPI(`/api/applications/${window.applicationId}/initiate-payment/`, {
-          method: 'POST'
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.payment_url) {
-          window.location.href = data.payment_url;
-        } else {
-          alert('Failed to initiate payment. Please try again.');
-        }
-      } catch (error) {
-        alert('Error initiating payment. Please try again.');
-      }
-    }
   </script>
 
 </body>

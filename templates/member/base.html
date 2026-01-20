@@ -82,10 +82,24 @@
 
 <script src="{% static 'js/auth-utils.js' %}"></script>
 <script>
-    const user = getUser();
-    if (!user || user.user_type !== 'member') window.location.href = '/';
-    document.getElementById('userName').textContent = user.username || user.email;
-    document.getElementById('userInitial').textContent = (user.username || user.email)[0].toUpperCase();
+    // Remove redirect - let Django handle authentication
+    console.log('Member base template loaded - no client-side auth check');
+    
+    // Try to get user info for display, but don't redirect if missing
+    try {
+        const user = getUser();
+        if (user) {
+            document.getElementById('userName').textContent = user.username || user.email || 'Member';
+            document.getElementById('userInitial').textContent = (user.username || user.email || 'M')[0].toUpperCase();
+        } else {
+            document.getElementById('userName').textContent = 'Member';
+            document.getElementById('userInitial').textContent = 'M';
+        }
+    } catch (error) {
+        console.log('Could not load user info:', error);
+        document.getElementById('userName').textContent = 'Member';
+        document.getElementById('userInitial').textContent = 'M';
+    }
 </script>
 </body>
 </html>

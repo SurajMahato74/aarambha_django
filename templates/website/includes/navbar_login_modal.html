@@ -83,6 +83,10 @@
 </div>
 
 <script>
+    function handleNavbarLoginClick() {
+        document.getElementById('navbarLoginModal').style.display = 'flex';
+    }
+
     function toggleNavbarModalOtpLogin() {
         document.getElementById('navbarModalLoginForm').style.display = 'none';
         document.getElementById('navbarModalSeparator').style.display = 'none';
@@ -125,22 +129,20 @@
                 setUser(data.user);
                 document.getElementById('navbarLoginModal').style.display = 'none';
                 
-                // Check for pending payments first
-                if (data.has_pending_payment) {
-                    window.location.href = '/guest/profile/';
+                // Check if there's a pending donate action
+                const pendingAction = localStorage.getItem('pendingAction');
+                if (pendingAction === 'donate') {
+                    localStorage.removeItem('pendingAction');
+                    setTimeout(() => {
+                        if (document.getElementById('donationModal')) {
+                            document.getElementById('donationModal').style.display = 'flex';
+                        }
+                    }, 500);
                     return;
                 }
                 
-                // Redirect based on user type
-                if (data.user.is_superuser || data.user.user_type === 'superadmin') {
-                    window.location.href = '/admin/dashboard/';
-                } else if (data.user.user_type === 'member') {
-                    window.location.href = '/member/dashboard/';
-                } else if (data.user.user_type === 'volunteer') {
-                    window.location.href = '/volunteer/dashboard/';
-                } else {
-                    window.location.href = '/guest/welcome/';
-                }
+                // Reload current page to update authentication state
+                window.location.reload();
             } else {
                 errorDiv.textContent = data.non_field_errors?.[0] || data.error || 'Login failed. Please check credentials.';
             }
@@ -219,22 +221,8 @@
                 setUser(data.user);
                 document.getElementById('navbarLoginModal').style.display = 'none';
                 
-                // Check for pending payments first
-                if (data.has_pending_payment) {
-                    window.location.href = '/guest/profile/';
-                    return;
-                }
-                
-                // Redirect based on user type
-                if (data.user.is_superuser || data.user.user_type === 'superadmin') {
-                    window.location.href = '/admin/dashboard/';
-                } else if (data.user.user_type === 'member') {
-                    window.location.href = '/member/dashboard/';
-                } else if (data.user.user_type === 'volunteer') {
-                    window.location.href = '/volunteer/dashboard/';
-                } else {
-                    window.location.href = '/guest/welcome/';
-                }
+                // Reload current page to update authentication state
+                window.location.reload();
             } else {
                 errorDiv.style.color = '#dc3545';
                 errorDiv.textContent = data.error || 'Invalid OTP';
@@ -252,5 +240,27 @@
         document.getElementById('navbarModalEmailStep').style.display = 'block';
         document.getElementById('navbarModalOtpStep').style.display = 'none';
         document.getElementById('navbarModalOtpError').textContent = '';
+    }
+
+    // Function to handle donate button clicks
+    function handleDonateClick(donateUrl) {
+        {% if user.is_authenticated %}
+            openDonationModal('General Donation', 'Support Aarambha Foundation in our mission to provide education, healthcare, and community development programs.', '', 'general');
+        {% else %}
+            document.getElementById('loginModal').style.display = 'flex';
+        {% endif %}
+    }
+
+    // Function to handle flag school dropout button clicks
+    function handleFlagSchoolClick(flagUrl) {
+        const user = getUser();
+        if (!user) {
+            // Store the flag school URL to continue after login
+            localStorage.setItem('pendingAction', flagUrl);
+            document.getElementById('loginModal').style.display = 'flex';
+        } else {
+            // User is logged in, proceed to flag school page
+            window.location.href = flagUrl;
+        }
     }
 </script>

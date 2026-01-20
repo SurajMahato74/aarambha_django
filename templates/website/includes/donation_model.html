@@ -222,6 +222,12 @@
     <div class="donation-card">
 
         <div id="step1" class="step-content active">
+            {% if not user.is_authenticated %}
+                <div style="text-align: center; padding: 20px;">
+                    <p>Please login to make a donation</p>
+                    <button class="donate-submit" onclick="localStorage.setItem('pendingAction', 'donate'); document.getElementById('donationModal').style.display='none'; document.getElementById('loginModal').style.display='flex';">Login</button>
+                </div>
+            {% else %}
             <div class="secure-header">🔒 Secure Donation</div>
             <div class="amount-grid">
                 <button class="amt-btn" onclick="setAmount('1,000')">1,000</button>
@@ -237,6 +243,7 @@
                 <span style="color:#888; font-size:12px;">NPR ⌵</span>
             </div>
             <button class="donate-submit" onclick="nextStep(2)">Next</button>
+            {% endif %}
         </div>
 
         <div id="step2" class="step-content">
@@ -255,7 +262,7 @@
             </div>
             <div class="form-group">
                 <label>Email Address</label>
-                <input type="email" id="email" placeholder="john@example.com">
+                <input type="email" id="email" placeholder="john@example.com" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}">
             </div>
             <div class="form-group">
                 <label>Phone Number (Optional)</label>
@@ -268,12 +275,16 @@
             <div class="secure-header">Payment Method</div>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Choosing to pay: <strong id="summaryAmt">Rs
                     1,000</strong></p>
-            <div class="payment-option" onclick="finish()">
+            <div class="payment-option" onclick="finish('khalti')" style="margin-bottom: 10px;">
                 <img src="https://web.khalti.com/static/img/logo1.png" alt="Khalti">
                 <span>Pay with Khalti</span>
             </div>
+            <div class="payment-option" onclick="finish('stripe')">
+                <img src="https://stripe.com/img/v3/home/twitter.png" alt="Stripe" style="height: 16px;">
+                <span>Pay with Stripe</span>
+            </div>
             <p style="font-size: 11px; color: #999; margin-top: 10px; text-align: center;">You will be redirected to
-                Khalti's secure portal.</p>
+                secure payment portal.</p>
         </div>
 
         <div id="step4" class="step-content">
@@ -338,15 +349,13 @@
         }
     }
 
-    async function finish() {
-        // Check if user is logged in first
-        const user = JSON.parse(localStorage.getItem('user') || 'null');
-        if (!user) {
+    async function finish(paymentMethod = 'khalti') {
+        {% if not user.is_authenticated %}
             alert('Please login first to make a donation.');
-            // Show login modal or redirect
-            $('#loginModal').modal('show');
+            document.getElementById('donationModal').style.display = 'none';
+            document.getElementById('loginModal').style.display = 'flex';
             return;
-        }
+        {% endif %}
 
         // Collect donation data
         const title = document.getElementById('title').value;
@@ -362,20 +371,37 @@
             return;
         }
 
-        // Show loading state
-        const paymentOption = document.querySelector('.payment-option');
-        const originalText = paymentOption.innerHTML;
-        paymentOption.innerHTML = '<span>Processing...</span>';
-        paymentOption.style.pointerEvents = 'none';
+        // Show loading state on clicked option only
+        const clickedOption = event.target.closest('.payment-option');
+        const originalText = clickedOption.innerHTML;
+        clickedOption.innerHTML = '<span>Processing...</span>';
+        clickedOption.style.pointerEvents = 'none';
 
         try {
-            // Call API to initiate payment
+            if (paymentMethod === 'stripe') {
+                // Stripe payment (placeholder - implement Stripe integration)
+                alert('Stripe payment coming soon!');
+                clickedOption.innerHTML = originalText;
+                clickedOption.style.pointerEvents = 'auto';
+                return;
+            }
+
+            // Khalti payment
+            const token = localStorage.getItem('access_token');
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            };
+            
+            // Only add Authorization header if token exists and is valid format
+            if (token && token.trim() && !token.includes('undefined')) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
             const response = await fetch('/api/core/donations/initiate/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
+                headers: headers,
+                credentials: 'include',
                 body: JSON.stringify({
                     title: title,
                     full_name: fullName,
@@ -393,14 +419,30 @@
             } else {
                 // Show error
                 alert(data.error || 'Failed to initiate payment. Please try again.');
-                paymentOption.innerHTML = originalText;
-                paymentOption.style.pointerEvents = 'auto';
+                clickedOption.innerHTML = originalText;
+                clickedOption.style.pointerEvents = 'auto';
             }
         } catch (error) {
             console.error('Payment initiation error:', error);
             alert('An error occurred. Please try again.');
-            paymentOption.innerHTML = originalText;
-            paymentOption.style.pointerEvents = 'auto';
+            clickedOption.innerHTML = originalText;
+            clickedOption.style.pointerEvents = 'auto';
         }
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 </script>

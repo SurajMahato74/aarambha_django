@@ -974,14 +974,24 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def donation_initiate_payment(request):
     """
     Initiate a donation payment with Khalti.
     Creates a donation record and initiates Khalti payment.
     """
     try:
+        # Check authentication manually - accept both JWT and Django session
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Authentication required'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
         logger.info("Starting donation_initiate_payment")
+        logger.info(f"User authenticated: {request.user.is_authenticated}")
+        logger.info(f"User: {request.user}")
+        
         # Extract donation data
         title = request.data.get('title', 'Mr.')
         full_name = request.data.get('full_name')

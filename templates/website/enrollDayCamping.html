@@ -40,6 +40,7 @@
 
 <body>
   {% include 'website/includes/navbar.html'%}
+  {% include 'website/includes/navbar_login_modal.html'%}
  <section id="one-rupee-campaign" class="py-3 campaign-bg-1">
         <div class="container">
             <div class="row align-items-center">
@@ -54,7 +55,7 @@
                     </ul>
                      <div id="campaignActionButton">
                         <a href="javascript:void(0)" onclick="handleCampaignAction()"
-                          class="btn py-2" style="font-size:14px" id="mainActionBtn">Enroll Now & Donate</a>
+                          class="btn py-2" style="font-size:14px; background-color: white; color: black; border: 1px solid #ccc;" id="mainActionBtn">Enroll Now & Donate</a>
                      </div>
                 </div>
                 <div class="col-lg-6 text-center">
@@ -68,7 +69,7 @@
     <!-- Campaign Enrollment Modal -->
     <div class="modal fade" id="campaignEnrollModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content" style="background-color: #1a202c; color: white; border: 1px solid #4a5568;">
+            <div class="modal-content" style="background-color: white; color: black; border: 1px solid #ccc;">
                 <div class="modal-header">
                     <h5 class="modal-title">Enroll in One Rupee a Day Campaign</h5>
                     <button type="button" class="close" onclick="closeEnrollModal()">
@@ -176,7 +177,17 @@
   <script src="{% static 'js/navbar.js' %}"></script>
   <script src="{% static 'js/config.js' %}"></script>
   
+  <script type="application/json" id="django-user-data">
+  {% if user.is_authenticated %}
+  {"isAuthenticated": true, "email": "{{ user.email }}", "id": {{ user.id }}, "first_name": "{{ user.first_name }}", "last_name": "{{ user.last_name }}"}
+  {% else %}
+  {"isAuthenticated": false, "email": null}
+  {% endif %}
+  </script>
+  
   <script>
+  // Set user info for JavaScript
+  window.djangoUser = JSON.parse(document.getElementById('django-user-data').textContent);
   let currentCampaignId = null;
   
   document.addEventListener('DOMContentLoaded', function() {
@@ -202,15 +213,8 @@
   
   function handleCampaignAction() {
       if (!isLoggedIn()) {
-          // Show login modal
-          $('#loginModal').modal('show');
-          
-          // After login, show enrollment form
-          $(document).one('userLoggedIn', function() {
-              setTimeout(() => {
-                  showEnrollmentForm();
-              }, 500);
-          });
+          // Show navbar login modal
+          document.getElementById('navbarLoginModal').style.display = 'flex';
       } else {
           showEnrollmentForm();
       }
@@ -223,6 +227,7 @@
           const data = await response.json();
           
           if (data.enrolled) {
+              alert('You are already enrolled in the One Rupee a Day Campaign!');
               showCampaignDashboard(data);
               return;
           }
@@ -280,12 +285,26 @@
       const data = Object.fromEntries(formData.entries());
       
       try {
-          const response = await fetchAPI('/api/applications/one-rupee-campaign/enroll/', {
+          const token = localStorage.getItem('access_token');
+          const csrfToken = getCookie('csrftoken');
+          
+          const headers = {
+              'Content-Type': 'application/json',
+          };
+          
+          if (token) {
+              headers['Authorization'] = `Bearer ${token}`;
+          }
+          
+          if (csrfToken) {
+              headers['X-CSRFToken'] = csrfToken;
+          }
+          
+          const response = await fetch('/api/applications/one-rupee-campaign/enroll/', {
               method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(data)
+              headers: headers,
+              body: JSON.stringify(data),
+              credentials: 'include'
           });
           
           if (response.ok) {
@@ -316,8 +335,25 @@
   
   async function initiatePayment(campaignId) {
       try {
-          const response = await fetchAPI(`/api/applications/one-rupee-campaign/${campaignId}/initiate-payment/`, {
-              method: 'POST'
+          const token = localStorage.getItem('access_token');
+          const csrfToken = getCookie('csrftoken');
+          
+          const headers = {
+              'Content-Type': 'application/json',
+          };
+          
+          if (token) {
+              headers['Authorization'] = `Bearer ${token}`;
+          }
+          
+          if (csrfToken) {
+              headers['X-CSRFToken'] = csrfToken;
+          }
+          
+          const response = await fetch(`/api/applications/one-rupee-campaign/${campaignId}/initiate-payment/`, {
+              method: 'POST',
+              headers: headers,
+              credentials: 'include'
           });
           
           if (response.ok) {
@@ -422,12 +458,40 @@
   }
   
   function isLoggedIn() {
-      return localStorage.getItem('access_token') !== null;
+      // Check both localStorage token and Django session
+      const hasToken = localStorage.getItem('access_token') !== null;
+      const hasDjangoSession = window.djangoUser && window.djangoUser.isAuthenticated;
+      return hasToken || hasDjangoSession;
   }
   
   function getCurrentUser() {
+      // First try localStorage
       const userData = localStorage.getItem('user_data');
-      return userData ? JSON.parse(userData) : null;
+      if (userData) {
+          return JSON.parse(userData);
+      }
+      
+      // Fall back to Django session data
+      if (window.djangoUser && window.djangoUser.isAuthenticated) {
+          return window.djangoUser;
+      }
+      
+      return null;
+  }
+  
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
   }
   </script>
 </body>

@@ -125,6 +125,7 @@
                     <hr style="border: 1px solid #000" />
                     <div class="content">
                         <form id="dropoutReportForm" class="pb-4">
+                            {% csrf_token %}
                             <!-- Reporter Information -->
                             <div class="row">
                                 <div class="col-md-12">
@@ -320,6 +321,9 @@
             e.preventDefault();
 
             const formData = new FormData(e.target);
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             const submitBtn = e.submitter || document.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
@@ -329,6 +333,9 @@
             try {
                 const response = await fetch('/api/core/reports/school-dropout/', {
                     method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
                     body: formData
                 });
 
@@ -342,7 +349,7 @@
                         timer: 1000,
                         showConfirmButton: false
                     }).then(() => {
-                        window.location.href = '/';
+                        window.location.href = '/guest/profile/?tab=applications';
                     });
                 } else {
                     console.error(data);

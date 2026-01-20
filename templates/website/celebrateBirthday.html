@@ -71,6 +71,7 @@
 
 <body>
   {% include 'website/includes/navbar.html' %}
+  {% include 'website/includes/navbar_login_modal.html' %}
 
   <!-- Hero Section -->
   <section class="split-banner">
@@ -156,11 +157,10 @@
     function showCreateCampaignModal() {
       // Check if user is logged in
       if (!window.djangoUser || !window.djangoUser.isAuthenticated) {
-        // Show login modal instead
-        const loginModal = document.getElementById('loginModal');
-        if (loginModal) {
-          loginModal.style.display = 'flex';
-          document.body.classList.add('modal-open');
+        // Show navbar login modal instead
+        const navbarLoginModal = document.getElementById('navbarLoginModal');
+        if (navbarLoginModal) {
+          navbarLoginModal.style.display = 'flex';
           return;
         }
       }

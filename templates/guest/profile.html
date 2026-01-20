@@ -37,6 +37,7 @@
 
         .profile-section {
             background-color: #f8f6f4;
+            margin-bottom: 400px !important;
         }
 
         .application-table tbody tr {
@@ -120,7 +121,7 @@
 <body>
     {% include 'website/includes/navbar.html'%}
     <!-- Guest Welcome Content -->
-    <section class="py-3 profile-section" style="min-height: 100vh;">
+    <section class="py-3 profile-section" style="min-height: 100vh; padding-bottom: 200px;">
         <div class="container">
             <div class="row">
                 <div class="col-12">
@@ -144,7 +145,7 @@
                                         <a href="#" class="nav-link" data-target="applications" style="color: #E36F1E;">
                                             <i class="fas fa-file-alt me-1"></i>Applications
                                         </a>
-                                        <a href="#" class="nav-link" data-target="donations" style="color: #E36F1E;">
+                                        <a href="#" class="nav-link" data-target="donations" style="color: #E36F1E;" id="donationsTab">
                                             <i class="fas fa-heart me-1"></i>My Donations
                                         </a>
                                     </nav>
@@ -189,6 +190,7 @@
                                         <tbody id="applicationsTableBody">
                                             <tr>
                                                 <td colspan="5" class="text-center py-4">
+                                                    
                                                     <i class="fas fa-spinner fa-spin me-2"></i>Loading applications...
                                                 </td>
                                             </tr>
@@ -227,8 +229,11 @@
             </div>
         </div>
     </section>
+    
+    <div style="height: 300px;"></div>
 
     {% include "website/includes/login_modal.html" %}
+    {% include "website/includes/navbar_login_modal.html" %}
 
     {% include "website/includes/footer.html" %}
 <!-- Application Details Modal -->
@@ -265,6 +270,41 @@
     </div>
 </div>
 
+<!-- Payment Options Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content" style="background-color: #f8f6f4;">
+            <div class="modal-header" style="background-color: #E36F1E; color: white;">
+                <h5 class="modal-title">Choose Payment Method</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="background-color: #f8f6f4;">
+                <div class="text-center mb-3">
+                    <h6>Payment Amount: <span id="paymentAmount" class="text-success"></span></h6>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 py-3" onclick="processPayment('khalti')">
+                            <i class="fas fa-wallet me-2"></i>
+                            <div>Khalti</div>
+                            <small>Digital Wallet</small>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-success w-100 py-3" onclick="processPayment('stripe')">
+                            <i class="fas fa-credit-card me-2"></i>
+                            <div>Stripe</div>
+                            <small>Card Payment</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Edit Application Modal -->
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
@@ -281,7 +321,6 @@
         </div>
     </div>
 </div>
-
     <!-- scripts start -->
     <!-- jquery  start-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"
@@ -334,35 +373,15 @@
                 }, 500);
             }
             
-            {% if django_authenticated %}
-            // Sync Django auth to localStorage
-            localStorage.setItem('access_token', '{{ access_token }}');
-            localStorage.setItem('refresh_token', '{{ refresh_token }}');
-            localStorage.setItem('user', '{{ user_data|escapejs }}');
-            
-            const userData = JSON.parse('{{ user_data|escapejs }}');
-            console.log('User authenticated:', userData);
-            
-            // Set user info in UI
-            if (document.getElementById('profileEmail')) {
-                document.getElementById('profileEmail').textContent = userData.email;
+            // Check for applications tab parameter
+            if (urlParams.get('tab') === 'applications' || window.location.hash === '#applications') {
+                setTimeout(() => {
+                    const applicationsTab = document.querySelector('[data-target="applications"]');
+                    if (applicationsTab) {
+                        applicationsTab.click();
+                    }
+                }, 500);
             }
-            
-            // Update navbar auth after syncing
-            setTimeout(() => {
-                if (typeof updateNavbarAuth === 'function') {
-                    updateNavbarAuth();
-                }
-            }, 100);
-            {% else %}
-            // For non-Django authenticated users, check localStorage
-            const user = getUser();
-            if (user) {
-                if (document.getElementById('profileEmail')) {
-                    document.getElementById('profileEmail').textContent = user.email;
-                }
-            }
-            {% endif %}
             
             // Load profile on page load
             loadProfile();
@@ -403,6 +422,87 @@
             });
         });
         
+        async function loadDonations() {
+            try {
+                const response = await apiCall('/api/core/donations/my/');
+                const donations = await response.json();
+                
+                const tbody = document.getElementById('donationsTableBody');
+                
+                if (donations.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No donations found.</p>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = donations.map(donation => `
+                        <tr>
+                            <td>Rs. ${donation.amount}</td>
+                            <td>
+                                <span class="badge" style="background-color: ${donation.payment_status === 'completed' ? '#28a745' : '#ffc107'}; color: #000;">
+                                    ${donation.payment_status.toUpperCase()}
+                                </span>
+                            </td>
+                            <td>${donation.transaction_id || 'N/A'}</td>
+                            <td>${new Date(donation.created_at).toLocaleDateString()}</td>
+                            <td>${donation.purchase_order_id}</td>
+                            <td>
+                                ${donation.payment_status === 'completed' ? 
+                                    '<i class="fas fa-check-circle text-success" title="Completed"></i>' : 
+                                    '<i class="fas fa-clock text-warning" title="Pending"></i>'
+                                }
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading donations:', error);
+                document.getElementById('donationsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No donations found.</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Simple API call function - handle missing or invalid tokens gracefully
+        async function apiCall(url, options = {}) {
+            const token = localStorage.getItem('access_token');
+            
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            // Only add Authorization header if token exists and is valid format
+            if (token && token.trim() && !token.includes('undefined')) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            const csrfToken = getCookie('csrftoken');
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            
+            return fetch(url, {
+                ...options,
+                headers,
+                credentials: 'include'
+            });
+        }
+        
+        // Unified API call function with authentication
+        async function authenticatedFetch(url, options = {}) {
+            return apiCall(url, options);
+        }
+        
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 // Clear all localStorage data
@@ -432,29 +532,13 @@
         
         async function loadNotices() {
             try {
-                // Check if user is authenticated
-                const token = localStorage.getItem('access_token');
-                if (!token) {
-                    throw new Error('No authentication token');
-                }
-                
-                const response = await fetchAPI('/api/notices/my-notifications/');
+                const response = await apiCall('/api/notices/my-notifications/');
                 
                 if (!response.ok) {
-                    // If 403, try to refresh token or redirect to login
-                    if (response.status === 403) {
-                        console.log('Authentication failed, redirecting to login');
-                        localStorage.clear();
-                        window.location.href = '/accounts/login/';
-                        return;
-                    }
                     throw new Error('Failed to fetch notices');
                 }
                 
                 const data = await response.json();
-                console.log('Notifications data:', data);
-                
-                // Handle case where API returns an object with notifications array
                 const notificationsList = data.notifications || data.results || data || [];
 
                 const container = document.getElementById('noticesContainer');
@@ -519,8 +603,7 @@
                 document.getElementById('noticesContainer').innerHTML = `
                     <div class="text-center py-3">
                         <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Please login to view notices.</p>
-                        <a href="/accounts/login/" class="btn btn-primary btn-sm">Login</a>
+                        <p class="text-muted">No notices available.</p>
                     </div>
                 `;
             }
@@ -529,11 +612,11 @@
         async function loadApplications() {
             try {
                 // Load regular applications
-                const response = await fetchAPI('/api/applications/my-applications/');
+                const response = await apiCall('/api/applications/my-applications/');
                 const applications = await response.json();
                 
                 // Load sponsorship applications
-                const sponsorshipResponse = await fetchAPI('/api/applications/sponsorships/my/');
+                const sponsorshipResponse = await apiCall('/api/applications/sponsorships/my/');
                 const sponsorships = await sponsorshipResponse.json();
                 
                 // Load school dropout reports
@@ -620,15 +703,15 @@
                                     `<br><small class="text-info"><i class="fas fa-calendar me-1"></i>Scheduled: ${new Date(app.interview_datetime).toLocaleDateString()}</small>` : ''}
                             </td>
                             <td>
-                                ${app.type === 'application' && app.application_type === 'member' && app.payment_required ? `
-                                    <span class="badge ${app.payment_completed ? 'bg-success' : 'bg-warning'}" style="color: #000 !important;">
-                                        ${app.payment_completed ? 'Paid' : 'Pending'}
-                                    </span>
-                                    ${app.payment_completed ? `<br><small style="color: #000;">Paid Rs. ${app.payment_amount}</small>` : `<br><small class="text-muted">Rs. ${app.payment_amount}</small>`}
-                                    ${app.payment_completed && app.payment_date ? `<br><small class="text-muted">${new Date(app.payment_date).toLocaleDateString()}</small>` : ''}
-                                ` : app.type === 'sponsorship' && app.payment_amount ? `
-                                    <span class="text-success">Rs. ${app.payment_amount}</span>
-                                ` : '<span class="text-muted">N/A</span>'}
+                                    ${app.type === 'application' && app.application_type === 'member' && app.payment_required ? `
+                                        <span class="badge ${app.payment_completed ? 'bg-success' : 'bg-warning'}" style="color: #000 !important;">
+                                            ${app.payment_completed ? 'Paid' : 'Pending'}
+                                        </span>
+                                        ${app.payment_completed ? `<br><small style="color: #000;">Paid Rs. ${app.payment_amount}</small>` : `<br><small class="text-muted">Rs. ${app.payment_amount}</small>`}
+                                        ${app.payment_completed && app.payment_date ? `<br><small class="text-muted">${new Date(app.payment_date).toLocaleDateString()}</small>` : ''}
+                                    ` : app.type === 'sponsorship' && app.payment_amount ? `
+                                        <span class="text-success">Rs. ${app.payment_amount}</span>
+                                    ` : '<span class="text-muted">N/A</span>'}
                             </td>
                             <td>
                                 <div>${new Date(app.applied_at || app.created_at).toLocaleDateString()}</div>
@@ -652,6 +735,20 @@
                                                 <i class="fas fa-check-circle"></i> Ack
                                             </span>
                                         `}
+                                        ${app.interview_attended !== null ? `
+                                            <span class="badge ms-1" title="Interview ${app.interview_attended ? 'Attended' : 'Not Attended'}" style="background-color: ${app.interview_attended ? '#28a745' : '#dc3545'}; color: white;">
+                                                <i class="fas fa-${app.interview_attended ? 'check' : 'times'}"></i> ${app.interview_attended ? 'Attended' : 'Missed'}
+                                            </span>
+                                        ` : ''}
+                                    ` : ''}
+                                    ${app.type === 'application' && app.status === 'approved' && app.application_type === 'member' && app.payment_required && !app.payment_completed ? `
+                                        <button class="btn btn-warning btn-sm" onclick="showPaymentOptions(${app.id}, ${app.payment_amount})" title="Pay Now">
+                                            <i class="fas fa-credit-card me-1"></i>Pay Rs. ${app.payment_amount}
+                                        </button>
+                                    ` : app.type === 'application' && app.status === 'approved' && app.application_type === 'member' && app.payment_completed ? `
+                                        <button class="btn btn-secondary btn-sm" disabled title="Payment Completed">
+                                            <i class="fas fa-check me-1"></i>Paid
+                                        </button>
                                     ` : ''}
                                     ${app.type === 'application' && app.status === 'rejected' && app.rejection_type === 'correction' ? `
                                         <button class="fs-3" onclick="editApplication(${app.id})" title="Edit Application">
@@ -691,6 +788,15 @@
                 resolved: '#28a745'
             };
             return colors[status] || '#6c757d';
+        }
+        
+        // Function to redirect to member dashboard with proper authentication
+        async function redirectToMemberDashboard() {
+            console.log('Redirecting to member dashboard...');
+            
+            // For Google login users, just redirect - Django session will handle auth
+            console.log('Redirecting to member dashboard (session-based auth)...');
+            window.location.href = '/member/dashboard/';
         }
         
         async function showSponsorshipModal(id) {
@@ -1295,50 +1401,37 @@
                                 </p>
                             ` : ''}
                             <span class="badge px-2 py-1" style="background-color: ${getStatusColor(app.status)}; font-size: 12px;">${app.status.replace('_', ' ').toUpperCase()}</span>
-                            ${app.status === 'approved' ? `
+                            ${app.application_type === 'member' && app.status === 'approved' && app.payment_completed ? `
                                 <div class="mt-2">
-                                    ${app.application_type === 'member' && app.payment_completed ? `
-                                        <div class="alert alert-success py-2 mb-2" style="font-size:12px">
-                                            <i class="fas fa-check-circle me-1"></i>Paid for Member (Rs. ${app.payment_amount})
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <a href="/member/dashboard/" class="btn btn-primary btn-sm py-1" style="font-size:11px">
-                                                Member
-                                            </a>
-                                            <a href="/sponsor/dashboard/" class="btn btn-outline-secondary btn-sm py-1" style="font-size:11px">
-                                                Sponsor
-                                            </a>
-                                        </div>
-                                    ` : app.application_type === 'member' && app.payment_required && !app.payment_completed ? `
-                                        <div class="alert alert-warning py-2 mb-2" style="font-size:12px">
-                                            <i class="fas fa-exclamation-triangle me-1"></i>Payment Required (Rs. ${app.payment_amount})
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <a href="/member/dashboard/" class="btn btn-secondary btn-sm py-1" style="font-size:11px" disabled>
-                                                Member (Pay)
-                                            </a>
-                                            <a href="/sponsor/dashboard/" class="btn btn-outline-secondary btn-sm py-1" style="font-size:11px">
-                                                Sponsor
-                                            </a>
-                                        </div>
-                                    ` : `
-                                        <div class="d-flex gap-2">
-                                            <a href="${app.application_type === 'member' ? '/member/dashboard/' : '/dashboard/volunteer/'}" class="btn btn-primary btn-sm py-1" style="font-size:11px">
-                                                ${app.application_type === 'member' ? 'Member' : 'Volunteer'}
-                                            </a>
-                                            <a href="/sponsor/dashboard/" class="btn btn-outline-secondary btn-sm py-1" style="font-size:11px">
-                                                Sponsor
-                                            </a>
-                                        </div>
-                                    `}
+                                    <div class="alert alert-success py-2 mb-2" style="font-size:12px">
+                                        <i class="fas fa-check-circle me-1"></i>Payment Completed - Member Access Granted
+                                    </div>
+                                    <a href="javascript:void(0)" onclick="redirectToMemberDashboard()" class="btn btn-primary btn-sm py-1" style="font-size:11px">
+                                        <i class="fas fa-tachometer-alt me-1"></i>Member Dashboard
+                                    </a>
                                 </div>
-                            ` : ''}
-                            ${app.application_type === 'member' && app.payment_required && !app.payment_completed ? `
+                            ` : app.application_type === 'member' && app.status === 'approved' && app.payment_required && !app.payment_completed ? `
                                 <div class="mt-2">
                                     <div class="alert alert-warning py-2 mb-2" style="font-size:12px">
-                                        <i class="fas fa-credit-card me-1"></i>Payment Required for Member
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Payment Required for Member Access
                                     </div>
-                                    <button onclick="initiatePayment(${app.id})" class="btn btn-success btn-sm py-2" style="font-size:12px">
+                                    <button class="btn btn-secondary btn-sm py-1" style="font-size:11px" disabled>
+                                        <i class="fas fa-lock me-1"></i>Member Dashboard (Pay First)
+                                    </button>
+                                </div>
+                            ` : app.status === 'approved' && app.application_type === 'volunteer' ? `
+                                <div class="mt-2">
+                                    <a href="/volunteer/dashboard/" class="btn btn-primary btn-sm py-1" style="font-size:11px">
+                                        <i class="fas fa-tachometer-alt me-1"></i>Volunteer Dashboard
+                                    </a>
+                                </div>
+                            ` : ''}
+                            ${app.application_type === 'member' && app.status === 'approved' && app.payment_required && !app.payment_completed ? `
+                                <div class="mt-2">
+                                    <div class="alert alert-warning py-2 mb-2" style="font-size:12px">
+                                        <i class="fas fa-credit-card me-1"></i>Complete Payment to Access Member Features
+                                    </div>
+                                    <button onclick="showPaymentOptions(${app.id}, ${app.payment_amount})" class="btn btn-warning btn-sm py-2" style="font-size:12px">
                                         <i class="fas fa-credit-card me-1"></i>Pay Now (Rs. ${app.payment_amount})
                                     </button>
                                 </div>
@@ -1543,28 +1636,32 @@
             return cookieValue;
         }
         
-        async function initiatePayment(applicationId) {
+        // Show payment options modal
+        function showPaymentOptions(applicationId, amount) {
+            window.currentPaymentApp = applicationId;
+            document.getElementById('paymentAmount').textContent = 'Rs. ' + amount;
+            $('#paymentModal').modal('show');
+        }
+        
+        // Process payment with selected method
+        async function processPayment(method) {
             try {
-                const response = await fetchAPI(`/api/applications/${applicationId}/initiate-payment/`, {
+                $('#paymentModal').modal('hide');
+                
+                const response = await apiCall(`/api/applications/${window.currentPaymentApp}/initiate-payment/`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                    body: JSON.stringify({ payment_method: method })
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
                     
                     if (data.test_mode) {
-                        // Test mode - show message and don't open payment window
-                        alert('Test Mode: Payment initiated successfully. Use "Skip & Confirm Payment" button to complete the payment.');
+                        alert('Test Mode: Payment initiated successfully.');
                     } else {
-                        // Production/Sandbox mode - redirect to Khalti payment page
-                        window.location.href = data.payment_url;  // Same tab redirect
-                        // Don't show alert since user is being redirected
+                        window.location.href = data.payment_url;
                     }
                     
-                    // Refresh the page after some time
                     setTimeout(() => {
                         loadApplications();
                         loadProfile();

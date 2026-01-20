@@ -110,9 +110,7 @@ def submit_application(request):
 
         return Response({
             'message': 'Application submitted successfully',
-            'application': serializer.data,
-            'payment_required': application.payment_required,
-            'payment_amount': float(application.payment_amount)
+            'application': serializer.data
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -257,7 +255,12 @@ def update_application_status(request, pk):
         if 'interview_description' in request.data:
             application.interview_description = request.data['interview_description']
         if 'interview_attended' in request.data:
-            application.interview_attended = request.data['interview_attended']
+            # Convert string 'true'/'false' to boolean if needed
+            attended = request.data['interview_attended']
+            if isinstance(attended, str):
+                application.interview_attended = attended.lower() == 'true'
+            else:
+                application.interview_attended = bool(attended)
         if 'rejection_reason' in request.data:
             application.rejection_reason = request.data['rejection_reason']
         if 'rejection_type' in request.data:
@@ -287,10 +290,60 @@ def update_application_status(request, pk):
 
         # Send email notifications
         email_sent = False
-        if new_status == 'approved':
+        if new_status == 'interview_scheduled':
+            try:
+                from datetime import datetime
+                
+                # Parse interview datetime if it's a string
+                if application.interview_datetime:
+                    if isinstance(application.interview_datetime, str):
+                        try:
+                            interview_dt = datetime.fromisoformat(application.interview_datetime.replace('Z', '+00:00'))
+                        except:
+                            interview_dt = datetime.strptime(application.interview_datetime, '%Y-%m-%dT%H:%M')
+                    else:
+                        interview_dt = application.interview_datetime
+                    interview_date = interview_dt.strftime('%B %d, %Y at %I:%M %p')
+                else:
+                    interview_date = 'TBD'
+                    
+                interview_link_text = f"\n\nInterview Link: {application.interview_link}" if application.interview_link else ""
+                interview_desc_text = f"\n\nInstructions: {application.interview_description}" if application.interview_description else ""
+                
+                subject = f'📅 Interview Scheduled - Aarambha Foundation'
+                message = f'''Dear {application.full_name},
+
+Your interview has been scheduled for your {application.application_type} application.
+
+Interview Details:
+Date & Time: {interview_date}{interview_link_text}{interview_desc_text}
+
+Please make sure to attend the interview on time. If you have any questions or need to reschedule, please contact us immediately.
+
+Best regards,
+Aarambha Foundation Team'''
+                
+                send_mail(
+                    subject,
+                    message,
+                    settings.EMAIL_HOST_USER,
+                    [application.user.email],
+                    fail_silently=False,
+                )
+                email_sent = True
+            except Exception as e:
+                print(f'Interview email error: {e}')
+                email_sent = False
+        elif new_status == 'approved':
+            # Set payment requirement for member applications upon approval
+            if application.application_type == 'member':
+                application.payment_required = True
+                application.save()
+            
             # Check if member application requires payment
             if application.application_type == 'member' and application.payment_required and not application.payment_completed:
-                return Response({'error': 'Cannot approve member application: Payment not completed. Member must pay Rs. 1000 membership fee first.'}, status=status.HTTP_400_BAD_REQUEST)
+                # Don't block approval, just notify that payment is required
+                pass
             
             # Generate login credentials for the user
             import secrets

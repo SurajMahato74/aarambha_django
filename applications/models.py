@@ -72,9 +72,8 @@ class Application(models.Model):
         return f"{self.full_name} - {self.application_type} ({self.status})"
     
     def save(self, *args, **kwargs):
-        # Set payment_required for member applications
-        if self.application_type == 'member':
-            self.payment_required = True
+        # Don't automatically set payment_required for member applications
+        # Payment will be required only after approval
         super().save(*args, **kwargs)
 
 class ChildSponsorship(models.Model):

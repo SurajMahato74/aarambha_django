@@ -64,90 +64,98 @@
 </div>
 
 <script>
-    const user = getUser();
-    if (!user || user.user_type !== 'member') window.location.href = '/';
-    document.getElementById('welcomeName').textContent = user.first_name || user.username || 'Member';
+    // Remove all redirects - stay on dashboard and show errors instead
+    console.log('Member dashboard loaded - no redirects');
     
     // Load all data on page load
     loadDashboardData();
     
     async function loadDashboardData() {
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
-        
-        // Load notices
+        // Load notices without token requirement
         loadNotices();
         
-        // Load task count
-        loadTaskCount(token);
-        
-        // Load message count
-        loadMessageCount(token);
-        
-        // Load event count
-        loadEventCount(token);
+        // Load counts with session-based auth
+        loadTaskCount();
+        loadMessageCount();
+        loadEventCount();
     }
     
-    async function loadTaskCount(token) {
+    async function loadTaskCount() {
         try {
             const response = await fetch('/api/tasks/my-tasks/', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
                 const tasks = data.results || data || [];
                 document.getElementById('taskCount').textContent = tasks.length;
+            } else {
+                document.getElementById('taskCount').textContent = 'Error';
             }
         } catch (error) {
             console.error('Error loading tasks:', error);
+            document.getElementById('taskCount').textContent = 'Error';
         }
     }
     
-    async function loadMessageCount(token) {
+    async function loadMessageCount() {
         try {
             const response = await fetch('/messaging/api/conversations/', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
                 const conversations = data.conversations || [];
                 const unreadCount = conversations.filter(c => c.unread_count > 0).length;
                 document.getElementById('messageCount').textContent = unreadCount;
+            } else {
+                document.getElementById('messageCount').textContent = 'Error';
             }
         } catch (error) {
             console.error('Error loading messages:', error);
+            document.getElementById('messageCount').textContent = 'Error';
         }
     }
     
-    async function loadEventCount(token) {
+    async function loadEventCount() {
         try {
             const response = await fetch('/api/events/my-events/', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
                 const events = data.results || data || [];
                 document.getElementById('eventCount').textContent = events.length;
+            } else {
+                document.getElementById('eventCount').textContent = 'Error';
             }
         } catch (error) {
             console.error('Error loading events:', error);
+            document.getElementById('eventCount').textContent = 'Error';
         }
     }
     
     async function loadNotices() {
         try {
-            const token = localStorage.getItem('access_token');
-            if (!token) throw new Error('No authentication token');
-            
             const response = await fetch('/api/notices/my-notifications/', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             
-            if (!response.ok) throw new Error('Failed to fetch notices');
+            const container = document.getElementById('noticesContainer');
+            
+            if (!response.ok) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
+                        <p class="text-red-400">Authentication Error: ${response.status}</p>
+                        <p class="text-slate-400 text-sm">Please check your login status</p>
+                    </div>
+                `;
+                return;
+            }
             
             const data = await response.json();
             const notificationsList = data.notifications || data.results || data || [];
-            const container = document.getElementById('noticesContainer');
             
             // Update notice count in card
             const unreadCount = notificationsList.filter(n => !n.is_read).length;
@@ -181,7 +189,8 @@
             document.getElementById('noticesContainer').innerHTML = `
                 <div class="text-center py-4">
                     <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
-                    <p class="text-red-400">Error loading notices.</p>
+                    <p class="text-red-400">Network Error</p>
+                    <p class="text-slate-400 text-sm">${error.message}</p>
                 </div>
             `;
         }

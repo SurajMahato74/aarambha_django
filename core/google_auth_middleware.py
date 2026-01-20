@@ -10,12 +10,12 @@ class GoogleAuthSyncMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
         
-        # Check if user just logged in via Google and is being redirected to profile
+        # Check if user is authenticated and this is the profile page
         if (request.user.is_authenticated and 
-            request.path == '/guest/profile/' and 
-            'google' in request.session.get('socialaccount_sociallogin', {}).get('account', {}).get('provider', '')):
+            request.path == '/guest/profile/' and
+            response.status_code == 200):
             
-            # Generate JWT tokens for the user
+            # Generate JWT tokens for consistency
             refresh = RefreshToken.for_user(request.user)
             user_data = {
                 'id': request.user.id,
@@ -28,29 +28,15 @@ class GoogleAuthSyncMiddleware:
                 'branch': request.user.branch.id if hasattr(request.user, 'branch') and request.user.branch else None,
             }
             
-            # Add JavaScript to set localStorage and ensure session consistency
-            user_json = json.dumps(user_data)
+            # Add script to sync localStorage with Django session
+            access_token = str(refresh.access_token).replace("'", "\\'")
+            refresh_token = str(refresh).replace("'", "\\'")
             script = f"""
             <script>
-                // Clear any existing auth data first
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                localStorage.removeItem('user');
-                
-                // Set new auth data
-                localStorage.setItem('access_token', '{str(refresh.access_token)}');
-                localStorage.setItem('refresh_token', '{str(refresh)}');
-                localStorage.setItem('user', JSON.stringify({user_json}));
-                
-                // Update navbar auth state
-                if (typeof updateNavbarAuth === 'function') {{
-                    updateNavbarAuth();
-                }}
-                
-                console.log('Google auth synced to localStorage and session');
-                
-                // Set flag for success message
-                localStorage.setItem('justLoggedIn', 'true');
+                console.log('Syncing Google auth tokens...');
+                localStorage.setItem('access_token', '{access_token}');
+                localStorage.setItem('refresh_token', '{refresh_token}');
+                console.log('Google auth tokens synced successfully');
             </script>
             """
             
