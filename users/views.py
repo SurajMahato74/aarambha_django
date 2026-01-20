@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Q
 from django.contrib.auth import login as django_login
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from .models import CustomUser
 from .auth_utils import create_unified_auth_response, logout_user_completely
@@ -99,8 +101,10 @@ def verify_otp(request):
     except EmailOTP.DoesNotExist:
         return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def login(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
