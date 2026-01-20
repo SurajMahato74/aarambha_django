@@ -70,8 +70,8 @@
 </div>
 
 <script>
-    const user = getUser();
-    if (!user || user.user_type !== 'member') window.location.href = '/';
+    // Remove redirect - let Django handle authentication
+    console.log('Member profile loaded - no client-side auth check');
     
     // Load profile details on page load
     loadProfileDetails();
@@ -104,9 +104,8 @@
     
     async function loadProfileDetails() {
         try {
-            const token = localStorage.getItem('access_token');
             const response = await fetch('/api/users/profile/', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             
             if (response.ok) {
@@ -139,13 +138,20 @@
                         </div>
                     </div>
                 `;
+            } else {
+                document.getElementById('profileDetails').innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
+                        <p class="text-red-400">Error loading profile: ${response.status}</p>
+                    </div>
+                `;
             }
         } catch (error) {
             console.error('Error loading profile details:', error);
             document.getElementById('profileDetails').innerHTML = `
                 <div class="text-center py-8">
                     <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-3"></i>
-                    <p class="text-red-400">Error loading profile details</p>
+                    <p class="text-red-400">Network error loading profile</p>
                 </div>
             `;
         }

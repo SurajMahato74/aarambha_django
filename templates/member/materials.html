@@ -32,8 +32,8 @@
 </div>
 
 <script>
-    const user = getUser();
-    if (!user || user.user_type !== 'member') window.location.href = '/';
+    // Remove redirect - let Django handle authentication
+    console.log('Member materials loaded - no client-side auth check');
     
     let materials = [];
     let categories = [];
@@ -44,20 +44,28 @@
     
     async function loadMaterials() {
         try {
-            const token = localStorage.getItem('access_token');
             const response = await fetch('/api/materials/my-materials/', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             
-            const data = await response.json();
-            materials = data.materials || [];
-            renderMaterials();
+            if (response.ok) {
+                const data = await response.json();
+                materials = data.materials || [];
+                renderMaterials();
+            } else {
+                document.getElementById('materialsContainer').innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
+                        <p class="text-red-400">Error loading materials: ${response.status}</p>
+                    </div>
+                `;
+            }
         } catch (error) {
             console.error('Error loading materials:', error);
             document.getElementById('materialsContainer').innerHTML = `
                 <div class="text-center py-8">
                     <i class="fas fa-exclamation-triangle fa-2x text-red-400 mb-2"></i>
-                    <p class="text-red-400">Error loading materials.</p>
+                    <p class="text-red-400">Network error loading materials</p>
                 </div>
             `;
         }
@@ -65,14 +73,15 @@
     
     async function loadCategories() {
         try {
-            const token = localStorage.getItem('access_token');
             const response = await fetch('/api/materials/categories/', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             
-            const data = await response.json();
-            categories = data.categories || [];
-            renderCategoryFilters();
+            if (response.ok) {
+                const data = await response.json();
+                categories = data.categories || [];
+                renderCategoryFilters();
+            }
         } catch (error) {
             console.error('Error loading categories:', error);
         }
