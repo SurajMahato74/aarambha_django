@@ -141,7 +141,7 @@
                     return;
                 }
                 
-                // Reload current page to update authentication state
+                // Always reload current page regardless of user type (admin or regular)
                 window.location.reload();
             } else {
                 errorDiv.textContent = data.non_field_errors?.[0] || data.error || 'Login failed. Please check credentials.';
@@ -221,7 +221,7 @@
                 setUser(data.user);
                 document.getElementById('navbarLoginModal').style.display = 'none';
                 
-                // Reload current page to update authentication state
+                // Always reload current page regardless of user type (admin or regular)
                 window.location.reload();
             } else {
                 errorDiv.style.color = '#dc3545';

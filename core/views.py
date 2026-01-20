@@ -391,7 +391,11 @@ def logout_view(request):
         from django.http import HttpResponseNotAllowed
         return HttpResponseNotAllowed(['POST'])
 
+@login_required
 def admin_dashboard(request):
+    if not request.user.is_superuser:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Access denied")
     from users.models import CustomUser
     from branches.models import Branch
     from applications.models import Application

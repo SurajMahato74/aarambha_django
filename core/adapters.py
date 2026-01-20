@@ -1,11 +1,36 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import user_email, user_field
 from django.contrib.auth import get_user_model
 from allauth.account.models import EmailAddress
 from django.contrib.auth import login as django_login
+from django.urls import reverse
 import uuid
 
 User = get_user_model()
+
+class CustomAccountAdapter(DefaultAccountAdapter):
+    def get_login_redirect_url(self, request):
+        """
+        Custom login redirect logic to prevent admin users from being redirected
+        """
+        # Check if there's a 'next' parameter (user was trying to access a protected page)
+        next_url = request.GET.get('next') or request.POST.get('next')
+        if next_url:
+            return next_url
+        
+        # If user is superuser/admin and no specific page requested, stay on current page
+        if hasattr(request.user, 'is_superuser') and request.user.is_superuser:
+            # Get referer URL
+            referer = request.META.get('HTTP_REFERER')
+            if referer and not referer.endswith('/accounts/google/login/'):
+                return referer
+            
+            # Default to home page for admin users
+            return '/'
+        
+        # For regular users, use default behavior
+        return super().get_login_redirect_url(request)
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def pre_social_login(self, request, sociallogin):
@@ -46,6 +71,28 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         user.user_type = 'guest'  # Always set to guest for Google login
         user.save()
         return user
+    
+    def get_login_redirect_url(self, request):
+        """
+        Custom login redirect logic for social login to prevent admin users from being redirected
+        """
+        # Check if there's a 'next' parameter (user was trying to access a protected page)
+        next_url = request.GET.get('next') or request.POST.get('next')
+        if next_url:
+            return next_url
+        
+        # If user is superuser/admin and no specific page requested, stay on current page
+        if hasattr(request.user, 'is_superuser') and request.user.is_superuser:
+            # Get referer URL
+            referer = request.META.get('HTTP_REFERER')
+            if referer and not referer.endswith('/accounts/google/login/'):
+                return referer
+            
+            # Default to home page for admin users
+            return '/'
+        
+        # For regular users, use default behavior
+        return super().get_login_redirect_url(request)
     
     def authentication_error(self, request, provider_id, error=None, exception=None, extra_context=None):
         """

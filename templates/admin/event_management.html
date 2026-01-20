@@ -41,7 +41,7 @@
                         <td class="py-3 px-4">
                             <div>
                                 <div class="font-medium text-white">{{ event.title }}</div>
-                                <div class="text-sm text-slate-400">{{ event.description|truncatechars:50 }}</div>
+                                <div class="text-sm text-slate-400">{{ event.description|striptags|truncatechars:50 }}</div>
                             </div>
                         </td>
                         <td class="py-3 px-4">
