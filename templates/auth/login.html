@@ -10,13 +10,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
+      
+  <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
     <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#135bec",
+                        "primary": "#2d3b5b",
+                        "orange":"#d6692a",
                         "background-light": "#f6f6f8",
                         "background-dark": "#101622",
                     },
@@ -38,56 +41,60 @@
     </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display">
+<body class=" font-display" style="background-image: url('{% static 'website/images/mission.png' %}'); background-size: cover; background-position: center; background-attachment: fixed;">
+    <!-- Background Overlay -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-0"></div>
+    
     <!-- Global Loader -->
     <div id="global-loader" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
     </div>
 
-    <div class="relative flex h-auto min-h-screen w-full flex-col items-center justify-center p-4">
-        <div class="flex w-full max-w-sm flex-col items-center">
+    <div class="relative flex h-auto min-h-screen w-full flex-col items-center justify-center p-4 z-10">
+        <div class="flex w-full max-w-sm flex-col items-center bg-[#F3F3F3]   rounded-2xl shadow-2xl p-8">
 
             <!-- Title + Back Button -->
-            <div id="titleContainer" class="relative w-full mb-6 flex justify-center">
+            <div id="titleContainer" class=" w-full mb-6 flex justify-center items-center flex-col">
                 <div id="backIcon" class="absolute left-0 flex items-center cursor-pointer hidden"
                     onclick="goBackToMainLogin()">
                     <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-2xl">arrow_back</span>
                 </div>
-                <div class="text-gray-900 dark:text-white font-bold text-lg">Login</div>
+                <img src="{% static 'website/images/logo.png' %}" style="width: 160px;">
+                <div class="text-gray-700 mt-2  font-bold text-sm">Login</div>
             </div>
 
             <!-- Username/Password Form -->
-            <form id="loginForm" class="w-full space-y-4">
+            <form id="loginForm" class="w-full space-y-3">
                 <div class="flex w-full flex-col">
-                    <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+                    <label class="mb-2 text-sm font-medium text-gray-700 ">Username</label>
                     <div class="relative flex items-center">
                         <span
-                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">person</span>
+                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 ">person</span>
                         <input id="username"
-                            class="form-input h-12 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            class="form-input h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 "
                             placeholder="Enter your username" type="text" required />
                     </div>
                 </div>
 
                 <div class="flex w-full flex-col">
-                    <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                    <label class="mb-2 text-sm font-medium text-gray-700">Password</label>
                     <div class="relative flex items-center">
                         <span
-                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">lock</span>
+                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 ">lock</span>
                         <input id="password"
-                            class="form-input h-12 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            class="form-input h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 "
                             placeholder="Enter your password" type="password" required />
                         <button type="button" onclick="togglePassword()"
-                            class="absolute right-3 text-gray-400 dark:text-gray-500">
+                            class="absolute right-3 top-2 text-gray-400 ">
                             <span class="material-symbols-outlined" id="toggleIcon">visibility</span>
                         </button>
                     </div>
                 </div>
 
-                <div id="message" class="text-sm text-center h-5"></div>
+                <div id="message" class="text-sm text-center "></div>
 
                 <button type="submit"
-                    class="w-full h-12 rounded-lg bg-primary font-bold text-white font-bold hover:bg-primary/90 transition">
+                    class="w-full h-10 rounded-lg bg-primary font-bold text-white font-bold hover:bg-orange transition">
                     Login
                 </button>
             </form>
@@ -98,13 +105,13 @@
                     <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
                     <div class="relative flex items-center">
                         <span
-                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">mail</span>
+                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 ">mail</span>
                         <input id="emailInput"
-                            class="form-input h-12 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            class="form-input h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 "
                             placeholder="Enter your email" type="email" required />
                     </div>
                     <button type="button" onclick="sendOTP(this)"
-                        class="mt-4 w-full h-12 rounded-lg bg-primary text-white font-bold hover:bg-primary/90">
+                        class="mt-4 w-full h-10 rounded-lg bg-primary text-white font-bold hover:bg-primary/90">
                         Send OTP
                     </button>
                 </div>
@@ -113,13 +120,13 @@
                     <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Enter OTP</label>
                     <div class="relative flex items-center">
                         <span
-                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">pin</span>
+                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 ">pin</span>
                         <input id="otpInput"
-                            class="form-input h-12 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            class="form-input h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 "
                             placeholder="6-digit OTP" type="text" maxlength="6" required />
                     </div>
                     <button type="button" onclick="verifyOTP(this)"
-                        class="mt-4 w-full h-12 rounded-lg bg-primary text-white font-bold hover:bg-primary/90">
+                        class="mt-4 w-full h-10 rounded-lg bg-primary text-white font-bold hover:bg-primary/90">
                         Verify OTP
                     </button>
                     <button type="button" onclick="showEmailStep()"
@@ -138,14 +145,21 @@
                 </button>
             </div>
 
-            <div class="mt-12 text-center">
-                <p class="text-xs text-gray-500 dark:text-gray-600">© 2025 Aarambha Foundation</p>
-            </div>
+          
         </div>
     </div>
+    <footer>
+        <div class="fixed z-3 flex h-16 w-full items-center justify-center w-full  bottom-1 z-10">
+            <div class="text-center text-sm text-gray-300">
+                &copy; <span id="currentYear"></span> aarambha foundration. All rights reserved.
+            </div>
+        </div>
+    </footer>
 
     <script src="{% static 'js/config.js' %}"></script>
     <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
         // Show/Hide forms
         function showEmailLogin() {
             document.getElementById('loginForm').classList.add('hidden');

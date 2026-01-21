@@ -29,7 +29,7 @@
 <body>
   {% include 'website/includes/navbar.html'%}
   <!-- START FIXED HERO SECTION -->
-  <section class="hero-fixed-wrapper wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+  <section class="hero-fixed-wrapper wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" style="position: relative;">
     <div class="img-box">
       {% if hero_section %}
       {% if hero_section.background_video %}
@@ -57,17 +57,18 @@
       {% endif %}
       {% else %}
       <!-- Fallback to default video when no hero section exists -->
-      <video src="{% static 'website/images/cover.mp4' %}" autoplay loop muted playsinline
+      {% comment %} <video src="{% static 'website/images/cover.mp4' %}" autoplay loop muted playsinline
         controlslist="nodownload noremoteplayback noplaybackrate" disablepictureinpicture>
-      </video>
+      </video> {% endcomment %}
+      <img src="{% static 'website/images/hero.jpg' %}" alt="" srcset="">
       {% endif %}
     </div>
-    <div class="hero-fixed" style="position: relative;">
-      <div style="position: fixed; bottom: 220px; right: 100px; z-index: 1000; display: flex; flex-direction: row; gap: 15px; align-items: center;">
-        <a href="javascript:void(0)" onclick="handleFlagSchoolClick('{% url 'report_school_dropout' %}')" class="btn1 navigation__donate" style="padding: 12px 24px; white-space: nowrap;">
+    <div class="hero-fixed" style="position: absolute; z-index: 99;">
+      <div style=" display: flex; flex-direction: row; gap: 15px; align-items: center;">
+        <a href="javascript:void(0)" onclick="handleFlagSchoolClick('{% url 'report_school_dropout' %}')" class="btn2 navigation__donate" style="padding: 12px 24px; white-space: nowrap;">
           Flag a School Dropout
         </a>
-        <a href="javascript:void(0)" onclick="handleDonateClick('#')" class="btn navigation__donate d-none d-md-block" style="padding: 12px 40px; white-space: nowrap;">
+        <a href="javascript:void(0)" onclick="handleDonateClick('#')" class="btn btn--orange-white navigation__donate d-none d-md-block" style="padding: 12px 40px; white-space: nowrap;">
           Donate
         </a>
       </div>
