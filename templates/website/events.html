@@ -59,10 +59,13 @@
                       <span>{{ event.title }}</span>
                     </h3>
                     <div class="card__blurb">
-                      <p>{{ event.description|truncatewords:30 }}</p>
+                      <p>{{ event.description|truncatewords:15 }}</p>
                       {% if event.location %}
                       <p><small><i class="fa-solid fa-location-dot"></i> {{ event.location }}</small></p>
                       {% endif %}
+                    </div>
+                     <div>
+                      <a href="{% url 'website_event_detail' event.id %}" class="btn btn--orange-white">Read More</a>
                     </div>
                   </div>
                 </div>

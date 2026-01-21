@@ -65,12 +65,12 @@
     </div>
     <div class="hero-fixed" style="position: absolute; z-index: 99;">
       <div style=" display: flex; flex-direction: row; gap: 15px; align-items: center;">
-        <a href="javascript:void(0)" onclick="handleFlagSchoolClick('{% url 'report_school_dropout' %}')" class="btn2 navigation__donate" style="padding: 12px 24px; white-space: nowrap;">
+        <a href="javascript:void(0)" onclick="handleFlagSchoolClick('{% url 'report_school_dropout' %}')" class="btn btn--orange-white navigation__donate" style="padding: 12px 24px; white-space: nowrap;">
           Flag a School Dropout
         </a>
-        <a href="javascript:void(0)" onclick="handleDonateClick('#')" class="btn btn--orange-white navigation__donate d-none d-md-block" style="padding: 12px 40px; white-space: nowrap;">
+        {% comment %} <a href="javascript:void(0)" onclick="handleDonateClick('#')" class="btn btn--orange-white navigation__donate d-none d-md-block" style="padding: 12px 40px; white-space: nowrap;">
           Donate
-        </a>
+        </a> {% endcomment %}
       </div>
     </div>
   </section>
@@ -94,7 +94,7 @@
                   </h3>
                   <div class="card__blurb">
                     <p>Join our One Rupee a Day Campaign and make a meaningful impact with just one rupee daily. </p>
-                    <div><span class="btn btn--orange-white">Join Campaign</span></div>
+                    <div class="mt-md-5"><span class="btn btn--orange-white">Join Campaign</span></div>
                   </div>
                 </div>
               </div>
@@ -115,7 +115,7 @@
                   </h3>
                   <div class="card__blurb">
                     <p>Make your birthday special by sponsoring a big dream. Celebrate your special day while making a difference in a child's life and supporting their education.</p>
-                    <div><span class="btn btn--orange-white">Celebrate</span></div>
+                    <div class=""><span class="btn btn--orange-white">Celebrate</span></div>
                   </div>
                 </div>
               </div>
@@ -355,7 +355,7 @@
       <div class="container">
         <ul class="row">
           {% for event in events %}
-          <div class="col-lg-3 col-md-6 mb-4">
+          <div class="col-lg-4 col-md-6 mb-4">
           <li class="card card--standard card--full-link wow fadeInUp" data-wow-duration="1s"
             data-wow-delay="{{ forloop.counter0|add:4|floatformat:1|stringformat:'0.%ss' }}">
             <a href="{% url 'website_event_detail' event.id %}" class="text-decoration-none">
@@ -375,10 +375,13 @@
                       <span>{{ event.title }}</span>
                     </h3>
                     <div class="card__blurb">
-                      <p>{{ event.description|truncatewords:30 }}</p>
+                      <p>{{ event.description|truncatewords:15 }}</p>
                       {% if event.location %}
                       <p><small><i class="fa-solid fa-location-dot"></i> {{ event.location }}</small></p>
                       {% endif %}
+                    </div>
+                    <div>
+                      <a href="{% url 'website_event_detail' event.id %}" class="btn btn--orange-white">Read More</a>
                     </div>
                   </div>
                 </div>
@@ -449,12 +452,13 @@
         </ul>
         <div class="col-md-12 mb-3 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.9s">
           <div class="d-flex justify-content-center mt-2">
-            <a href="{% url 'website_events' %}" class="py-1 px-4 align-content-center btn" style="
+            <a href="{% url 'website_events' %}" class="py-1 px-3 align-content-center btn" style="
                   background: transparent !important;
                   color: #000;
                   border: 1px solid #000;
                   font-weight: 400;
                   text-transform: capitalize;
+                  font-size:12px;
                 ">&nbsp; &nbsp; View All Events <i class="bi bi-arrow-right"></i>
             </a>
           </div>

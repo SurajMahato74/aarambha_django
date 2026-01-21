@@ -27,19 +27,24 @@
   <style>
     .header-top img {
       width: 100%;
-      max-height: 250px;
+      height: 450px;
       object-fit: cover;
       border-radius: 10px;
     }
+    @media (max-width: 768px) {
+       .header-top img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    }
+
 
     .header-bottom {
       color: #2d3b5b;
       background-color: #fff;
-      border-top: 10px solid #8f5556;
-      border-left: 1px solid #8f5556;
-      border-right: 1px solid #8f5556;
-      border-bottom: 1px solid #8f5556;
-      padding: 5px 20px;
+
       border-radius: 10px 10px 0 0;
     }
 
@@ -221,59 +226,44 @@
 
 <body>
   {% include 'website/includes/navbar.html'%}
-
-  <!-- <main class="mt-5" style="background-image: url('images/volentier.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; min-height: 35vh; display: flex; align-items: center; justify-content: center;">
-         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.82);"></div>
-         <div style="position: relative; z-index: 2; text-align: center; ">
-             <h1 style="font-size: 2.6rem; font-weight: bold; margin-bottom: 0.5rem; color: #f54401;">Be a Member</h1>
-             <p style="font-size: 1.2rem; margin-bottom: 0; color: #ccc;">Join our mission to empower communities and create lasting change across Nepal</p>
-         </div>
-        </main> -->
-
-  <div class="container member-section">
-    <div class="row justify-content-center">
-      <div class="col-12 col-md-8 wow fadeInUp">
-        <div class="header-top " style="margin-top: 100px; margin-bottom: 10px">
-          <img src="{% static 'website/images/volentier.jpg' %}" alt="Aarambha Foundation" />
+  <section class="member-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 col-md-12 wow fadeInUp">
+        <div class="header-top " style="margin-top: 90px; margin-bottom: 10px">
+          <img src="{% static 'website/images/volentier.jpg' %}" alt="Aarambha Foundation" class="" />
         </div>
         <div class="header-bottom mb-3 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
-          <h1>Membership Application | Aarambha Foundation</h1>
-          <div class="header-content">
-            <p>
-              Aarambha Foundation, formally registered on 3rd August 2015, is
-              a non-profit, non-governmental organization working for child
-              welfare, youth empowerment and social welfare. The primary focus
-              of the organization is to bring each and every children of the
-              nation to the light of education and then, uplifting them
-              through personal and behavioral development. The organization
-              believes in team work and has the tagline “Our Beginning for
-              Change”.
+          <h1 class="bg-orange text-white" style="border-radius:10px">&nbsp;&nbsp;Membership Application</h1>
+          <div class="header-content py-2">
+            <p class="mb-3">
+             Aarambha Foundation, formally registered on 3rd August 2015, is a non-profit, non-governmental
+organization dedicated to child welfare, youth empowerment, and social development. We strongly
+believe in teamwork and collective action, guided by our tagline: <strong>“Our Beginning for Change.”</strong>
             </p>
-            <p>
-              Aarambha has reached hundreds of lives since the establishment
-              through the School Dropouts’ Prevention and Re-enrollment
-              Project (SDPRP), Free Tuition Campaign, Rural Library Project,
-              Free Health Camp and Clothes Distribution, Teaching Fellowship,
-              Digital Classroom and it has changed the lives of thousands of
-              youths through the motivational seminar series - Getting into
-              Yourself. The journey of Aarambha has just begun and our
-              enthusiastic team is on the way to touch millions of lives in
-              Nepal.
+            <p class="mb-3">
+              We work to bring the light of education, promote better health, and nurture a safe and supportive
+environment across the nation—where the laughter, voices, and aspirations of every child, both
+heard and unheard, are valued and celebrated. Our mission is to ensure that every child has the
+opportunity to learn, grow, and develop through personal and behavioural empowerment.
             </p>
-            <p>
-              We are basically a group of enthusiastic youngsters who has a
-              strong determination to create a change in the society. We have
-              a common understanding and feeling of selflessness and we stand
-              to donate a part of our life to transform the existing society
-              into the better, beautiful and productive one. Through small
-              efforts and planning, Aarambha Foundation and its team of
-              dedicated members, come together for the greater good and
-              achieve the goal of creating a positive difference in the life
-              of a child or the children.
+            <p class="mb-3">
+              Since its establishment, Aarambha Foundation has touched hundreds of lives through impactful
+initiatives such as the <strong>School Dropouts’ Prevention and Re-Enrollment Project (SDPRP), Free
+Tuition Campaign, Rural Library Project, Free Health Camps and Clothes Distribution, Teaching
+Fellowship, Digital Classroom programs and Modular Montessori.</strong> Thousands of young people have
+also been inspired through our motivational seminar series, <strong>“Getting into Yourself.”</strong> While our
+journey has just begun, our passionate team is committed to reaching thousands of lives across
+Nepal.
             </p>
+            <p class="mb-3">We are a group of enthusiastic young individuals driven by a shared vision to create meaningful
+change in society. United by selflessness and determination, we dedicate a part of our lives to
+building a better, more beautiful, and productive society. Through thoughtful planning and small yet
+impactful efforts, Aarambha Foundation and its dedicated members come together for the greater
+good—creating positive change in the lives of children and communities.</p>
             <p>
-              If you agree with the same, join today to become a member of
-              Aarambha Family.
+              If you share this vision and believe in the power of collective action, <strong>join us today and become a
+member of the Aarambha Family.</strong> Together, we can be the beginning of change.
             </p>
             <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
               <h4 style="color: #2d3b5b; margin-bottom: 15px;"><i class="fas fa-info-circle"></i> Membership Information</h4>
@@ -474,6 +464,7 @@
       </div>
     </div>
   </div>
+  </section>
 
 
     {% include "website/includes/footer.html" %}
