@@ -28,9 +28,7 @@
     .header-top img {
       width: 100%;
       height: 450px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
+      object-fit: cover;    }
     @media (max-width: 768px) {
        .header-top img {
       width: 100%;
@@ -227,14 +225,22 @@
 <body>
   {% include 'website/includes/navbar.html'%}
   <section class="member-section">
-  <div class="container">
+     <div class="header-top " style="margin-top: 85px;">
+          <img src="{% static 'website/images/volentier.jpg' %}" alt="Aarambha Foundation" class="" />
+    </div>
+  <div class="bg-orange">
+    <div class="container">
+      <div class="row">
+      <div class="col-md-12">
+          <h3 class="text-white py-3">Membership Application</h3>
+      </div>
+    </div>
+    </div>
+  </div>
+  <div class="container py-4">
     <div class="row">
       <div class="col-12 col-md-12 wow fadeInUp">
-        <div class="header-top " style="margin-top: 90px; margin-bottom: 10px">
-          <img src="{% static 'website/images/volentier.jpg' %}" alt="Aarambha Foundation" class="" />
-        </div>
         <div class="header-bottom mb-3 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
-          <h1 class="bg-orange text-white" style="border-radius:10px">&nbsp;&nbsp;Membership Application</h1>
           <div class="header-content py-2">
             <p class="mb-3">
              Aarambha Foundation, formally registered on 3rd August 2015, is a non-profit, non-governmental

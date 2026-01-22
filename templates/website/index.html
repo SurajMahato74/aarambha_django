@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="{% static 'website/css/index.css' %}" />
   <link rel="stylesheet" href="{% static 'website/css/style.css' %}" />
   <!-- custom-css end -->
-  <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
+  <link rel="icon" type="image/png" href="{% static 'website/images/favicon.png' %}" />
   <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
 </head>
 
@@ -63,7 +63,7 @@
       <img src="{% static 'website/images/hero.jpg' %}" alt="" srcset="">
       {% endif %}
     </div>
-    <div class="hero-fixed" style="position: absolute; z-index: 99;">
+    <div class="hero-fixed" style="position: absolute; z-index: 9;">
       <div style=" display: flex; flex-direction: row; gap: 15px; align-items: center;">
         <a href="javascript:void(0)" onclick="handleFlagSchoolClick('{% url 'report_school_dropout' %}')" class="btn btn--orange-white navigation__donate" style="padding: 12px 24px; white-space: nowrap;">
           Flag a School Dropout
@@ -538,7 +538,7 @@
   <script src="{% static 'website/js/script.js' %}"></script>
   <script src="{% static 'website/js/min.js' %}"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <script src="{% static 'js/navbar.js' %}"></script>
+  {% comment %} <script src="{% static 'js/navbar.js' %}"></script> {% endcomment %}
   <script src="{% static 'js/config.js' %}"></script>
   <script>
     function handleFlagSchoolClick(url) {

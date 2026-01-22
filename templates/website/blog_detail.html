@@ -29,15 +29,17 @@
     .back-icon {
       position: absolute;
       top: 1rem;
-      left: 1rem;
+      left: 5.5rem;
       color: white;
-      font-size: 1.5rem;
+      font-size: 1rem;
       text-decoration: none;
-      z-index: 1000;
-      background: rgba(0,0,0,0.3);
-      padding: 0.5rem;
-      border-radius: 50%;
+      z-index: 99;
     }
+     @media (max-width: 768px) {
+      .back-icon {
+        left: 1rem;
+      }
+     }
     .back-icon:hover {
       color: rgba(255,255,255,0.8);
       text-decoration: none;
@@ -47,7 +49,7 @@
       padding: 3rem 0;
     }
     .blog-paragraph {
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
     }
     .blog-paragraph img {
       max-width: 100%;
@@ -156,34 +158,30 @@
   {% include 'website/includes/navbar_login_modal.html'%}
 
   <!-- Blog Header -->
-  <section class="bg-blue py-5" style="position: relative;">
-    <a href="{% url 'website_blogs' %}" class="back-icon">
-      <i class="fas fa-arrow-left"></i>
-    </a>
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-8 mx-auto text-center">
-          <h1 class="mb-4 text-white">{{ blog_post.title }}</h1>
-          <div class="mt-3">
-            {% for category in blog_post.categories.all %}
+  <section style="position: relative;">
+     <div class="bg-blue py-5">
+     <h3 class="text-center text-white">{{ blog_post.title }}</h3>
+     <p class="text-center mt-2">
+      {% for category in blog_post.categories.all %}
             <a href="{% url 'website_blogs' %}?category={{ category.slug }}" 
                class="category-badge" 
                style="background-color: {{ category.color }};">{{ category.name }}</a>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
+      {% endfor %}
+     </p>
     </div>
+    <a href="{% url 'website_blogs' %}" class="back-icon">
+      <i class="fas fa-arrow-left"></i> Back to Blogs
+    </a>
   </section>
 
   <!-- Featured Image -->
   {% if blog_post.featured_image %}
-  <section class="py-0">
+  <section class="">
     <div class="container">
       <div class="row">
         <div class="col-12">
           <img src="{{ blog_post.featured_image.url }}" alt="{{ blog_post.title }}" 
-               class="img-fluid w-100" style="max-height: 400px; object-fit: cover; border-radius: 12px;">
+               class="img-fluid w-100 h-100" style="object-fit: cover; ">
         </div>
       </div>
     </div>
@@ -194,14 +192,14 @@
   <section class="blog-content">
     <div class="container">
       <div class="row">
-        <div class="col-lg-8 mx-auto">
+        <div class="col-lg-12">
           <!-- Blog Excerpt -->
           <div class="lead mb-4">{{ blog_post.excerpt }}</div>
           
           <!-- Dynamic Paragraphs -->
           {% for paragraph in paragraphs %}
           <div class="blog-paragraph">
-            {% if paragraph.paragraph_type == 'text' %}
+            {% if paragraph.paragraph_type == 'text' %} 
               {{ paragraph.content|safe }}
             {% elif paragraph.paragraph_type == 'image' %}
               {% if paragraph.image %}

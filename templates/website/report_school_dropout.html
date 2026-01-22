@@ -25,23 +25,25 @@
     <link rel="icon" type="image/png" href="{% static 'website/images/favicon.png' %}" />
     <title>Report School Dropout | Aarambha Foundation</title>
     <style>
-        .header-top img {
-            width: 100%;
-            max-height: 250px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
+              .header-top img {
+      width: 100%;
+      height: 450px;
+      object-fit: cover;    }
+    @media (max-width: 768px) {
+       .header-top img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    }
 
-        .header-bottom {
-            color: #2d3b5b;
-            background-color: #fff;
-            border-top: 10px solid #8f5556;
-            border-left: 1px solid #8f5556;
-            border-right: 1px solid #8f5556;
-            border-bottom: 1px solid #8f5556;
-            padding: 5px 20px;
-            border-radius: 10px 10px 0 0;
-        }
+     .header-bottom {
+      color: #2d3b5b;
+      background-color: #fff;
+
+      border-radius: 10px 10px 0 0;
+    }
 
         .header-bottom h1 {
             margin: 0;
@@ -104,42 +106,57 @@
 
 <body>
     {% include 'website/includes/navbar.html'%}
-    <div class="container member-section">
+    <section class="member-section">
+           <div class="header-top " style="margin-top: 85px;">
+          <img src="{% static 'website/images/help.jpg' %}" alt="Aarambha Foundation" />
+    </div>
+  <div class="bg-orange">
+    <div class="container">
+      <div class="row">
+      <div class="col-md-12">
+          <h3 class="text-white py-3">Report a School Dropout</h3>
+      </div>
+    </div>
+    </div>
+  </div>
+
+
+    <div class="container py-4">
         <div class="row justify-content-center">
-            <div class="col-12 col-md-8 wow fadeInUp">
-                <div class="header-top " style="margin-top: 100px; margin-bottom: 10px">
-                    <img src="{% static 'website/images/help.jpg' %}" alt="Report School Dropout" />
-                </div>
+            <div class="col-12 col-md-12">
+               
                 <div class="header-bottom mb-3">
-                    <h1>Report School Dropout | Aarambha Foundation</h1>
+                    
                     <div class="header-content">
-                        <p>
-                            Aarambha Foundation is committed to ensuring every child has access to quality education. If
-                            you know of a child who has dropped out of school, please report it here. Your information
-                            will help us reach out and provide support to bring the child back to education.
+                        <p class="mb-3">
+                            At Aarambha Foundation, we are committed to ensuring that every child attends school and receives
+a quality education. If you know of a child who is not going to school or has dropped out, we
+encourage you to report it to us. Your one step can help us reach a child in need and work toward
+enrolling them back into school.
                         </p>
-                        <p>
-                            All reports are treated confidentially. You can choose to remain anonymous if you wish.
+                        <p class="mb-3">
+                           Please fill out the form below to report a school dropout. We will review the information and try our
+best to support the child’s return to education.
                         </p>
                     </div>
-                    <hr style="border: 1px solid #000" />
+             
                     <div class="content">
-                        <form id="dropoutReportForm" class="pb-4">
+                        <form id="dropoutReportForm">
                             {% csrf_token %}
                             <!-- Reporter Information -->
                             <div class="row">
-                                <div class="col-md-12">
-                                    <h3>Reporter Information</h3>
+                                <div class="col-md-12 mb-2">
+                                    <h4>Reporter Information</h4>
                                     <p>Your information will be kept confidential.</p>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="reporter_name">Your Name <span class="required">*</span></label>
                                         <input type="text" id="reporter_name" name="reporter_name"
                                             placeholder="Enter your full name" required />
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="reporter_email">Email Address <span
                                                 class="required">*</span></label>
@@ -147,14 +164,14 @@
                                             placeholder="your@email.com" required />
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="reporter_phone">Phone Number</label>
                                         <input type="tel" id="reporter_phone" name="reporter_phone"
                                             placeholder="+977 9800000000" />
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <div class="form-group">
                                         <label for="is_anonymous">Report Anonymously</label>
                                         <input type="checkbox" id="is_anonymous" name="is_anonymous" />
@@ -165,9 +182,9 @@
                             </div>
 
                             <!-- Dropout Information -->
-                            <div class="row mt-4">
-                                <div class="col-md-12">
-                                    <h3>Dropout Information</h3>
+                            <div class="row  mt-1">
+                                <div class="col-md-12 mb-2">
+                                    <h4>Dropout Information</h4>
                                     <p>Please provide as much information as possible about the child.</p>
                                 </div>
                                 <div class="col-md-6">
@@ -248,8 +265,8 @@
             </div>
         </div>
     </div>
+</section>
 
-    <a href="" class="floating-icon"><span><i class="bi bi-heart-fill"></i></span> DONATE</a>
 
      {% include "website/includes/footer.html" %}
     <!-- scripts start -->

@@ -50,27 +50,28 @@
     <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
 
     <style>
-      .header-top img {
-        width: 100%;
-        max-height: 250px;
-        object-fit: cover;
-        border-radius: 10px;
-      }
+        .header-top img {
+      width: 100%;
+      height: 450px;
+      object-fit: cover;    }
+    @media (max-width: 768px) {
+       .header-top img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    }
 
-      .header-bottom {
-        color: #2d3b5b;
-        background-color: #fff;
-        border-top: 10px solid #8f5556;
-        border-left: 1px solid #8f5556;
-        border-right: 1px solid #8f5556;
-        border-bottom: 1px solid #8f5556;
-        padding: 5px 20px;
-        border-radius: 10px 10px 0 0;
-      }
+     .header-bottom {
+      color: #2d3b5b;
+      background-color: #fff;
 
+      border-radius: 10px 10px 0 0;
+    }
       .header-bottom h1 {
         margin: 0;
-        font-size: 25px;
+        font-size: 20px;
       }
 
       .header-bottom .header-content p {
@@ -164,61 +165,49 @@
   <body>
     {% include 'website/includes/navbar.html' %}
 
-    <!-- <main class="mt-5" style="background-image: url('images/volentier.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; min-height: 35vh; display: flex; align-items: center; justify-content: center;">
-         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.82);"></div>
-         <div style="position: relative; z-index: 2; text-align: center; ">
-             <h1 style="font-size: 2.6rem; font-weight: bold; margin-bottom: 0.5rem; color: #f54401;">Be a Member</h1>
-             <p style="font-size: 1.2rem; margin-bottom: 0; color: #ccc;">Join our mission to empower communities and create lasting change across Nepal</p>
-         </div>
-         </main> -->
-    <div class="container member-section">
-      <div class="row justify-content-center">
-        <div class="col-12 col-md-8 wow fadeInUp">
-          <div
-            class="header-top"
-            style="margin-top: 100px; margin-bottom: 10px"
-          >
-            <img
-              src="{% static 'website/images/volentier.jpg' %}"
-              alt="Aarambha Foundation"
-            />
-          </div>
+    <section class="member-section">
+           <div class="header-top " style="margin-top: 85px;">
+          <img src="{% static 'website/images/volentier.jpg' %}" alt="Aarambha Foundation" class="" />
+    </div>
+  <div class="bg-orange">
+    <div class="container">
+      <div class="row">
+      <div class="col-md-12">
+          <h3 class="text-white py-3">Volunteer Application</h3>
+      </div>
+    </div>
+    </div>
+  </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-md-12">
+      
           <div class="header-bottom mb-3">
-            <h1>Volunteer Application | Aarambha Foundation</h1>
-            <div class="header-content">
-              <p>
-                Aarambha Foundation is a non-profit, non-governmental
-                organization committed to child welfare, youth empowerment, and
-                community development. Since its establishment, the organization
-                has been driven by the belief that meaningful change begins with
-                collective effort and compassion.
+            <div class="header-content py-4">
+              <p class="mb-3">
+               Aarambha Foundation is a non-profit, non-governmental organization dedicated to child welfare,
+youth empowerment, and community development. Since our establishment, we have been guided
+by a simple belief: meaningful change begins with collective effort, compassion, and action.
+              </p>
+              <p class="mb-3">
+               Our volunteer programs are designed to connect passionate individuals with meaningful
+opportunities to create real impact. Whether you’re supporting educational initiatives, contributing
+to community development projects, mentoring young minds, or assisting on the ground during
+campaigns and events, volunteers play a vital role in turning ideas into positive change.
+              </p>
+              <p class="mb-3">
+                Through initiatives such as the <strong>School Dropouts’ Prevention and Re-Enrollment Program (SDPRP),
+Free Tuition Campaign, Rural Library Project, Digital Classroom, Free Health Camps, and
+motivational seminar series,</strong> our volunteers have touched countless lives across Nepal. With your
+time, skills, and dedication, we can expand this impact even further.
+              </p>
+              <p class="mb-3">
+                We believe in teamwork, selflessness, and the power of young minds committed to building a better
+and more inclusive society. If you share this vision and are eager to contribute your passion and
+abilities to a meaningful cause, we warmly invite you to join Aarambha Foundation as a volunteer.
               </p>
               <p>
-                Our volunteer programs aim to connect passionate individuals
-                with impactful opportunities—whether it's supporting educational
-                initiatives, contributing to community projects, mentoring
-                youths, or assisting on the ground during campaigns. Volunteers
-                play a vital role in extending our reach and transforming ideas
-                into real change.
-              </p>
-              <p>
-                Through projects like the School Dropouts’ Prevention and
-                Re-enrollment Program (SDPRP), Free Tuition Campaign, Rural
-                Library Project, Digital Classroom, Free Health Camps, and
-                motivational seminars, volunteers have touched countless lives
-                across Nepal. Your time, energy, and dedication can help us
-                expand this impact even further.
-              </p>
-              <p>
-                We believe in teamwork, selflessness, and the power of young
-                minds committed to building a better society. If you share this
-                vision and want to contribute your skills, passion, and time for
-                a meaningful cause, we welcome you to join Aarambha Foundation
-                as a volunteer.
-              </p>
-              <p>
-                Become a part of our journey—your small effort can create a big
-                difference.
+               <strong>Be a part of our journey—your small effort can create a big difference.</strong>
               </p>
             </div>
             <hr style="border: 1px solid #000" />
@@ -416,10 +405,7 @@
         </div>
       </div>
     </div>
-
-    <a href="" class="floating-icon"
-      ><span><i class="bi bi-heart-fill"></i></span> DONATE</a
-    >
+    </section>
 
    
 
