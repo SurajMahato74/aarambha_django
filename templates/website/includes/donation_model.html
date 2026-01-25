@@ -212,10 +212,14 @@
             <img src="{% static 'website/images/logo.png' %}" alt="Aarambha Foundation">
         </div>
         <div class="info-content">
-            <p>Your support helps us provide education, healthcare, and community development programs. Join us in making a lasting impact today.</p>
-            <div class="footer-links">
-                <a href="#">Privacy</a> • <a href="#">Usage</a> • <a href="#">Contact</a>
-            </div>
+            <p>Your donation to Aarambha Foundation helps support needy children with education and basic
+healthcare, prevent school dropouts, and give out-of-school children a second chance to learn. Every
+contribution creates real impact and brings hope to a child’s future.</p>
+<h5 class="py-0 my-0">❤️ Donate. Change a Life</h5>
+            {% comment %} <div class="footer-links">
+                
+              <a href="#">Privacy</a> • <a href="#">Usage</a> • <a href="#">Contact</a>
+            </div> {% endcomment %}
         </div>
     </div>
 
@@ -224,10 +228,10 @@
         <div id="step1" class="step-content active">
             {% if not user.is_authenticated %}
                 <div style="text-align: center; padding: 20px;">
-                    <h3 style="margin-bottom: 20px; color: #333;">Choose how to donate</h3>
+                    <h4 style="margin-bottom: 20px; color: #333;">Choose how to donate</h4>
                     
                     <!-- Anonymous Donation Option -->
-                    <button class="donate-submit" onclick="proceedAsAnonymous()" style="margin-bottom: 15px; background: #28a745;">
+                    <button class="donate-submit" onclick="proceedAsAnonymous()" style="margin-bottom: 15px; background: #2D3B5B;">
                         Donate Anonymously
                     </button>
                     
