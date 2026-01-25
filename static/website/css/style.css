@@ -1901,25 +1901,36 @@ b {
 	transition: background-size .5s, background-position, .5s, border-color .5s
 }
 @media (max-width: 768px) {
+	.btn-mt{
+		margin-top: -10px !important;
+	}
 	
 .btn {
-	font-size: 0.7rem;
+	font-size: 0.6rem;
+	align-items: center;
 	font-weight: 600;
 	letter-spacing: .025em;
-	line-height: 0.9rem;
+	line-height: 0.4rem;
 	position: relative;
 	text-transform: uppercase;
 	--tw-text-opacity: 1;
 	background-image: linear-gradient(90deg, #2d3b5b 50%, #d6692a 0);
 	background-position: 100% 100%;
 	background-size: 200% 100%;
-	border-radius: 2.25rem;
+	border-radius: 1.5rem;
 	color: #fff;
 	color: rgba(255, 255, 255, var(--tw-text-opacity, 1));
 	font-family: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
-	padding: .75rem 2rem;
+	padding: .55rem 1rem;
 	text-decoration-line: none;
 	transition: background-size .5s, background-position, .5s, border-color .5s
+}
+.btn:after {
+	content: '→';
+	font-size: 16px;
+	font-weight: bold;
+	margin-left: 0.3rem;
+	
 }
 }
 

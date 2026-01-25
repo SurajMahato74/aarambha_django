@@ -25,10 +25,22 @@
   <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
   <title>Aarambha Foundation &#8211; Our Beginning for the Change</title>
   <style>
+          .header-top img {
+      width: 100%;
+      height: 450px;
+      object-fit: cover;    }
+    @media (max-width: 768px) {
+       .header-top img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
     .privacy ul {
       padding-left: 20px;
 
     }
+}
 
     .privacy ul li {
       list-style: dotted;
@@ -41,27 +53,58 @@
 <body>
   {% include 'website/includes/navbar.html'%}
   {% include 'website/includes/navbar_login_modal.html'%}
- <section id="one-rupee-campaign" class="py-3 campaign-bg-1">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h3 class=" fw-bold text-primary">Enroll in One Rupee a Day Campaign</h3>
-                    <p class=" mt-4">Your small daily contribution of just <strong>Rs 1 per day</strong> (Rs 365 per year) can transform a child's life by providing access to quality education, school supplies, and support to prevent dropouts.</p>
-                    <p>At Aarambha Foundation, we believe that every child deserves the light of education. With your support through the One Rupee a Day Campaign, we can clear school fees, distribute stationery, and empower children in rural Nepal to stay in school and dream big.</p>
-                    <ul class="list-unstyled mt-4">
-                        <li class="mb-3"><strong>Impact:</strong> Sponsor education for underprivileged children in Nepal.</li>
-                        <li class="mb-3"><strong>Easy Recurring Donation:</strong> Set up automatic daily/monthly contributions.</li>
-                        <li class="mb-3"><strong>Transparent:</strong> Regular updates on how your contribution is making a difference.</li>
-                    </ul>
-                     <div id="campaignActionButton">
-                        <a href="javascript:void(0)" onclick="handleCampaignAction()"
-                          class="btn py-2" style="font-size:13px; background-color: white; color: white; border: 1px solid #ccc;" id="mainActionBtn">Enroll Now & Donate</a>
-                     </div>
+ <section id="one-rupee-campaign" class=" campaign-bg-1">
+     <div class="header-top ">
+          <img src="{% static 'website/images/mission.png' %}" alt="Aarambha Foundation" />
+    </div>
+     <div class="bg-orange">
+    <div class="container">
+      <div class="row">
+      <div class="col-md-12">
+          <h3 class="text-white py-4 px-2 px-md-5">Enroll in One Rupee a Day Campaign </h3>
+      </div>
+    </div>
+    </div>
+  </div>
+
+        <div class="container py-5">
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="px-2 px-md-5">
+                        <p class="mb-3 text-justify">
+                            At Aarambha Foundation, we believe that every penny matters when it comes to supporting a needy
+child’s education and health. Even the smallest contribution, when given consistently, can create a
+powerful and lasting impact. The One Rupee a Day Campaign is built on a simple idea: when many
+people come together to give a little every day, we can change lives in a big way.
+                        </p>
+                        <p class="mb-3 text-justify">
+                            By joining this campaign, you commit to donating just <strong>one rupee every single day</strong> to support
+Aarambha’s initiatives focused on preventing school dropouts, re-enrolling out-of-school children,
+and ensuring access to education and basic healthcare. This small daily act of kindness helps us
+provide learning materials, educational support, and health assistance to children who need it most.
+                        </p>
+                        <p class="mb-3 text-justify">
+                            Once you join the One Rupee a Day Campaign, you become a <strong>campaign member</strong> and an active part
+of Aarambha’s mission. We will regularly keep you updated on where and how your donations are
+being invested, so you can see the real impact of your contribution and the lives being touched
+through your support.
+                        </p>
+                        <p class="text-justify mb-3">
+                            One rupee may seem small—but given daily, and given together, it becomes hope, education, and
+opportunity for a child. Join the One Rupee a Day Campaign and be part of a community that
+believes lasting change begins with simple, consistent giving.
+                        </p>
+
+                  
+                   
+                    
+                        <div id="campaignActionButton">
+                            <a href="javascript:void(0)" onclick="handleCampaignAction()"
+                            class="btn py-2" style="font-size:13px; background-color: white; color: white; border: 1px solid #ccc;" id="mainActionBtn">Enroll Now & Donate</a>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-lg-6 text-center">
-                    <img src="{% static 'website/images/mission.png' %}" alt="Children learning in school" class="img-fluid rounded shadow-sm">
-                    <p class="mt-3 text-muted">Children supported by Aarambha Foundation's education programs</p>
-                </div>
+                
             </div>
         </div>
     </section>

@@ -28,21 +28,24 @@
 
 <body>
     {% include 'website/includes/navbar.html'%}
+    <section class="">
+     <div class="bg-blue py-5">
+     <h3 class="text-center text-white">Get Involved</h3>
+       <p class="text-white-50 text-center">Join Aarambha Foundation and make a difference in the lives of children
+                    across Nepal. Choose how you'd like to contribute:</p>
+    </div>
+  </section>
 
-    <div class="container mt-5">
+    <div class="container mt-2">
         <div class="row justify-content-center">
             <div class="col-12 col-md-8">
-                <h1 class="text-center mb-4">Get Involved</h1>
-                <p class="text-center mb-5">Join Aarambha Foundation and make a difference in the lives of children
-                    across Nepal. Choose how you'd like to contribute:</p>
-
                 <div class="row">
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
                             <div class="card-body text-center">
                                 <i class="fas fa-users fa-3x mb-3 text-primary"></i>
                                 <h5 class="card-title">Become a Member</h5>
-                                <p class="card-text">Join our core team and help drive our mission forward.</p>
+                                <p class="card-text mb-2">Join our core team and help drive our mission forward.</p>
                                 <a href="{% url 'website_member_form' %}" class="btn btn-primary">Apply Now</a>
                             </div>
                         </div>
@@ -53,7 +56,7 @@
                             <div class="card-body text-center">
                                 <i class="fas fa-hands-helping fa-3x mb-3 text-success"></i>
                                 <h5 class="card-title">Be a Volunteer</h5>
-                                <p class="card-text">Contribute your time and skills to our various projects.</p>
+                                <p class="card-text mb-2">Contribute your time and skills to our various projects.</p>
                                 <a href="{% url 'website_volunteer_form' %}" class="btn btn-success">Apply Now</a>
                             </div>
                         </div>
@@ -64,7 +67,7 @@
                             <div class="card-body text-center">
                                 <i class="fas fa-child fa-3x mb-3 text-warning"></i>
                                 <h5 class="card-title">Sponsor a Child</h5>
-                                <p class="card-text">Provide educational support to a child in need.</p>
+                                <p class="card-text mb-2">Provide educational support to a child in need.</p>
                                 <a href="{% url 'website_sponsor_child_form' %}" class="btn btn-warning">Apply Now</a>
                             </div>
                         </div>
@@ -74,8 +77,7 @@
         </div>
     </div>
 
-    <a href="javascript:void(0)" onclick="openDonationModal()" class="floating-icon"><span><i
-                class="bi bi-heart-fill"></i></span> DONATE</a>
+    
 
      {% include "website/includes/footer.html" %}
 

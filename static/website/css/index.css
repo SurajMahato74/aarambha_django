@@ -16,6 +16,9 @@ body {
   font-family: "Manrope", sans-serif;
   position: relative;
 }
+.text-justify{
+  text-align: justify !important;
+}
 .bg-orange{
   background: var(--main-color) !important;
 }

@@ -17,6 +17,18 @@
   <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
   <title>Celebrate Your Birthday - Aarambha Foundation</title>
   <style>
+       .header-top img {
+      width: 100%;
+      height: 450px;
+      object-fit: cover;    }
+    @media (max-width: 768px) {
+       .header-top img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+  }
     .modal {
       display: none;
       position: fixed;
@@ -72,38 +84,72 @@
 <body>
   {% include 'website/includes/navbar.html' %}
   {% include 'website/includes/navbar_login_modal.html' %}
-
-  <!-- Hero Section -->
-  <section class="split-banner">
-    <div class="full-width">
-      <div class="split-banner__content split-banner__content--image-on-left theme--orange">
-        <div class="split-banner__text">
-          <h2 class="split-banner__title">🎉 Celebrate Your Birthday with Purpose</h2>
-          <div class="max-text-width">
-            <div class="rich-text">
-              <p>Turn your special day into a life-changing moment for children in need. Create a birthday fundraiser and invite friends to donate instead of giving gifts!</p>
-            </div>
-          </div>
-          <div class="d-flex gap-3 flex-wrap">
-            <a href="javascript:void(0)" onclick="scrollToActiveCampaigns()" class="btn btn--orange-white">
-              <i class="fas fa-heart me-2"></i>Support Active Campaigns
-            </a>
-          </div>
-        </div>
-        <div class="split-banner__image">
+ <div class="header-top">
           <img src="{% static 'website/images/health.jpg' %}" alt="Birthday Celebration" loading="lazy" fetchpriority="auto" decoding="async" />
-        </div>
+  </div>
+   <div class="bg-orange">
+    <div class="container">
+      <div class="row">
+      <div class="col-md-12">
+          <h3 class="text-white py-4 px-2 px-md-5">Celebrate Your Birthday Funding a Big Dream </h3>
       </div>
     </div>
-  </section>
+    </div>
+  </div>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12 col-md-12">
+              
+                <div class="header-bottom mb-3 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+                    <div class="header-content px-2 px-md-5">
+                      <p class="mb-3 text-justify">
+                        Your birthday is more than just a celebration—it’s a chance to create joy, hope, and opportunity for
+someone else. With Aarambha Foundation, you can turn your special occasion into a meaningful act
+of giving by fundraising for a cause that truly changes lives. Instead of gifts, invite your friends and
+family to support a project that helps needy children access education and healthcare.
+                      </p>
+                      <p class="mb-3 text-justify">
+                        We offer several ongoing projects and programs that you can choose from to donate to or fundraise
+for. Whether it’s preventing school dropouts, re-enrolling out-of-school children, or supporting a
+child’s education and health, your birthday fundraiser can give an impactful project the support it
+needs to grow and succeed.
+                      </p>
+                      <p class="mb-3 text-justify">
+                        You can easily share your chosen project’s story through social media, messaging apps, or email, and
+invite your friends and family to contribute. Every share becomes an opportunity to spread
+awareness, inspire kindness, and bring more people together for a meaningful cause.
+
+                      </p>
+                      <p class="mb-3 text-justify">
+                        We believe transparency builds trust. That’s why we show clearly how much funding is being raised
+and how it is being used. As your fundraiser progresses, we will keep you updated on the project’s
+development and the real-world impact of the support you helped generate.
+                      </p>
+                      <p class="mb-3 text-justify">
+                        Celebrate your birthday by giving someone else a reason to dream. Start a birthday fundraiser with
+Aarambha Foundation and make your special day the beginning of a brighter future for a child.
+                      </p>
+                      <div class="d-flex gap-3 flex-wrap">
+            <a href="javascript:void(0)" onclick="scrollToActiveCampaigns()" class="btn">
+              Support Active Campaigns
+            </a>
+          </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 
 
   <!-- Active Campaigns -->
-  <section id="active-campaigns" class="events">
+  <section id="active-campaigns" class="events mb-3">
     <div class="vission__content wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
-      <div class="d-flex justify-content-center">
-        <h1 class="py-0 my-0">ACTIVE BIRTHDAY CAMPAIGNS</h1>
+      <div class="">
+        <h3 class="bg-orange text-white py-4 px-2 px-md-5">ACTIVE BIRTHDAY CAMPAIGNS</h3>
       </div>
     </div>
     <div class="card-group card-group--blue-dark">
