@@ -1,0 +1,175 @@
+<!-- Birthday Payment Modal -->
+<style>
+.khalti-btn {
+    background: linear-gradient(135deg, #5C2D91 0%, #7B3F98 100%) !important;
+    border: none !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(92, 45, 145, 0.3) !important;
+}
+
+.khalti-btn:hover {
+    background: linear-gradient(135deg, #4A2577 0%, #693285 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(92, 45, 145, 0.4) !important;
+    color: white !important;
+}
+
+.khalti-logo-img {
+    height: 24px;
+    width: auto;
+    background: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+</style>
+
+<div id="birthdayPaymentModal" class="modal" tabindex="-1" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+  <div class="modal-dialog" style="margin: 0; max-width: 500px; width: 90%;">
+    <div class="modal-content" style="background: #1e293b; color: white; border: none; border-radius: 8px;">
+      <div class="modal-header" style="border-bottom: 1px solid #334155; padding: 20px;">
+        <h5 class="modal-title">
+          <i class="fas fa-birthday-cake" style="color: #ef4444; margin-right: 8px;"></i>
+          Birthday Donation
+        </h5>
+        <button type="button" class="close text-white" onclick="closeBirthdayPaymentModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <form id="birthdayDonationForm">
+          <div class="form-group">
+            <label style="color: #d1d5db;">Your Name *</label>
+            <input type="text" class="form-control" id="donor_name" required 
+                   style="background: #334155; border: 1px solid #475569; color: white;">
+          </div>
+          
+          <div class="form-group">
+            <label style="color: #d1d5db;">Donation Amount (NPR) *</label>
+            <input type="number" class="form-control" id="amount" min="100" required 
+                   placeholder="Enter donation amount" 
+                   style="background: #334155; border: 1px solid #475569; color: white;">
+          </div>
+          
+          <div class="form-group">
+            <label style="color: #d1d5db;">Message (Optional)</label>
+            <textarea class="form-control" id="message" rows="3" 
+                      placeholder="Leave a birthday message..." 
+                      style="background: #334155; border: 1px solid #475569; color: white;"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #334155; padding: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeBirthdayPaymentModal()">Cancel</button>
+        <button type="button" class="btn khalti-btn" onclick="processBirthdayDonation()">
+          <img src="/static/website/images/kh.png" alt="Khalti" class="khalti-logo-img">
+          Donate with Khalti
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openBirthdayPaymentModal() {
+  const modal = document.getElementById('birthdayPaymentModal');
+  modal.style.display = 'flex';
+  
+  // Clear form
+  document.getElementById('birthdayDonationForm').reset();
+}
+
+function closeBirthdayPaymentModal() {
+  const modal = document.getElementById('birthdayPaymentModal');
+  modal.style.display = 'none';
+}
+
+async function processBirthdayDonation() {
+  const form = document.getElementById('birthdayDonationForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  
+  const donationData = {
+    campaign_id: campaignId,
+    donor_name: document.getElementById('donor_name').value,
+    amount: document.getElementById('amount').value,
+    message: document.getElementById('message').value
+  };
+  
+  try {
+    const submitBtn = document.querySelector('.khalti-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>Processing...';
+    submitBtn.disabled = true;
+    
+    const response = await fetch(`/api/applications/birthday-campaign/${campaignId}/donate/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(donationData)
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      closeBirthdayPaymentModal();
+      Swal.fire({
+        icon: 'success',
+        title: 'Thank You!',
+        text: 'Your donation has been recorded successfully!'
+      }).then(() => {
+        loadCampaignDetails();
+      });
+    } else {
+      throw new Error(result.error || 'Failed to process donation');
+    }
+  } catch (error) {
+    console.error('Donation error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Donation Failed',
+      text: error.message || 'Failed to process donation. Please try again.'
+    });
+    
+    const submitBtn = document.querySelector('.khalti-btn');
+    submitBtn.innerHTML = `
+      <img src="/static/website/images/kh.png" alt="Khalti" class="khalti-logo-img">
+      Donate with Khalti
+    `;
+    submitBtn.disabled = false;
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('birthdayPaymentModal');
+  if (e.target === modal) {
+    closeBirthdayPaymentModal();
+  }
+});
+</script>

@@ -123,8 +123,8 @@
                     class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_event_management' or request.resolver_match.url_name == 'admin_event_participations' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-calendar-alt w-4"></i> Event Management
                 </a>
-                <a href="{% url 'admin_school_dropout_reports' %}"
-                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_school_dropout_reports' %}active text-indigo-300 font-medium{% endif %}">
+                <a href="{% url 'admin_school_dropout_reports_new' %}"
+                    class="menu-link hover-bg flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 {% if request.resolver_match.url_name == 'admin_school_dropout_reports_new' %}active text-indigo-300 font-medium{% endif %}">
                     <i class="fas fa-graduation-cap w-4"></i> School Dropout Reports
                 </a>
                 <a href="{% url 'admin_recommendation_letters' %}"

@@ -4,6 +4,7 @@
 {% block title %}School Dropout Reports{% endblock %}
 
 {% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet" />
 <style>
@@ -23,6 +24,7 @@
 {% block page_title %}School Dropout Reports{% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="p-6">
 
     <!-- Filters -->
@@ -232,17 +234,20 @@
 </div>
 
 <script>
-    // Add fetchAPI function for admin template
     async function fetchAPI(url, options = {}) {
         const token = localStorage.getItem('access_token');
         const defaultOptions = {
             headers: {
-                'Content-Type': 'application/json',
-                ...(token && { 'Authorization': `Bearer ${token}` }),
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}'
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             },
             credentials: 'include'
         };
+        
+        if (options.headers) {
+            defaultOptions.headers = { ...defaultOptions.headers, ...options.headers };
+        }
+        
         return fetch(url, { ...defaultOptions, ...options });
     }
 
@@ -250,50 +255,69 @@
     let currentReportId = null;
 
     async function loadReports() {
-        const search = document.getElementById('searchInput').value;
-        const status = document.getElementById('statusFilter').value;
-        const gender = document.getElementById('genderFilter').value;
-        const district = document.getElementById('districtFilter').value;
+        try {
+            const search = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+            const gender = document.getElementById('genderFilter').value;
+            const district = document.getElementById('districtFilter').value;
 
-        const params = new URLSearchParams({
-            page: currentPage,
-            search, status, gender, district
-        });
+            const params = new URLSearchParams({
+                page: currentPage,
+                search, status, gender, district
+            });
 
-        const response = await fetchAPI(`/api/core/reports/school-dropout/admin/?${params}`);
-        const data = await response.json();
+            const response = await fetchAPI(`/api/core/reports/school-dropout/admin/?${params}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
 
-        const tbody = document.getElementById('reportsTable');
-        tbody.innerHTML = data.results.map(report => `
-            <tr class="border-t border-slate-700">
-                <td class="px-4 py-3">${report.dropout_name}</td>
-                <td class="px-4 py-3">${report.school_name}</td>
-                <td class="px-4 py-3">${report.district}</td>
-                <td class="px-4 py-3">${report.is_anonymous ? 'Anonymous' : report.reporter_name}</td>
-                <td class="px-4 py-3">
-                    <span class="px-2 py-1 rounded text-xs ${getStatusColor(report.status)}">${report.status}</span>
-                    ${report.added_to_child_database ? '<span class="ml-2 px-2 py-1 rounded text-xs bg-purple-600">In Database</span>' : ''}
-                </td>
-                <td class="px-4 py-3">${new Date(report.created_at).toLocaleDateString()}</td>
-                <td class="px-4 py-3">
-                    <div class="flex gap-2">
-                        <button onclick="viewReport(${report.id})" class="text-blue-400 hover:text-blue-300" title="View Details">
-                            <span class="material-symbols-outlined" style="font-size:20px">visibility</span>
-                        </button>
-                        <button onclick="openStatusModal(${report.id})" class="text-yellow-400 hover:text-yellow-300" title="Update Status">
-                            <span class="material-symbols-outlined" style="font-size:20px">edit</span>
-                        </button>
-                        ${report.status === 'investigated' && !report.added_to_child_database ? `
-                            <button onclick="openAddToChildModal(${report.id})" class="text-green-400 hover:text-green-300" title="Add to Child Database">
-                                <span class="material-symbols-outlined" style="font-size:20px">person_add</span>
+            const tbody = document.getElementById('reportsTable');
+            tbody.innerHTML = data.results.map(report => `
+                <tr class="border-t border-slate-700">
+                    <td class="px-4 py-3">${report.dropout_name}</td>
+                    <td class="px-4 py-3">${report.school_name}</td>
+                    <td class="px-4 py-3">${report.district}</td>
+                    <td class="px-4 py-3">${report.is_anonymous ? 'Anonymous' : report.reporter_name}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded text-xs ${getStatusColor(report.status)}">${report.status}</span>
+                        ${report.added_to_child_database ? '<span class="ml-2 px-2 py-1 rounded text-xs bg-purple-600">In Database</span>' : ''}
+                    </td>
+                    <td class="px-4 py-3">${new Date(report.created_at).toLocaleDateString()}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex gap-2">
+                            <button onclick="viewReport(${report.id})" class="text-blue-400 hover:text-blue-300" title="View Details">
+                                <span class="material-symbols-outlined" style="font-size:20px">visibility</span>
                             </button>
-                        ` : ''}
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+                            <button onclick="openStatusModal(${report.id})" class="text-yellow-400 hover:text-yellow-300" title="Update Status">
+                                <span class="material-symbols-outlined" style="font-size:20px">edit</span>
+                            </button>
+                            ${report.status === 'investigated' && !report.added_to_child_database ? `
+                                <button onclick="openAddToChildModal(${report.id})" class="text-green-400 hover:text-green-300" title="Add to Child Database">
+                                    <span class="material-symbols-outlined" style="font-size:20px">person_add</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
 
-        document.getElementById('pageInfo').textContent = `Showing ${data.results.length} of ${data.total}`;
+            document.getElementById('pageInfo').textContent = `Showing ${data.results.length} of ${data.total}`;
+        } catch (error) {
+            console.error('Error loading reports:', error);
+            const tbody = document.getElementById('reportsTable');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-8 text-center text-red-400">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Error loading reports: ${error.message}</p>
+                        <p class="text-sm mt-2">Please check your authentication and try again.</p>
+                    </td>
+                </tr>
+            `;
+        }
     }
 
     function getStatusColor(status) {
@@ -306,8 +330,14 @@
     }
 
     async function viewReport(id) {
-        const response = await fetchAPI(`/api/core/reports/school-dropout/admin/${id}/`);
-        const report = await response.json();
+        try {
+            const response = await fetchAPI(`/api/core/reports/school-dropout/admin/${id}/`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const report = await response.json();
 
         const statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(report.status)}">${report.status.replace('_', ' ').toUpperCase()}</span>`;
 
@@ -395,6 +425,10 @@
         </div>
     `;
         document.getElementById('viewModal').classList.remove('hidden');
+        } catch (error) {
+            console.error('Error loading report details:', error);
+            alert(`Error loading report details: ${error.message}`);
+        }
     }
 
     function closeModal() {
@@ -504,10 +538,12 @@
                 closeStatusModal();
                 loadReports();
             } else {
-                alert('Failed to update status');
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                alert(`Failed to update status: ${errorData.error || response.statusText}`);
             }
         } catch (error) {
-            alert('Error updating status');
+            console.error('Error updating status:', error);
+            alert(`Error updating status: ${error.message}`);
         } finally {
             // Reset button
             updateBtn.disabled = false;

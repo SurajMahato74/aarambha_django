@@ -493,20 +493,44 @@ believes in a brighter tomorrow.
     {% include 'website/includes/login_modal.html' %}
 
     <!-- Hidden Config for JS -->
-    <script src="{% static 'js/config.js' %}"></script>
     <script>
         let editMode = false;
         let editSponsorshipId = null;
         
-        function startApplication() {
-            const user = getUser();
-            if (!user) {
+        async function startApplication() {
+            try {
+                // Check authentication by making an API call
+                const response = await fetch('/api/users/profile/', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                
+                if (!response.ok) {
+                    document.getElementById('loginModal').style.display = 'flex';
+                    return;
+                }
+                
+                // User is authenticated, show the form
+                document.getElementById("startSection").style.display = "none";
+                document.getElementById("sponsorshipForm").style.display = "block";
+            } catch (error) {
+                // Authentication failed, show login modal
                 document.getElementById('loginModal').style.display = 'flex';
-                return;
             }
-
-            document.getElementById("startSection").style.display = "none";
-            document.getElementById("sponsorshipForm").style.display = "block";
+        }
+        
+        function getCsrfToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return value;
+                }
+            }
+            return '';
         }
         
         // Check for edit mode on page load
@@ -525,7 +549,12 @@ believes in a brighter tomorrow.
         
         async function loadSponsorshipForEdit(id) {
             try {
-                const response = await fetchAPI(`/api/applications/sponsorships/${id}/`);
+                const response = await fetch(`/api/applications/sponsorships/${id}/`, {
+                    credentials: 'include',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
                 const sponsorship = await response.json();
                 
                 // Check if user can edit this sponsorship
@@ -617,15 +646,12 @@ believes in a brighter tomorrow.
         document.getElementById("sponsorshipForm").addEventListener("submit", async function (e) {
             e.preventDefault();
             
-            const user = getUser();
-            if (!user) {
-                Swal.fire({
-                    title: "Login Required",
-                    text: "Please login to submit sponsorship application.",
-                    icon: "warning"
-                });
-                return;
-            }
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            // Show loader
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>Submitting...';
+            submitBtn.disabled = true;
             
             const formData = new FormData(e.target);
             
@@ -641,19 +667,18 @@ believes in a brighter tomorrow.
             
             try {
                 let response;
-                if (editMode && editSponsorshipId) {
-                    // Update existing sponsorship
-                    response = await fetchAPI(`/api/applications/sponsorships/${editSponsorshipId}/update/`, {
-                        method: 'PUT',
-                        body: formData
-                    });
-                } else {
-                    // Create new sponsorship
-                    response = await fetchAPI('/api/applications/sponsorships/submit/', {
-                        method: 'POST',
-                        body: formData
-                    });
-                }
+                const url = editMode && editSponsorshipId ? 
+                    `/api/applications/sponsorships/${editSponsorshipId}/update/` : 
+                    '/api/applications/sponsorships/submit/';
+                
+                response = await fetch(url, {
+                    method: editMode ? 'PUT' : 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: formData
+                });
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -681,11 +706,13 @@ believes in a brighter tomorrow.
                     text: "Network error occurred. Please try again.",
                     icon: "error"
                 });
+            } finally {
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         });
     </script>
 
 </body>
-<script src="{% static 'js/config.js' %}"></script>
-
 </html>

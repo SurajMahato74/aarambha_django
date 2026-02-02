@@ -140,6 +140,18 @@ function displayAssignments(assignments) {
                             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
                             Approve
                         </button>
+                        <button onclick="rejectAssignment(${assignment.id})" 
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors ml-2">
+                            Reject
+                        </button>
+                    ` : assignment.status === 'approved' ? `
+                        <span class="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium">
+                            ✓ Approved
+                        </span>
+                    ` : assignment.status === 'rejected' ? `
+                        <span class="px-4 py-2 bg-red-100 text-red-800 rounded-lg text-sm font-medium">
+                            ✗ Rejected
+                        </span>
                     ` : ''}
                 </div>
             </div>
@@ -228,11 +240,27 @@ async function viewChildDetails(assignmentId) {
             </div>
             
             ${assignment.status === 'pending' ? `
-                <div class="mt-6 flex justify-center">
+                <div class="mt-6 flex justify-center space-x-4">
                     <button onclick="approveAssignment(${assignment.id})" 
                         class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
                         <i class="fas fa-heart mr-2"></i>Approve Sponsorship
                     </button>
+                    <button onclick="rejectAssignment(${assignment.id})" 
+                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium">
+                        <i class="fas fa-times mr-2"></i>Reject Sponsorship
+                    </button>
+                </div>
+            ` : assignment.status === 'approved' ? `
+                <div class="mt-6 flex justify-center">
+                    <span class="px-6 py-3 bg-green-100 text-green-800 rounded-lg font-medium">
+                        <i class="fas fa-check-circle mr-2"></i>Sponsorship Approved
+                    </span>
+                </div>
+            ` : assignment.status === 'rejected' ? `
+                <div class="mt-6 flex justify-center">
+                    <span class="px-6 py-3 bg-red-100 text-red-800 rounded-lg font-medium">
+                        <i class="fas fa-times-circle mr-2"></i>Sponsorship Rejected
+                    </span>
                 </div>
             ` : ''}
         `;
@@ -251,13 +279,13 @@ function closeChildModal() {
     currentAssignmentId = null;
 }
 
-async function approveAssignment(assignmentId) {
-    if (!confirm('Are you sure you want to approve this sponsorship? This will start your sponsorship journey with this child.')) {
+async function rejectAssignment(assignmentId) {
+    if (!confirm('Are you sure you want to reject this sponsorship? This child will be made available for other sponsors.')) {
         return;
     }
     
     try {
-        const response = await fetchAPI(`/api/applications/assignments/${assignmentId}/approve/`, {
+        const response = await fetch(`/api/applications/simple-reject/${assignmentId}/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -266,10 +294,37 @@ async function approveAssignment(assignmentId) {
         
         if (response.ok) {
             const result = await response.json();
-            alert('Sponsorship approved successfully! Welcome to your sponsorship journey.');
+            alert('Sponsorship rejected successfully.');
             closeChildModal();
-            // Redirect to children page
-            window.location.href = result.redirect_url || '/sponsor/children/';
+            loadAssignments();
+        } else {
+            const error = await response.json();
+            alert('Error rejecting sponsorship: ' + (error.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error rejecting assignment:', error);
+        alert('Error rejecting sponsorship');
+    }
+}
+
+async function approveAssignment(assignmentId) {
+    if (!confirm('Are you sure you want to approve this sponsorship? This will start your sponsorship journey with this child.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/applications/simple-approve/${assignmentId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            alert('Sponsorship approved successfully! You can now view this child in your sponsored children.');
+            closeChildModal();
+            loadAssignments();
         } else {
             const error = await response.json();
             alert('Error approving sponsorship: ' + (error.error || 'Unknown error'));

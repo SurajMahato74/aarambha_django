@@ -220,7 +220,7 @@
                 </button>
                 <button type="button" onclick="assignSelectedChildren()" id="assignBtn"
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
-                    <i class="fas fa-user-plus mr-2"></i>Assign Children
+                    <i class="fas fa-save mr-2"></i>Update Assignments
                 </button>
             </div>
         </div>
@@ -789,30 +789,68 @@ async function loadSponsorshipDetails(sponsorshipId) {
 
 async function loadAvailableChildrenWithMatching(sponsorship) {
     try {
-        // Only load children that are available (not sponsored)
-        const response = await fetchAPI('/api/applications/children/?status=available');
-        const allChildren = await response.json();
+        // Load all children (available and assigned)
+        const [availableResponse, assignmentsResponse] = await Promise.all([
+            fetchAPI('/api/applications/children/?status=available'),
+            fetchAPI(`/api/applications/sponsorships/${sponsorship.id}/assignments/`)
+        ]);
         
-        // Filter out children who already have pending or approved assignments
-        const availableChildren = [];
-        for (const child of allChildren) {
-            // Check if child has any pending/approved assignments
-            const hasAssignment = await checkChildAssignment(child.id);
-            if (!hasAssignment) {
-                availableChildren.push(child);
-            }
-        }
+        const availableChildren = await availableResponse.json();
+        const currentAssignments = await assignmentsResponse.json();
+        
+        // Get children already assigned to this sponsor
+        const assignedChildren = currentAssignments.map(assignment => ({
+            ...assignment.child,
+            isAssigned: true,
+            assignmentId: assignment.id,
+            assignmentStatus: assignment.status,
+            preferred_sponsorship_type: assignment.child.preferred_sponsorship_type || [],
+            preferred_frequency: assignment.child.preferred_frequency || []
+        }));
+        
+        // Combine available children and assigned children
+        const allChildren = [
+            ...availableChildren.map(child => ({
+                ...child, 
+                isAssigned: false,
+                preferred_sponsorship_type: child.preferred_sponsorship_type || [],
+                preferred_frequency: child.preferred_frequency || []
+            })), 
+            ...assignedChildren
+        ];
+        
+        // Remove duplicates (in case a child appears in both lists)
+        const uniqueChildren = allChildren.filter((child, index, self) => 
+            index === self.findIndex(c => c.id === child.id)
+        );
         
         // Calculate matching scores
-        const childrenWithScores = availableChildren.map(child => ({
+        const childrenWithScores = uniqueChildren.map(child => ({
             ...child,
             matchScore: calculateMatchScore(sponsorship, child)
         }));
         
-        // Sort by match score (highest first)
-        childrenWithScores.sort((a, b) => b.matchScore - a.matchScore);
+        // Sort by assignment status first (assigned first), then by match score
+        childrenWithScores.sort((a, b) => {
+            if (a.isAssigned && !b.isAssigned) return -1;
+            if (!a.isAssigned && b.isAssigned) return 1;
+            return b.matchScore - a.matchScore;
+        });
         
         displayAvailableChildrenWithScores(childrenWithScores, sponsorship);
+        
+        // Pre-select already assigned children
+        setTimeout(() => {
+            childrenWithScores.forEach(child => {
+                if (child.isAssigned) {
+                    const checkbox = document.getElementById(`child_${child.id}`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        toggleChildSelection(child.id);
+                    }
+                }
+            });
+        }, 100);
         
         document.getElementById('childSearchInput').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
@@ -1034,7 +1072,7 @@ function displayAvailableChildrenWithScores(children, sponsorship) {
         childrenList.innerHTML = `
             <div class="text-center text-slate-400 py-8">
                 <i class="fas fa-child text-4xl mb-4 opacity-50"></i>
-                <p>No available children found</p>
+                <p>No children found</p>
             </div>
         `;
         return;
@@ -1049,8 +1087,17 @@ function displayAvailableChildrenWithScores(children, sponsorship) {
                        child.matchScore >= 60 ? 'bg-yellow-500/20' : 
                        child.matchScore >= 40 ? 'bg-orange-500/20' : 'bg-red-500/20';
         
+        // Determine border color based on assignment status
+        let borderColor = child.matchScore >= 80 ? 'border-green-400' : 
+                         child.matchScore >= 60 ? 'border-yellow-400' : 
+                         child.matchScore >= 40 ? 'border-orange-400' : 'border-red-400';
+        
+        if (child.isAssigned) {
+            borderColor = 'border-blue-400'; // Blue border for already assigned children
+        }
+        
         return `
-        <div class="flex items-center p-3 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors border-l-4 ${child.matchScore >= 80 ? 'border-green-400' : child.matchScore >= 60 ? 'border-yellow-400' : child.matchScore >= 40 ? 'border-orange-400' : 'border-red-400'}">
+        <div class="flex items-center p-3 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors border-l-4 ${borderColor}">
             <input type="checkbox" id="child_${child.id}" onchange="toggleChildSelection(${child.id})" 
                 class="mr-3 rounded bg-slate-600 border-slate-500 text-indigo-600 focus:ring-indigo-500">
             <div class="flex-1">
@@ -1065,22 +1112,28 @@ function displayAvailableChildrenWithScores(children, sponsorship) {
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
                                 <div class="font-medium text-white">${child.full_name}</div>
-                                <div class="px-2 py-1 rounded-full text-xs font-bold ${matchBg} ${matchColor}">
-                                    ${child.matchScore}% Match
-                                </div>
+                                ${child.isAssigned ? `
+                                    <div class="px-2 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400">
+                                        Currently Assigned
+                                    </div>
+                                ` : `
+                                    <div class="px-2 py-1 rounded-full text-xs font-bold ${matchBg} ${matchColor}">
+                                        ${child.matchScore}% Match
+                                    </div>
+                                `}
                             </div>
                             <div class="text-sm text-slate-400">${child.age} years, ${child.gender}</div>
                             <div class="text-sm text-slate-400">${child.district}, ${child.village}</div>
                             ${child.school_name ? `<div class="text-sm text-slate-400">${child.school_name} - Grade ${child.grade_level}</div>` : ''}
                             <div class="text-xs text-slate-500 mt-1">
-                                ${getMatchDetails(sponsorship, child)}
+                                ${child.isAssigned ? `Assignment Status: ${child.assignmentStatus}` : getMatchDetails(sponsorship, child)}
                             </div>
                         </div>
                     </div>
                     <div class="text-right ml-4">
                         <div class="text-sm font-medium text-white">Rs. ${child.monthly_sponsorship_amount}/month</div>
-                        <div class="text-xs text-slate-400">${child.preferred_sponsorship_type.join(', ')}</div>
-                        <div class="text-xs text-slate-400">${child.preferred_frequency.join(', ')}</div>
+                        <div class="text-xs text-slate-400">${child.preferred_sponsorship_type && child.preferred_sponsorship_type.join ? child.preferred_sponsorship_type.join(', ') : 'N/A'}</div>
+                        <div class="text-xs text-slate-400">${child.preferred_frequency && child.preferred_frequency.join ? child.preferred_frequency.join(', ') : 'N/A'}</div>
                     </div>
                 </div>
             </div>
@@ -1203,38 +1256,62 @@ function removeChildSelection(childId) {
 }
 
 async function assignSelectedChildren() {
-    if (selectedChildrenIds.length === 0) {
-        alert('Please select at least one child to assign.');
-        return;
-    }
-    
     const assignBtn = document.getElementById('assignBtn');
     const originalHTML = assignBtn.innerHTML;
     assignBtn.disabled = true;
-    assignBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Assigning...';
+    assignBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating assignments...';
     
     try {
-        const response = await fetchAPI(`/api/applications/sponsorships/${currentSponsorshipId}/assign-children/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                child_ids: selectedChildrenIds
-            })
-        });
+        // Get current assignments to determine what to add/remove
+        const assignmentsResponse = await fetchAPI(`/api/applications/sponsorships/${currentSponsorshipId}/assignments/`);
+        const currentAssignments = await assignmentsResponse.json();
+        const currentChildIds = currentAssignments.map(a => a.child.id);
         
-        if (response.ok) {
-            alert(`Successfully assigned ${selectedChildrenIds.length} children to sponsor!`);
-            closeAssignModal();
-            loadSponsorships(currentPage);
-        } else {
-            const error = await response.json();
-            alert('Error assigning children: ' + (error.error || 'Unknown error'));
+        // Determine children to add and remove
+        const childrenToAdd = selectedChildrenIds.filter(id => !currentChildIds.includes(id));
+        const childrenToRemove = currentChildIds.filter(id => !selectedChildrenIds.includes(id));
+        
+        // Remove unselected children
+        for (const childId of childrenToRemove) {
+            const assignment = currentAssignments.find(a => a.child.id === childId);
+            if (assignment) {
+                await fetchAPI(`/api/applications/assignments/${assignment.id}/remove/`, {
+                    method: 'POST'
+                });
+            }
         }
+        
+        // Add newly selected children
+        if (childrenToAdd.length > 0) {
+            const response = await fetchAPI(`/api/applications/sponsorships/${currentSponsorshipId}/assign-children/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    child_ids: childrenToAdd
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to assign children');
+            }
+        }
+        
+        const totalChanges = childrenToAdd.length + childrenToRemove.length;
+        if (totalChanges > 0) {
+            alert(`Successfully updated assignments! Added: ${childrenToAdd.length}, Removed: ${childrenToRemove.length}`);
+        } else {
+            alert('No changes made to assignments.');
+        }
+        
+        closeAssignModal();
+        loadSponsorships(currentPage);
+        
     } catch (error) {
-        console.error('Error assigning children:', error);
-        alert('Error assigning children');
+        console.error('Error updating assignments:', error);
+        alert('Error updating assignments: ' + error.message);
     } finally {
         assignBtn.disabled = false;
         assignBtn.innerHTML = originalHTML;

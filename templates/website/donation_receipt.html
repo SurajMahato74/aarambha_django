@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Receipt - Aarambha Foundation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .receipt-container { height: 100vh; page-break-inside: avoid; }
+        }
+        .receipt-container { min-height: 100vh; display: flex; flex-direction: column; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="receipt-container bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto my-4">
+        <!-- Header with Logo -->
+        <div class="text-center mb-6">
+            <div class="flex items-center justify-center mb-3">
+                <img src="{% load static %}{% static 'website/images/logo.png' %}" alt="Aarambha Foundation" class="h-12 w-12 mr-3" onerror="this.style.display='none'">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800">Aarambha Foundation</h1>
+                    <p class="text-sm text-gray-600">Our Beginning for the Change</p>
+                </div>
+            </div>
+            <div class="bg-green-100 text-green-800 px-3 py-1 rounded-lg inline-block">
+                <i class="fas fa-check-circle mr-1"></i>
+                <span class="font-semibold">Donation Receipt</span>
+            </div>
+        </div>
+
+        <!-- Receipt Details in Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <!-- Donor Info -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-gray-800 mb-2">Donor Information</h3>
+                <div class="space-y-1 text-sm">
+                    <div><span class="text-gray-600">Name:</span> <span class="font-medium">{{ donation.full_name }}</span></div>
+                    <div><span class="text-gray-600">Email:</span> <span class="font-medium">{{ donation.email }}</span></div>
+                    {% if donation.phone %}<div><span class="text-gray-600">Phone:</span> <span class="font-medium">{{ donation.phone }}</span></div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Donation Info -->
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-gray-800 mb-2">Donation Details</h3>
+                <div class="space-y-1 text-sm">
+                    <div><span class="text-gray-600">Amount:</span> <span class="font-bold text-green-600 text-lg">Rs. {{ donation.amount }}</span></div>
+                    <div><span class="text-gray-600">Program:</span> <span class="font-medium">{{ donation.program_name|default:"General" }}</span></div>
+                    <div><span class="text-gray-600">Date:</span> <span class="font-medium">{{ donation.completed_at|date:"M d, Y" }}</span></div>
+                </div>
+            </div>
+
+            <!-- Transaction Info -->
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-gray-800 mb-2">Transaction Info</h3>
+                <div class="space-y-1 text-sm">
+                    <div><span class="text-gray-600">Receipt ID:</span> <span class="font-mono text-xs">{{ donation.purchase_order_id }}</span></div>
+                    {% if donation.transaction_id %}<div><span class="text-gray-600">Transaction ID:</span> <span class="font-mono text-xs">{{ donation.transaction_id }}</span></div>{% endif %}
+                    <div><span class="text-gray-600">Status:</span> <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{{ donation.payment_status|title }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thank You Message -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <h3 class="font-semibold text-blue-800 mb-2">Thank You!</h3>
+            <p class="text-blue-700 text-sm">Your generous donation helps us provide education, healthcare, and community development programs. Together, we are making a lasting impact in our communities.</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex-grow flex flex-col justify-end">
+            <div class="text-center text-xs text-gray-600 mb-4">
+                <p class="font-semibold">This receipt serves as your official donation record for tax purposes.</p>
+            </div>
+            
+            {% if contact_info %}
+            <div class="text-center text-xs text-gray-600 border-t pt-3">
+                <p class="font-semibold">Aarambha Foundation</p>
+                <p>{{ contact_info.address }}</p>
+                <p>Email: {{ contact_info.email }} | Phone: {{ contact_info.phone }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2 mt-4 no-print">
+                <button onclick="window.print()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm">
+                    <i class="fas fa-print mr-1"></i>Print
+                </button>
+                <a href="/" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded font-medium text-center text-sm">
+                    <i class="fas fa-home mr-1"></i>Home
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1361,10 +1361,10 @@
         
         async function loadProfile() {
             try {
-                // Check for approved sponsorships but don't redirect - show both options
+                // Check for approved sponsorships
                 const sponsorshipResponse = await fetchAPI('/api/applications/sponsorships/my/');
                 const sponsorships = await sponsorshipResponse.json();
-                const approvedSponsorships = sponsorships.filter(s => s.status === 'approved' || s.status === 'active');
+                const hasApprovedSponsorship = sponsorships.some(s => s.status === 'approved');
                 
                 const response = await fetchAPI('/api/applications/my-applications/');
                 const applications = await response.json();
@@ -1406,9 +1406,16 @@
                                     <div class="alert alert-success py-2 mb-2" style="font-size:12px">
                                         <i class="fas fa-check-circle me-1"></i>Payment Completed - Member Access Granted
                                     </div>
-                                    <a href="javascript:void(0)" onclick="redirectToMemberDashboard()" class="btn btn-primary btn-sm py-1" style="font-size:11px">
-                                        <i class="fas fa-tachometer-alt me-1"></i>Member Dashboard
-                                    </a>
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a href="javascript:void(0)" onclick="redirectToMemberDashboard()" class="btn btn-primary btn-sm py-1" style="font-size:11px">
+                                            <i class="fas fa-tachometer-alt me-1"></i>Member Dashboard
+                                        </a>
+                                        ${hasApprovedSponsorship ? `
+                                            <a href="/sponsor/dashboard/" class="btn btn-warning btn-sm py-1" style="font-size:11px">
+                                                <i class="fas fa-heart me-1"></i>Sponsor Dashboard
+                                            </a>
+                                        ` : ''}
+                                    </div>
                                 </div>
                             ` : app.application_type === 'member' && app.status === 'approved' && app.payment_required && !app.payment_completed ? `
                                 <div class="mt-2">
@@ -1421,21 +1428,28 @@
                                 </div>
                             ` : app.status === 'approved' && app.application_type === 'volunteer' ? `
                                 <div class="mt-2">
-                                    <a href="/volunteer/dashboard/" class="btn btn-primary btn-sm py-1" style="font-size:11px">
-                                        <i class="fas fa-tachometer-alt me-1"></i>Volunteer Dashboard
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a href="/volunteer/dashboard/" class="btn btn-primary btn-sm py-1" style="font-size:11px">
+                                            <i class="fas fa-tachometer-alt me-1"></i>Volunteer Dashboard
+                                        </a>
+                                        ${hasApprovedSponsorship ? `
+                                            <a href="/sponsor/dashboard/" class="btn btn-warning btn-sm py-1" style="font-size:11px">
+                                                <i class="fas fa-heart me-1"></i>Sponsor Dashboard
+                                            </a>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            ` : hasApprovedSponsorship ? `
+                                <div class="mt-2">
+                                    <div class="alert alert-success py-2 mb-2" style="font-size:12px">
+                                        <i class="fas fa-heart me-1"></i>Sponsor Access Granted
+                                    </div>
+                                    <a href="/sponsor/dashboard/" class="btn btn-warning btn-sm py-1" style="font-size:11px">
+                                        <i class="fas fa-tachometer-alt me-1"></i>Sponsor Dashboard
                                     </a>
                                 </div>
                             ` : ''}
-                            ${app.application_type === 'member' && app.status === 'approved' && app.payment_required && !app.payment_completed ? `
-                                <div class="mt-2">
-                                    <div class="alert alert-warning py-2 mb-2" style="font-size:12px">
-                                        <i class="fas fa-credit-card me-1"></i>Complete Payment to Access Member Features
-                                    </div>
-                                    <button onclick="showPaymentOptions(${app.id}, ${app.payment_amount})" class="btn btn-warning btn-sm py-2" style="font-size:12px">
-                                        <i class="fas fa-credit-card me-1"></i>Pay Now (Rs. ${app.payment_amount})
-                                    </button>
-                                </div>
-                            ` : ''}
+
                         </div>
                     </div>
                     <div class="row">

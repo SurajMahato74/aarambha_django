@@ -21,26 +21,6 @@
 <body>
   {% include 'website/includes/navbar.html' %}
 
-  <!-- Campaign Header -->
-  <section class="split-banner wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
-    <div class="full-width">
-      <div class="split-banner__content split-banner__content--image-on-left theme--orange">
-        <div class="split-banner__text">
-          <h2 id="campaign-title" class="split-banner__title">Loading...</h2>
-          <div class="max-text-width">
-            <div class="rich-text">
-              <p id="campaign-description">Loading campaign details...</p>
-              <p id="campaign-organizer">by <span class="fw-bold"></span></p>
-            </div>
-          </div>
-        </div>
-        <div class="split-banner__image">
-          <img id="campaign-photo" src="{% static 'website/images/health.jpg' %}" alt="Campaign" loading="lazy" fetchpriority="auto" decoding="async" />
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Campaign Stats -->
   <section class="stats-block wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.4s">
     <div class="container">
@@ -71,6 +51,11 @@
             <p class="stats-block__description">Donors</p>
           </li>
         </ul>
+        <div class="text-center mt-3">
+          <button id="payNowBtn" class="btn btn-success btn-lg" onclick="showDonationModal()">
+            <i class="fas fa-heart me-1"></i>Pay Now
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -85,6 +70,16 @@
             <div class="card-body">
               <h3 class="card-title">Campaign Story</h3>
               <p id="full-description" class="card-text">Loading story...</p>
+            </div>
+          </div>
+
+          <!-- Donations List -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h3 class="card-title">Recent Donations</h3>
+              <div id="donations-list">
+                <p class="text-muted">Loading donations...</p>
+              </div>
             </div>
           </div>
 
@@ -108,6 +103,8 @@
       </div>
     </div>
   </section>
+
+  {% include 'website/includes/birthday_payment_modal.html' %}
 
   {% include "website/includes/footer.html" %}
 
@@ -133,5 +130,166 @@
   <script>
     // Set campaign ID for the JavaScript file
     window.campaignId = "{{ campaign_id|default:'0' }}";
+    
+    // Birthday Campaign Detail Page JavaScript
+    const campaignId = window.campaignId || 0;
+    let campaignData = null;
+
+    $(document).ready(function() {
+        console.log('Birthday campaign page loaded');
+        console.log('Campaign ID:', campaignId);
+        
+        if (campaignId && campaignId !== '0') {
+            loadCampaignDetails();
+        } else {
+            showError('Invalid campaign ID');
+        }
+    });
+
+    async function loadCampaignDetails() {
+        try {
+            showLoading();
+            const response = await fetch(`/api/applications/birthday-campaign/${campaignId}/`);
+            const data = await response.json();
+
+            if (response.ok) {
+                campaignData = data;
+                displayCampaignDetails(campaignData);
+                displayDonations(data.donations || []);
+            } else {
+                throw new Error(data.error || 'Failed to load campaign details');
+            }
+        } catch (error) {
+            console.error('Error loading campaign:', error);
+            showError('Failed to load campaign details. The campaign may not exist or may have been removed.');
+            displayDonations([]);
+        }
+    }
+
+    function showLoading() {
+        $('#current-amount').text('0');
+        $('#target-amount').text('0');
+        $('#donors-count').text('0');
+        $('#full-description').text('Loading story...');
+        $('#target-display').text('0');
+        $('#current-display').text('0');
+        $('#birthday-date').text('Loading...');
+        $('#organizer-name').text('Loading...');
+    }
+
+    function showError(message) {
+        $('#current-amount').text('0');
+        $('#target-amount').text('0');
+        $('#donors-count').text('0');
+        $('#full-description').text('This campaign is not available.');
+        $('#target-display').text('0');
+        $('#current-display').text('0');
+        $('#birthday-date').text('N/A');
+        $('#organizer-name').text('N/A');
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Campaign Not Found',
+            text: message
+        });
+    }
+
+    function displayCampaignDetails(campaign) {
+        console.log('Displaying campaign details:', campaign);
+        
+        const currentAmount = parseFloat(campaign.current_amount) || 0;
+        const targetAmount = parseFloat(campaign.target_amount) || 0;
+        const donorsCount = parseInt(campaign.donors_count) || 0;
+        
+        console.log('Parsed amounts:', { currentAmount, targetAmount, donorsCount });
+        
+        $('#current-amount').text(currentAmount.toLocaleString());
+        $('#target-amount').text(targetAmount.toLocaleString());
+        $('#donors-count').text(donorsCount);
+        
+        $('#target-display').text(targetAmount.toLocaleString());
+        $('#current-display').text(currentAmount.toLocaleString());
+        $('#birthday-date').text(new Date(campaign.birthday_date).toLocaleDateString());
+        $('#organizer-name').text(campaign.full_name);
+        $('#full-description').text(campaign.description);
+        
+        $('#payNowBtn').show();
+    }
+
+    function displayDonations(donations) {
+        const container = $('#donations-list');
+        container.empty();
+
+        if (!donations || donations.length === 0) {
+            container.html('<p class="text-muted">No donations yet. Be the first to donate!</p>');
+            return;
+        }
+
+        donations.forEach(donation => {
+            const donationItem = `
+                <div class="donor-item p-3 mb-3 bg-light rounded">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${donation.donor_name}</h6>
+                            <p class="mb-1 text-success fw-bold">Rs. ${parseInt(donation.amount).toLocaleString()}</p>
+                            ${donation.message ? `<p class="mb-0 text-muted small">"${donation.message}"</p>` : ''}
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">${new Date(donation.date).toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.append(donationItem);
+        });
+    }
+
+    function showDonationModal() {
+        Swal.fire({
+            title: 'Choose Payment Method',
+            html: `
+                <div class="text-center">
+                    <button class="btn btn-primary btn-lg m-2" onclick="selectPaymentMethod('khalti')">
+                        <i class="fas fa-wallet me-2"></i>Khalti
+                    </button>
+                    <button class="btn btn-success btn-lg m-2" onclick="selectPaymentMethod('stripe')">
+                        <i class="fas fa-credit-card me-2"></i>Stripe
+                    </button>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'Cancel'
+        });
+    }
+
+    function selectPaymentMethod(method) {
+        Swal.close();
+        if (method === 'khalti') {
+            openBirthdayPaymentModal();
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'Stripe Payment',
+                text: 'Stripe payment integration coming soon!'
+            });
+        }
+    }
+
+
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
   </script>
-  <script src="{% static 'js/birthday-campaign.js' %}"></script>

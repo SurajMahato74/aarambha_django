@@ -1,0 +1,439 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block page_title %}School Dropout Reports{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-white">School Dropout Reports</h2>
+            <p class="text-slate-400">Manage school dropout reports and update their status</p>
+        </div>
+        <button onclick="refreshReports()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-slate-800 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-white" id="totalReports">0</div>
+        <div class="text-slate-400">Total Reports</div>
+    </div>
+    <div class="bg-slate-800 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-yellow-400" id="pendingReports">0</div>
+        <div class="text-slate-400">Pending</div>
+    </div>
+    <div class="bg-slate-800 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-blue-400" id="investigatedReports">0</div>
+        <div class="text-slate-400">Investigated</div>
+    </div>
+    <div class="bg-slate-800 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-green-400" id="resolvedReports">0</div>
+        <div class="text-slate-400">Resolved</div>
+    </div>
+</div>
+
+<div class="bg-slate-800 rounded-lg p-6">
+    <!-- Filters -->
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-white">All Reports</h3>
+        <div class="flex gap-2">
+            <input type="text" id="searchInput" placeholder="Search reports..." class="px-3 py-1 bg-slate-700 text-white rounded text-sm" oninput="applyFilters()">
+            <select id="statusFilter" class="px-3 py-1 bg-slate-700 text-white rounded text-sm" onchange="applyFilters()">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="investigated">Investigated</option>
+                <option value="resolved">Resolved</option>
+            </select>
+            <select id="districtFilter" class="px-3 py-1 bg-slate-700 text-white rounded text-sm" onchange="applyFilters()">
+                <option value="">All Districts</option>
+                {% for district in districts %}
+                <option value="{{ district }}">{{ district }}</option>
+                {% endfor %}
+            </select>
+            <select id="genderFilter" class="px-3 py-1 bg-slate-700 text-white rounded text-sm" onchange="applyFilters()">
+                <option value="">All Genders</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-8">
+        <i class="fas fa-spinner fa-spin fa-2x text-slate-400 mb-3"></i>
+        <p class="text-slate-400">Loading reports...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4" style="display: none;">
+        <strong>Error:</strong> <span id="errorMessage"></span>
+    </div>
+
+    <!-- Reports Container -->
+    <div id="reportsContainer" style="display: none;">
+        <!-- Reports will be loaded here -->
+    </div>
+
+    <!-- Pagination -->
+    <div id="paginationContainer" class="flex justify-center mt-6">
+        <!-- Pagination will be loaded here -->
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="updateStatusModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-slate-800 p-6 rounded-lg max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-white">Update Report Status</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times fa-lg"></i>
+            </button>
+        </div>
+        <form id="updateStatusForm">
+            <input type="hidden" id="reportId">
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Report Details:</label>
+                <div id="reportDetails" class="p-3 bg-slate-700 rounded text-slate-300 text-sm">
+                    <!-- Report details will be shown here -->
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">New Status:</label>
+                <select id="newStatus" class="w-full p-2 bg-slate-700 text-white rounded" required>
+                    <option value="pending">Pending</option>
+                    <option value="investigated">Investigated</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-medium mb-2">Admin Notes:</label>
+                <textarea id="adminNotes" class="w-full p-2 bg-slate-700 text-white rounded" rows="3" placeholder="Add notes about this status update..."></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="updateReportStatus()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-save mr-2"></i>Update Status
+                </button>
+                <button type="button" onclick="closeModal()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentFilters = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadReports();
+});
+
+async function loadReports(page = 1) {
+    try {
+        showLoading();
+        hideError();
+        
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            showError('Authentication required. Please login again.');
+            return;
+        }
+
+        const params = new URLSearchParams({
+            page: page,
+            page_size: 10,
+            ...currentFilters
+        });
+
+        const response = await fetch(`/api/core/reports/school-dropout/admin-new/?${params}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to load reports');
+        }
+
+        const data = await response.json();
+        displayReports(data.results);
+        displayPagination(data);
+        updateStats(data.results);
+        currentPage = page;
+        
+    } catch (error) {
+        console.error('Error loading reports:', error);
+        showError(error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+function displayReports(reports) {
+    const container = document.getElementById('reportsContainer');
+    
+    if (reports.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-inbox fa-3x text-slate-400 mb-3"></i>
+                <h5 class="text-white text-lg mb-2">No reports found</h5>
+                <p class="text-slate-400">No school dropout reports match your current filters.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = reports.map(report => `
+        <div class="bg-slate-700 rounded-lg p-4 mb-4">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h4 class="text-white font-semibold">${report.dropout_name}</h4>
+                        <span class="text-xs px-2 py-1 rounded ${
+                            report.status === 'pending' ? 'bg-yellow-500 text-black' :
+                            report.status === 'investigated' ? 'bg-blue-500 text-white' :
+                            'bg-green-500 text-white'
+                        }">${report.status.toUpperCase()}</span>
+                    </div>
+                    <p class="text-slate-300 text-sm mb-1"><strong>School:</strong> ${report.school_name}</p>
+                    <p class="text-slate-300 text-sm mb-1"><strong>Location:</strong> ${report.school_location}, ${report.district}</p>
+                    <p class="text-slate-300 text-sm mb-1"><strong>Reporter:</strong> ${report.reporter_name} (${report.reporter_email})</p>
+                    <p class="text-slate-300 text-sm mb-1"><strong>Age:</strong> ${report.dropout_age} | <strong>Gender:</strong> ${report.dropout_gender}</p>
+                    <p class="text-slate-300 text-sm mb-2"><strong>Reason:</strong> ${report.reason_for_dropout}</p>
+                    ${report.admin_notes ? `<p class="text-slate-300 text-sm"><strong>Admin Notes:</strong> ${report.admin_notes}</p>` : ''}
+                </div>
+                <div class="text-right">
+                    <p class="text-slate-400 text-xs mb-2">Reported: ${new Date(report.created_at).toLocaleDateString()}</p>
+                    <div class="space-y-2">
+                        <button onclick="openUpdateModal(${report.id}, '${report.dropout_name}', '${report.school_name}', '${report.status}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm w-full">
+                            Update Status
+                        </button>
+                        ${report.status === 'investigated' && !report.added_to_child_database ? 
+                            `<button onclick="addToChildDatabase(${report.id})" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm w-full">
+                                Add to Child DB
+                            </button>` : ''}
+                        ${report.added_to_child_database ? 
+                            `<span class="text-green-400 text-xs"><i class="fas fa-check"></i> Added to DB</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayPagination(data) {
+    const container = document.getElementById('paginationContainer');
+    const totalPages = data.total_pages;
+    const currentPage = data.page;
+    
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let paginationHTML = '<div class="flex gap-2">';
+    
+    if (currentPage > 1) {
+        paginationHTML += `<button onclick="loadReports(${currentPage - 1})" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-1 rounded text-sm">Previous</button>`;
+    }
+    
+    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        paginationHTML += `<button onclick="loadReports(${i})" class="${i === currentPage ? 'bg-orange-600' : 'bg-slate-600 hover:bg-slate-500'} text-white px-3 py-1 rounded text-sm">${i}</button>`;
+    }
+    
+    if (currentPage < totalPages) {
+        paginationHTML += `<button onclick="loadReports(${currentPage + 1})" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-1 rounded text-sm">Next</button>`;
+    }
+    
+    paginationHTML += '</div>';
+    container.innerHTML = paginationHTML;
+}
+
+function updateStats(reports) {
+    const total = reports.length;
+    const pending = reports.filter(r => r.status === 'pending').length;
+    const investigated = reports.filter(r => r.status === 'investigated').length;
+    const resolved = reports.filter(r => r.status === 'resolved').length;
+    
+    document.getElementById('totalReports').textContent = total;
+    document.getElementById('pendingReports').textContent = pending;
+    document.getElementById('investigatedReports').textContent = investigated;
+    document.getElementById('resolvedReports').textContent = resolved;
+}
+
+function applyFilters() {
+    currentFilters = {
+        search: document.getElementById('searchInput').value,
+        status: document.getElementById('statusFilter').value,
+        district: document.getElementById('districtFilter').value,
+        gender: document.getElementById('genderFilter').value
+    };
+    
+    Object.keys(currentFilters).forEach(key => {
+        if (!currentFilters[key]) {
+            delete currentFilters[key];
+        }
+    });
+    
+    loadReports(1);
+}
+
+function openUpdateModal(reportId, dropoutName, schoolName, currentStatus) {
+    document.getElementById('reportId').value = reportId;
+    document.getElementById('newStatus').value = currentStatus;
+    document.getElementById('adminNotes').value = '';
+    
+    document.getElementById('reportDetails').innerHTML = `
+        <strong>Child:</strong> ${dropoutName}<br>
+        <strong>School:</strong> ${schoolName}<br>
+        <strong>Current Status:</strong> <span class="text-xs px-2 py-1 rounded ${
+            currentStatus === 'pending' ? 'bg-yellow-500 text-black' :
+            currentStatus === 'investigated' ? 'bg-blue-500 text-white' :
+            'bg-green-500 text-white'
+        }">${currentStatus.toUpperCase()}</span>
+    `;
+    
+    document.getElementById('updateStatusModal').style.display = 'flex';
+}
+
+async function updateReportStatus() {
+    try {
+        // Show loading state
+        const updateButton = document.querySelector('#updateStatusModal button[onclick="updateReportStatus()"]');
+        const originalText = updateButton.innerHTML;
+        updateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+        updateButton.disabled = true;
+        
+        const reportId = document.getElementById('reportId').value;
+        const newStatus = document.getElementById('newStatus').value;
+        const adminNotes = document.getElementById('adminNotes').value;
+        
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            showError('Authentication required. Please login again.');
+            return;
+        }
+
+        const response = await fetch(`/api/core/reports/school-dropout/admin-new/${reportId}/update-status/`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                status: newStatus,
+                admin_notes: adminNotes
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update status');
+        }
+
+        closeModal();
+        showSuccess('Report status updated successfully!');
+        loadReports(currentPage);
+        
+    } catch (error) {
+        console.error('Error updating status:', error);
+        showError(error.message);
+    } finally {
+        // Reset button state
+        const updateButton = document.querySelector('#updateStatusModal button[onclick="updateReportStatus()"]');
+        if (updateButton) {
+            updateButton.innerHTML = '<i class="fas fa-save mr-2"></i>Update Status';
+            updateButton.disabled = false;
+        }
+    }
+}
+
+async function addToChildDatabase(reportId) {
+    if (!confirm('Are you sure you want to add this dropout to the child database?')) {
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            showError('Authentication required. Please login again.');
+            return;
+        }
+
+        const response = await fetch(`/api/core/reports/school-dropout/admin/${reportId}/add-to-child-database/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                date_of_birth: '2010-01-01', // Default values - you can make this a modal form
+                village: '',
+                address: '',
+                father_name: '',
+                mother_name: '',
+                monthly_sponsorship_amount: 1000
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to add to child database');
+        }
+
+        const result = await response.json();
+        showSuccess(`${result.message}. Child ID: ${result.child_id}`);
+        loadReports(currentPage);
+        
+    } catch (error) {
+        console.error('Error adding to child database:', error);
+        showError(error.message);
+    }
+}
+
+function refreshReports() {
+    loadReports(currentPage);
+}
+
+function closeModal() {
+    document.getElementById('updateStatusModal').style.display = 'none';
+}
+
+function showLoading() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('reportsContainer').style.display = 'none';
+}
+
+function hideLoading() {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('reportsContainer').style.display = 'block';
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorState').style.display = 'block';
+}
+
+function hideError() {
+    document.getElementById('errorState').style.display = 'none';
+}
+
+function showSuccess(message) {
+    const alert = document.createElement('div');
+    alert.className = 'bg-green-900 border border-green-700 text-green-100 px-4 py-3 rounded mb-4';
+    alert.innerHTML = `<strong>Success:</strong> ${message}`;
+    
+    document.querySelector('.bg-slate-800').insertBefore(alert, document.querySelector('.bg-slate-800').firstChild);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

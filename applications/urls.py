@@ -28,11 +28,17 @@ urlpatterns = [
     # Children Management URLs
     path('children/', views.children_api, name='children_api'),
     path('children/<int:pk>/', views.child_detail_api, name='child_detail_api'),
+    path('children/<int:pk>/make-available/', views.make_child_available, name='make_child_available'),
     path('children/stats/', views.children_stats, name='children_stats'),
     
     # Sponsor URLs
     path('my-assignments/', views.my_child_assignments, name='my_child_assignments'),
     path('assignments/<int:assignment_id>/approve/', views.approve_child_assignment, name='approve_child_assignment'),
+    path('assignments/<int:assignment_id>/reject/', views.reject_child_assignment, name='reject_child_assignment'),
+    path('simple-approve/<int:assignment_id>/', views.simple_approve_assignment, name='simple_approve_assignment'),
+    path('simple-reject/<int:assignment_id>/', views.simple_reject_assignment, name='simple_reject_assignment'),
+    path('simple-payment/<int:child_id>/', views.simple_initiate_payment, name='simple_initiate_payment'),
+    path('simple-payment-details/<int:child_id>/', views.simple_initiate_payment_details, name='simple_initiate_payment_details'),
     path('my-sponsored-children/', views.my_sponsored_children, name='my_sponsored_children'),
     
     # Assignment Management URLs

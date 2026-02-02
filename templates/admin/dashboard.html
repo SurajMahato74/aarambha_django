@@ -85,7 +85,7 @@
 </div>
 
 <!-- Recent Activity Section -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+<div class="grid grid-cols-1 gap-6 mb-8">
     <!-- Recent Applications -->
     <div class="card rounded-lg overflow-hidden bg-slate-800/50">
         <div class="p-5 border-b border-slate-700">
@@ -114,22 +114,6 @@
                 <p>No recent applications</p>
             </div>
             {% endfor %}
-        </div>
-    </div>
-    
-    <!-- Recent Notices -->
-    <div class="card rounded-lg overflow-hidden bg-slate-800/50">
-        <div class="p-5 border-b border-slate-700">
-            <h3 class="font-medium text-white flex items-center">
-                <i class="fas fa-bell mr-2 text-orange-500"></i>
-                Recent Notices
-            </h3>
-        </div>
-        <div class="max-h-80 overflow-y-auto" id="recentNotices">
-            <div class="text-center py-8 text-slate-400">
-                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                <p>Loading notifications...</p>
-            </div>
         </div>
     </div>
 </div>
@@ -185,13 +169,16 @@
             <div class="p-4 border-b border-slate-700/50 hover:bg-slate-700/30 transition">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-white font-medium">${{ payment.amount }}</p>
-                        <p class="text-slate-400 text-sm">{{ payment.user.get_full_name|default:payment.user.email }}</p>
-                        <p class="text-slate-500 text-xs">{{ payment.paid_at|timesince }} ago</p>
+                        <p class="text-white font-medium">Rs. {{ payment.amount|floatformat:0 }}</p>
+                        <p class="text-slate-400 text-sm">{{ payment.user_name }}</p>
+                        <p class="text-slate-500 text-xs">{{ payment.payment_date|timesince }} ago</p>
                     </div>
-                    <span class="badge {% if payment.is_verified %}bg-green-900/30 text-green-300{% else %}bg-yellow-900/30 text-yellow-300{% endif %}">
-                        {% if payment.is_verified %}Verified{% else %}Pending{% endif %}
-                    </span>
+                    <div class="text-right">
+                        <span class="badge bg-green-900/30 text-green-300 text-xs px-2 py-1 rounded-full">
+                            {{ payment.type }}
+                        </span>
+                        <p class="text-slate-500 text-xs mt-1">{{ payment.source }}</p>
+                    </div>
                 </div>
             </div>
             {% empty %}
@@ -204,95 +191,3 @@
     </div>
 </div>
 {% endblock %}
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    loadAdminNotifications();
-});
-
-async function loadAdminNotifications() {
-    try {
-        const response = await fetchAPI('/api/notices/my-notifications/');
-        
-        if (response.ok) {
-            const data = await response.json();
-            const notifications = data.notifications || data.results || data || [];
-            displayAdminNotifications(notifications.slice(0, 10));
-        } else {
-            throw new Error('Failed to load notifications');
-        }
-    } catch (error) {
-        console.error('Error loading notifications:', error);
-        document.getElementById('recentNotices').innerHTML = `
-            <div class="p-4 text-center text-slate-400">
-                <i class="fas fa-bell-slash text-2xl mb-2"></i>
-                <p>No recent notices</p>
-            </div>
-        `;
-    }
-}
-
-function displayAdminNotifications(notifications) {
-    const container = document.getElementById('recentNotices');
-    
-    if (notifications.length === 0) {
-        container.innerHTML = `
-            <div class="p-4 text-center text-slate-400">
-                <i class="fas fa-bell-slash text-2xl mb-2"></i>
-                <p>No recent notices</p>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = notifications.map(notification => `
-        <div class="p-4 border-b border-slate-700/50 hover:bg-slate-700/30 transition">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-white font-medium">${notification.title}</p>
-                    <p class="text-slate-400 text-sm">${notification.message.substring(0, 60)}${notification.message.length > 60 ? '...' : ''}</p>
-                    <p class="text-slate-500 text-xs">${formatDate(notification.created_at)}</p>
-                </div>
-                <span class="badge ${getNotificationBadgeColor(notification.notification_type)}">
-                    ${getNotificationTypeLabel(notification.notification_type)}
-                </span>
-            </div>
-        </div>
-    `).join('');
-}
-
-function getNotificationBadgeColor(type) {
-    const colors = {
-        sponsorship_confirmed: 'bg-green-900/30 text-green-300',
-        application_submitted: 'bg-blue-900/30 text-blue-300',
-        payment_completed: 'bg-purple-900/30 text-purple-300',
-        general: 'bg-gray-900/30 text-gray-300'
-    };
-    return colors[type] || 'bg-blue-900/30 text-blue-300';
-}
-
-function getNotificationTypeLabel(type) {
-    const labels = {
-        sponsorship_confirmed: 'Sponsorship',
-        application_submitted: 'Application',
-        payment_completed: 'Payment',
-        general: 'General'
-    };
-    return labels[type] || 'Notice';
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) {
-        return 'Yesterday';
-    } else if (diffDays < 7) {
-        return `${diffDays} days ago`;
-    } else {
-        return date.toLocaleDateString();
-    }
-}
-</script>

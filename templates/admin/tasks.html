@@ -393,7 +393,7 @@
             
             // Calculate metrics
             const totalParticipants = task.assigned_to.length;
-            const submittedCount = task.status === 'submitted' ? 1 : 0; // This will be updated from backend
+            const submittedCount = task.submission_count || 0;
             const overdueCount = isOverdue && task.status !== 'submitted' ? 1 : 0;
             const emailStatus = task.email_status || '0/0 sent';
             

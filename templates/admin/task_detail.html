@@ -69,7 +69,7 @@
                 '<span class="text-green-400">✓ Submitted</span>' : 
                 (user.is_overdue ? '<span class="text-red-400">⚠ Overdue</span>' : '<span class="text-yellow-400">⏳ Not Submitted</span>');
             
-            const actionButton = user.submission_status === 'submitted' ? 
+            const actionButton = (user.submission_status === 'submitted' || user.submission_status === 'approved' || user.submission_status === 'redo_requested') ? 
                 `<button onclick="viewSubmission(${user.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
                     <i class="fas fa-eye mr-1"></i>View
                 </button>` : 
@@ -283,7 +283,7 @@
                 '<span class="text-green-500">✅ Approved</span>' :
                 (user.is_overdue ? '<span class="text-red-400">⚠ Overdue</span>' : '<span class="text-yellow-400">⏳ Not Submitted</span>');
             
-            const actionButton = user.submission_status === 'submitted' ? 
+            const actionButton = (user.submission_status === 'submitted' || user.submission_status === 'approved' || user.submission_status === 'redo_requested') ? 
                 `<button onclick="viewSubmission(${user.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
                     <i class="fas fa-eye mr-1"></i>View
                 </button>` : 
@@ -344,7 +344,7 @@
     function viewSubmission(userId) {
         // Find user submission data
         const user = originalUsers.find(u => u.id === userId);
-        if (!user || user.submission_status !== 'submitted') return;
+        if (!user || (user.submission_status !== 'submitted' && user.submission_status !== 'approved' && user.submission_status !== 'redo_requested')) return;
         
         // Create submission modal
         const modal = document.createElement('div');
@@ -364,34 +364,36 @@
                             Loading submission...
                         </div>
                     </div>
-                    <div class="flex gap-3">
-                        <button onclick="reviewSubmission('approve')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-                            <i class="fas fa-check mr-2"></i>Approve
-                        </button>
-                        <button onclick="reviewSubmission('redo')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-                            <i class="fas fa-redo mr-2"></i>Request Redo
-                        </button>
-                    </div>
-                    <div>
-                        <label class="block text-slate-300 text-sm font-medium mb-2">Rating (1-10)</label>
-                        <select id="submissionRating" class="w-full p-2 bg-slate-700 text-white rounded">
-                            <option value="">Select rating...</option>
-                            <option value="1">1 - Poor</option>
-                            <option value="2">2 - Below Average</option>
-                            <option value="3">3 - Fair</option>
-                            <option value="4">4 - Below Good</option>
-                            <option value="5">5 - Average</option>
-                            <option value="6">6 - Above Average</option>
-                            <option value="7">7 - Good</option>
-                            <option value="8">8 - Very Good</option>
-                            <option value="9">9 - Excellent</option>
-                            <option value="10">10 - Outstanding</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-300 text-sm font-medium mb-2">Admin Comment</label>
-                        <textarea id="adminComment" class="w-full p-2 bg-slate-700 text-white rounded" rows="3" placeholder="Add your feedback..."></textarea>
-                    </div>
+                    ${user.submission_status === 'submitted' ? `
+                        <div class="flex gap-3">
+                            <button onclick="reviewSubmission('approve')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                <i class="fas fa-check mr-2"></i>Approve
+                            </button>
+                            <button onclick="reviewSubmission('redo')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                                <i class="fas fa-redo mr-2"></i>Request Redo
+                            </button>
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 text-sm font-medium mb-2">Rating (1-10)</label>
+                            <select id="submissionRating" class="w-full p-2 bg-slate-700 text-white rounded">
+                                <option value="">Select rating...</option>
+                                <option value="1">1 - Poor</option>
+                                <option value="2">2 - Below Average</option>
+                                <option value="3">3 - Fair</option>
+                                <option value="4">4 - Below Good</option>
+                                <option value="5">5 - Average</option>
+                                <option value="6">6 - Above Average</option>
+                                <option value="7">7 - Good</option>
+                                <option value="8">8 - Very Good</option>
+                                <option value="9">9 - Excellent</option>
+                                <option value="10">10 - Outstanding</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 text-sm font-medium mb-2">Admin Comment</label>
+                            <textarea id="adminComment" class="w-full p-2 bg-slate-700 text-white rounded" rows="3" placeholder="Add your feedback..."></textarea>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -405,46 +407,62 @@
     }
     
     async function loadSubmissionDetails(userId) {
-        const user = originalUsers.find(u => u.id === userId);
-        if (!user || user.submission_status === 'not_submitted') {
-            document.getElementById('submissionContent').innerHTML = '<p class="text-slate-400">No submission found.</p>';
-            return;
-        }
+        const taskId = new URLSearchParams(window.location.search).get('id');
         
-        document.getElementById('submissionContent').innerHTML = `
-            <div class="space-y-3">
-                <div>
-                    <strong class="text-white">Submitted:</strong> 
-                    <span class="text-slate-300">${new Date(user.submitted_at).toLocaleString()}</span>
-                </div>
-                ${user.submission_text ? `
-                    <div>
-                        <strong class="text-white">Content:</strong>
-                        <div class="bg-slate-600 p-3 rounded mt-2 text-slate-200">${user.submission_text}</div>
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`/api/tasks/admin/${taskId}/submission/${userId}/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const submission = await response.json();
+                
+                document.getElementById('submissionContent').innerHTML = `
+                    <div class="space-y-3">
+                        <div>
+                            <strong class="text-white">Status:</strong> 
+                            <span class="text-slate-300">${submission.status.replace('_', ' ').toUpperCase()}</span>
+                        </div>
+                        <div>
+                            <strong class="text-white">Submitted:</strong> 
+                            <span class="text-slate-300">${new Date(submission.submitted_at).toLocaleString()}</span>
+                        </div>
+                        ${submission.submission_text ? `
+                            <div>
+                                <strong class="text-white">Content:</strong>
+                                <div class="bg-slate-600 p-3 rounded mt-2 text-slate-200">${submission.submission_text}</div>
+                            </div>
+                        ` : ''}
+                        ${submission.submission_file ? `
+                            <div>
+                                <strong class="text-white">File:</strong>
+                                <a href="${submission.submission_file}" target="_blank" class="text-blue-400 hover:underline ml-2">
+                                    <i class="fas fa-file mr-1"></i>View Submitted File
+                                </a>
+                            </div>
+                        ` : ''}
+                        ${submission.admin_feedback ? `
+                            <div>
+                                <strong class="text-white">Admin Feedback:</strong>
+                                <div class="bg-slate-600 p-3 rounded mt-2 text-slate-200">${submission.admin_feedback}</div>
+                            </div>
+                        ` : ''}
+                        ${submission.rating ? `
+                            <div>
+                                <strong class="text-white">Rating:</strong>
+                                <span class="text-yellow-400 ml-2">${submission.rating}/10 ${'★'.repeat(Math.floor(submission.rating/2))}${'☆'.repeat(5-Math.floor(submission.rating/2))}</span>
+                            </div>
+                        ` : ''}
                     </div>
-                ` : ''}
-                ${user.submission_file ? `
-                    <div>
-                        <strong class="text-white">File:</strong>
-                        <a href="${user.submission_file}" target="_blank" class="text-blue-400 hover:underline ml-2">
-                            <i class="fas fa-file mr-1"></i>View Submitted File
-                        </a>
-                    </div>
-                ` : ''}
-                ${user.admin_feedback ? `
-                    <div>
-                        <strong class="text-white">Previous Feedback:</strong>
-                        <div class="bg-slate-600 p-3 rounded mt-2 text-slate-200">${user.admin_feedback}</div>
-                    </div>
-                ` : ''}
-                ${user.rating ? `
-                    <div>
-                        <strong class="text-white">Rating:</strong>
-                        <span class="text-yellow-400 ml-2">${user.rating}/10 ${'★'.repeat(Math.floor(user.rating/2))}${'☆'.repeat(5-Math.floor(user.rating/2))}</span>
-                    </div>
-                ` : ''}
-            </div>
-        `;
+                `;
+            } else {
+                document.getElementById('submissionContent').innerHTML = '<p class="text-slate-400">Error loading submission details.</p>';
+            }
+        } catch (error) {
+            console.error('Error loading submission details:', error);
+            document.getElementById('submissionContent').innerHTML = '<p class="text-slate-400">Error loading submission details.</p>';
+        }
     }
     
     function closeSubmissionModal() {
@@ -456,8 +474,10 @@
     }
     
     async function reviewSubmission(action) {
-        const comment = document.getElementById('adminComment').value;
-        const rating = document.getElementById('submissionRating').value;
+        const commentField = document.getElementById('adminComment');
+        const ratingField = document.getElementById('submissionRating');
+        const comment = commentField ? commentField.value : '';
+        const rating = ratingField ? ratingField.value : '';
         const userId = window.currentSubmissionUserId;
         const taskId = new URLSearchParams(window.location.search).get('id');
         
@@ -466,6 +486,9 @@
         // Show loading state
         const approveBtn = document.querySelector('button[onclick="reviewSubmission(\'approve\')"]');
         const redoBtn = document.querySelector('button[onclick="reviewSubmission(\'redo\')"]');
+        
+        if (!approveBtn || !redoBtn) return; // Buttons don't exist for already reviewed submissions
+        
         const originalApproveText = approveBtn.innerHTML;
         const originalRedoText = redoBtn.innerHTML;
         
@@ -503,10 +526,12 @@
             alert('Error processing review.');
         } finally {
             // Reset button states
-            approveBtn.innerHTML = originalApproveText;
-            approveBtn.disabled = false;
-            redoBtn.innerHTML = originalRedoText;
-            redoBtn.disabled = false;
+            if (approveBtn && redoBtn) {
+                approveBtn.innerHTML = originalApproveText;
+                approveBtn.disabled = false;
+                redoBtn.innerHTML = originalRedoText;
+                redoBtn.disabled = false;
+            }
         }
     }
 </script>

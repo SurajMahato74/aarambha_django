@@ -435,7 +435,7 @@ document.getElementById('paymentForm').addEventListener('submit', async function
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
     
     try {
-        const response = await fetchAPI(`/api/applications/child-payment/${currentChildId}/initiate/`, {
+        const response = await fetch(`/api/applications/simple-payment/${currentChildId}/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -90,9 +90,14 @@ function updateNavbarAuth() {
     } else {
         // User is not logged in - show login link
         navAuthItem.innerHTML = `
-            <a href="javascript:void(0)" id="navLoginLink" class="navigation__level-one-link" onclick="handleNavLoginClick()">Login</a>
+            <a href="javascript:void(0)" id="navLoginLink" class="navigation__level-one-link" onclick="handleNavbarLoginClick()">Login</a>
         `;
     }
+}
+
+function handleNavbarLoginClick() {
+    // Redirect to login page instead of showing modal
+    window.location.href = '/login/';
 }
 
 async function handleLogout() {

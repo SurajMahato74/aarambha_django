@@ -85,10 +85,13 @@ urlpatterns = [
     # School Dropout Report endpoints
     path('reports/school-dropout/', api_views.school_dropout_report_create, name='school_dropout_report_create'),
     path('reports/school-dropout/my/', api_views.my_school_dropout_reports, name='my_school_dropout_reports'),
-    path('reports/school-dropout/admin/', api_views.school_dropout_report_list_admin, name='school_dropout_report_list_admin'),
     path('reports/school-dropout/admin/<int:pk>/', api_views.school_dropout_report_detail_admin, name='school_dropout_report_detail_admin'),
     path('reports/school-dropout/admin/<int:pk>/update-status/', api_views.school_dropout_report_update_status, name='school_dropout_report_update_status'),
     path('reports/school-dropout/admin/<int:pk>/add-to-child-database/', api_views.add_dropout_to_child_database, name='add_dropout_to_child_database'),
+    
+    # New School Dropout Report endpoints with proper JWT auth
+    path('reports/school-dropout/admin-new/', api_views.school_dropout_report_list_admin_new, name='school_dropout_report_list_admin_new'),
+    path('reports/school-dropout/admin-new/<int:pk>/update-status/', api_views.school_dropout_report_update_status_new, name='school_dropout_report_update_status_new'),
 
     # Donation / Khalti Payment endpoints
     path('donations/initiate/', api_views.donation_initiate_payment, name='donation_initiate_payment'),

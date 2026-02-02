@@ -231,10 +231,14 @@
                             <button onclick="markAttendance(${app.id}, false)" class="text-red-400 hover:text-red-300" title="Mark Not Attended">
                                 <span class="material-symbols-outlined" style="font-size:20px">cancel</span>
                             </button>
-                        ` : `
-                            <span class="${app.interview_attended ? 'text-green-400' : 'text-red-400'}" title="${app.interview_attended ? 'Attended' : 'Not Attended'}">
-                                <span class="material-symbols-outlined" style="font-size:20px">${app.interview_attended ? 'task_alt' : 'event_busy'}</span>
+                        ` : app.interview_attended ? `
+                            <span class="text-green-400" title="Attended">
+                                <span class="material-symbols-outlined" style="font-size:20px">task_alt</span>
                             </span>
+                        ` : `
+                            <button onclick="markAttendance(${app.id}, true)" class="text-green-400 hover:text-green-300" title="Mark Attended">
+                                <span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
+                            </button>
                         `}
                     ` : ''}
                     <button onclick="approveApplication(${app.id})" class="text-emerald-400 hover:text-emerald-300" title="Approve">

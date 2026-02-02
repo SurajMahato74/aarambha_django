@@ -143,6 +143,9 @@ class AdminTasksAPI(APIView):
                     status_parts.append(f"{email_stats['pending']} pending")
                 email_status = ", ".join(status_parts)
             
+            # Get submission count for this task
+            submission_count = TaskSubmission.objects.filter(task=task, status__in=['submitted', 'approved']).count()
+            
             data.append({
                 'id': task.id,
                 'title': task.title,
@@ -151,6 +154,7 @@ class AdminTasksAPI(APIView):
                 'deadline': task.deadline.isoformat(),
                 'status': task.status,
                 'assigned_to': assigned_users,
+                'submission_count': submission_count,
                 'task_materials': materials,
                 'task_links': task.task_links,
                 'submission_text': task.submission_text,
@@ -386,6 +390,35 @@ class TaskDetailAPI(APIView):
             
         except Task.DoesNotExist:
             return Response({'error': 'Task not found'}, status=404)
+
+class SubmissionDetailAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, task_id, user_id):
+        if not request.user.is_superuser:
+            return Response({'error': 'Permission denied'}, status=403)
+            
+        try:
+            task = Task.objects.get(id=task_id)
+            user = CustomUser.objects.get(id=user_id)
+            submission = TaskSubmission.objects.get(task=task, user=user)
+            
+            return Response({
+                'id': submission.id,
+                'task_id': task.id,
+                'user_id': user.id,
+                'status': submission.status,
+                'submission_text': submission.submission_text,
+                'submission_file': submission.submission_file.url if submission.submission_file else None,
+                'admin_feedback': submission.admin_feedback,
+                'rating': submission.rating,
+                'submitted_at': submission.submitted_at.isoformat() if submission.submitted_at else None,
+                'reviewed_at': submission.reviewed_at.isoformat() if submission.reviewed_at else None,
+                'reviewed_by': submission.reviewed_by.get_full_name() if submission.reviewed_by else None
+            })
+            
+        except (Task.DoesNotExist, CustomUser.DoesNotExist, TaskSubmission.DoesNotExist):
+            return Response({'error': 'Submission not found'}, status=404)
 
 class ReviewSubmissionAPI(APIView):
     permission_classes = [IsAuthenticated]

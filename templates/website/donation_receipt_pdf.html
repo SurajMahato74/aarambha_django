@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Receipt - {{ donation.purchase_order_id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+        }
+        .receipt-container {
+            max-width: 700px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 20px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .org-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .tagline {
+            color: #666;
+            font-size: 12px;
+        }
+        .receipt-title {
+            background: #10b981;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 0;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .detail-section {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .detail-section h3 {
+            color: #374151;
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .detail-row {
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        .detail-label {
+            color: #6b7280;
+            font-weight: normal;
+        }
+        .detail-value {
+            font-weight: 500;
+        }
+        .amount {
+            font-size: 16px;
+            color: #10b981;
+            font-weight: bold;
+        }
+        .thank-you {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 15px 0;
+            flex-grow: 1;
+        }
+        .thank-you h3 {
+            margin: 0 0 8px 0;
+            color: #1e40af;
+            font-size: 16px;
+        }
+        .thank-you p {
+            margin: 0;
+            font-size: 13px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 10px;
+            margin-top: auto;
+        }
+        @media print {
+            body { margin: 0; padding: 10px; }
+            .receipt-container { border: none; height: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                {% load static %}
+                <img src="{% static 'website/images/logo.png' %}" alt="Logo" class="logo" onerror="this.style.display='none'">
+                <div>
+                    <div class="org-name">Aarambha Foundation</div>
+                    <div class="tagline">Our Beginning for the Change</div>
+                </div>
+            </div>
+            <div class="receipt-title">DONATION RECEIPT</div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="details-grid">
+            <!-- Donor Information -->
+            <div class="detail-section">
+                <h3>Donor Information</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Name:</span> <span class="detail-value">{{ donation.full_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email:</span> <span class="detail-value">{{ donation.email }}</span>
+                </div>
+                {% if donation.phone %}
+                <div class="detail-row">
+                    <span class="detail-label">Phone:</span> <span class="detail-value">{{ donation.phone }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Donation Information -->
+            <div class="detail-section">
+                <h3>Donation Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Amount:</span> <span class="detail-value amount">Rs. {{ donation.amount }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Program:</span> <span class="detail-value">{{ donation.program_name|default:"General" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span> <span class="detail-value">{{ donation.completed_at|date:"M d, Y g:i A" }}</span>
+                </div>
+            </div>
+
+            <!-- Transaction Information -->
+            <div class="detail-section">
+                <h3>Transaction Info</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Receipt ID:</span> <span class="detail-value">{{ donation.purchase_order_id }}</span>
+                </div>
+                {% if donation.transaction_id %}
+                <div class="detail-row">
+                    <span class="detail-label">Transaction ID:</span> <span class="detail-value">{{ donation.transaction_id }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span> <span class="detail-value">{{ donation.payment_status|title }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thank You Message -->
+        <div class="thank-you">
+            <h3>Thank You!</h3>
+            <p>Your generous donation helps us provide education, healthcare, and community development programs. Together, we are making a lasting impact in our communities.</p>
+            <p style="margin-top: 10px; font-weight: bold;">This receipt serves as your official donation record for tax purposes.</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Aarambha Foundation</strong></p>
+            {% if contact_info %}
+            <p>{{ contact_info.address }}</p>
+            <p>Email: {{ contact_info.email }} | Phone: {{ contact_info.phone }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            if (window.location.search.includes('download=pdf')) {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            }
+        };
+    </script>
+</body>
+</html>

@@ -23,12 +23,16 @@ async function loadCampaignDetails() {
         if (response.ok) {
             campaignData = data;
             displayCampaignDetails(campaignData);
+            // Load donations separately
+            displayDonations(data.donations || []);
         } else {
             throw new Error(data.error || 'Failed to load campaign details');
         }
     } catch (error) {
         console.error('Error loading campaign:', error);
         showError('Failed to load campaign details. The campaign may not exist or may have been removed.');
+        // Show empty donations on error
+        displayDonations([]);
     }
 }
 
@@ -69,11 +73,6 @@ function showError(message) {
 function displayCampaignDetails(campaign) {
     console.log('Displaying campaign details:', campaign);
     
-    $('#campaign-title').text(campaign.title);
-    $('#campaign-organizer span').text(campaign.full_name);
-    $('#campaign-description').text(campaign.description.substring(0, 200) + '...');
-    $('#full-description').text(campaign.description);
-    
     // Parse numbers properly
     const currentAmount = parseFloat(campaign.current_amount) || 0;
     const targetAmount = parseFloat(campaign.target_amount) || 0;
@@ -90,10 +89,10 @@ function displayCampaignDetails(campaign) {
     $('#current-display').text(currentAmount.toLocaleString());
     $('#birthday-date').text(new Date(campaign.birthday_date).toLocaleDateString());
     $('#organizer-name').text(campaign.full_name);
+    $('#full-description').text(campaign.description);
     
-    if (campaign.photo) {
-        $('#campaign-photo').attr('src', campaign.photo);
-    }
+    // Show Pay Now button
+    $('#payNowBtn').show();
 }
 
 function displayDonations(donations) {
@@ -116,15 +115,117 @@ function displayDonations(donations) {
                     </div>
                     <div class="text-end">
                         <small class="text-muted d-block">${new Date(donation.date).toLocaleDateString()}</small>
-                        <button class="btn btn-outline-primary btn-sm mt-1" onclick="printReceipt('${donation.donor_name.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${donation.amount}', '${donation.date}', '${(donation.message || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}')">
-                            <i class="fas fa-print me-1"></i>Print Receipt
-                        </button>
                     </div>
                 </div>
             </div>
         `;
         container.append(donationItem);
     });
+}
+
+function showDonationModal() {
+    // Show payment method selection first
+    Swal.fire({
+        title: 'Choose Payment Method',
+        html: `
+            <div class="text-center">
+                <button class="btn btn-primary btn-lg m-2" onclick="selectPaymentMethod('khalti')">
+                    <i class="fas fa-wallet me-2"></i>Khalti
+                </button>
+                <button class="btn btn-success btn-lg m-2" onclick="selectPaymentMethod('stripe')">
+                    <i class="fas fa-credit-card me-2"></i>Stripe
+                </button>
+            </div>
+        `,
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Cancel'
+    });
+}
+
+function selectPaymentMethod(method) {
+    Swal.close();
+    if (method === 'khalti') {
+        $('#donationModal').modal('show');
+    } else {
+        Swal.fire({
+            icon: 'info',
+            title: 'Stripe Payment',
+            text: 'Stripe payment integration coming soon!'
+        });
+    }
+}
+
+// Handle donation form submission
+$(document).ready(function() {
+    $('#donationForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            donor_name: $('#donor_name').val(),
+            amount: $('#amount').val(),
+            message: $('#message').val(),
+            is_anonymous: $('#is_anonymous').is(':checked')
+        };
+        
+        if (!formData.donor_name || !formData.amount || formData.amount < 100) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Input',
+                text: 'Please fill all required fields and ensure minimum donation is Rs. 100'
+            });
+            return;
+        }
+        
+        // Create donation record directly (simplified for now)
+        createDonationRecord(formData);
+    });
+});
+
+async function createDonationRecord(donationData) {
+    try {
+        Swal.fire({
+            title: 'Processing Donation...',
+            text: 'Please wait while we record your donation.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        const response = await fetch(`/api/applications/birthday-campaign/${campaignId}/donate/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(donationData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thank You!',
+                text: 'Your donation has been recorded successfully!'
+            }).then(() => {
+                // Close modal and refresh campaign data
+                $('#donationModal').modal('hide');
+                $('#donationForm')[0].reset();
+                loadCampaignDetails();
+            });
+        } else {
+            throw new Error(result.error || 'Failed to record donation');
+        }
+    } catch (error) {
+        console.error('Donation error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Donation Failed',
+            text: error.message || 'Failed to record donation. Please try again.'
+        });
+    }
 }
 
 async function makeDonation() {

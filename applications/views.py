@@ -1,3 +1,6 @@
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils import timezone
@@ -750,6 +753,38 @@ def child_detail_api(request, pk):
             'message': f'Child "{child_name}" deleted successfully'
         })
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def make_child_available(request, pk):
+    """Remove all assignments and make child available for sponsorship"""
+    try:
+        # Check if user is admin
+        if not request.user.is_superuser:
+            return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+        
+        child = Child.objects.get(pk=pk)
+        
+        # Remove all assignments for this child
+        assignments = ChildAssignment.objects.filter(child=child)
+        assignments_count = assignments.count()
+        assignments.delete()
+        
+        # Update child status to available
+        child.status = 'available'
+        child.current_sponsor = None
+        child.sponsorship_start_date = None
+        child.save()
+        
+        return Response({
+            'success': True,
+            'message': f'Child {child.full_name} is now available for sponsorship. Removed {assignments_count} assignments.'
+        })
+        
+    except Child.DoesNotExist:
+        return Response({'error': 'Child not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def children_stats(request):
@@ -897,6 +932,7 @@ def my_child_assignments(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def approve_child_assignment(request, assignment_id):
@@ -921,20 +957,6 @@ def approve_child_assignment(request, assignment_id):
         child.current_sponsor = request.user
         child.sponsorship_start_date = timezone.now().date()
         child.save()
-        
-        # Release other pending assignments for this sponsor
-        other_assignments = ChildAssignment.objects.filter(
-            sponsor=request.user, 
-            status='pending'
-        ).exclude(id=assignment_id)
-        
-        for other_assignment in other_assignments:
-            other_assignment.status = 'rejected'
-            other_assignment.save()
-            # Make other children available again
-            other_child = other_assignment.child
-            other_child.status = 'available'
-            other_child.save()
         
         # Create notification for sponsor
         UserNotification.objects.create(
@@ -982,6 +1004,57 @@ Aarambha Foundation Team''',
         return Response({
             'message': 'Assignment approved successfully',
             'redirect_url': '/sponsor/children/'
+        })
+        
+    except ChildAssignment.DoesNotExist:
+        return Response({'error': 'Assignment not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reject_child_assignment(request, assignment_id):
+    """Reject a child assignment"""
+    from django.core.mail import send_mail
+    from django.conf import settings
+    from notices.models import UserNotification
+    from django.utils import timezone
+    
+    try:
+        assignment = ChildAssignment.objects.get(id=assignment_id, sponsor=request.user)
+        
+        if assignment.status != 'pending':
+            return Response({'error': 'Assignment already processed'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        assignment.status = 'rejected'
+        assignment.save()
+        
+        child = assignment.child
+        child.status = 'available'
+        child.save()
+        
+        # Create notification for sponsor
+        UserNotification.objects.create(
+            user=request.user,
+            notification_type='sponsorship_rejected',
+            title='Sponsorship Rejected',
+            message=f'You have rejected the sponsorship for {child.full_name}. The child is now available for other sponsors.'
+        )
+        
+        # Create notification for admin
+        from users.models import CustomUser
+        admin_users = CustomUser.objects.filter(is_superuser=True)
+        for admin in admin_users:
+            UserNotification.objects.create(
+                user=admin,
+                notification_type='sponsorship_rejected',
+                title='Sponsorship Rejected',
+                message=f'{request.user.get_full_name()} has rejected sponsorship for {child.full_name}'
+            )
+        
+        return Response({
+            'message': 'Assignment rejected successfully'
         })
         
     except ChildAssignment.DoesNotExist:
@@ -2737,18 +2810,18 @@ def create_birthday_campaign(request):
 def get_birthday_campaign(request, campaign_id):
     """Get birthday campaign details"""
     try:
-        from .models import BirthdayCampaign, BirthdayDonation
+        from .models import BirthdayCampaign, BirthdayDonationRecord
         
         campaign = BirthdayCampaign.objects.get(id=campaign_id)
-        donations = BirthdayDonation.objects.filter(campaign=campaign, status='completed').order_by('-created_at')
+        donations = BirthdayDonationRecord.objects.filter(campaign=campaign).order_by('-donation_date')
         
         donation_data = []
         for donation in donations:
             donation_data.append({
-                'donor_name': 'Anonymous' if donation.is_anonymous else donation.donor_name,
-                'amount': str(donation.amount),
-                'message': donation.message,
-                'date': donation.payment_date.isoformat() if donation.payment_date else donation.created_at.isoformat()
+                'donor_name': donation.participant_name,
+                'amount': str(donation.donation_amount),
+                'message': donation.donation_description,
+                'date': donation.donation_date.isoformat()
             })
         
         data = {
@@ -2783,6 +2856,7 @@ def donate_to_birthday_campaign(request, campaign_id):
     try:
         from .models import BirthdayCampaign, BirthdayDonationRecord
         from django.utils import timezone
+        from decimal import Decimal
         
         campaign = BirthdayCampaign.objects.get(id=campaign_id)
         data = request.data
@@ -2806,7 +2880,7 @@ def donate_to_birthday_campaign(request, campaign_id):
         )
         
         # Update campaign totals
-        campaign.current_amount += float(donation_amount)
+        campaign.current_amount += Decimal(str(donation_amount))
         campaign.donors_count += 1
         campaign.save()
         
@@ -3153,3 +3227,268 @@ def create_donation_record(request):
         return Response({'error': 'Campaign not found'}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+
+# Simple Django views for assignment actions
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def simple_approve_assignment(request, assignment_id):
+    try:
+        assignment = ChildAssignment.objects.get(id=assignment_id, sponsor=request.user)
+        
+        if assignment.status != 'pending':
+            return JsonResponse({'error': 'Assignment already processed'}, status=400)
+        
+        assignment.status = 'approved'
+        assignment.approved_at = timezone.now()
+        assignment.save()
+        
+        child = assignment.child
+        child.status = 'sponsored'
+        child.current_sponsor = request.user
+        child.sponsorship_start_date = timezone.now().date()
+        child.save()
+        
+        # Create notification for sponsor
+        UserNotification.objects.create(
+            user=request.user,
+            notification_type='sponsorship_approved',
+            title='Sponsorship Approved',
+            message=f'You have approved the sponsorship for {child.full_name}. Welcome to your sponsorship journey!'
+        )
+        
+        return JsonResponse({'message': 'Assignment approved successfully'})
+        
+    except ChildAssignment.DoesNotExist:
+        return JsonResponse({'error': 'Assignment not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def simple_reject_assignment(request, assignment_id):
+    try:
+        assignment = ChildAssignment.objects.get(id=assignment_id, sponsor=request.user)
+        
+        if assignment.status != 'pending':
+            return JsonResponse({'error': 'Assignment already processed'}, status=400)
+        
+        assignment.status = 'rejected'
+        assignment.save()
+        
+        child = assignment.child
+        child.status = 'available'
+        child.save()
+        
+        # Create notification for sponsor
+        UserNotification.objects.create(
+            user=request.user,
+            notification_type='sponsorship_rejected',
+            title='Sponsorship Rejected',
+            message=f'You have rejected the sponsorship for {child.full_name}. The child is now available for other sponsors.'
+        )
+        
+        return JsonResponse({'message': 'Assignment rejected successfully'})
+        
+    except ChildAssignment.DoesNotExist:
+        return JsonResponse({'error': 'Assignment not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def simple_initiate_payment(request, child_id):
+    import requests
+    import uuid
+    import json
+    
+    try:
+        child = Child.objects.get(id=child_id, current_sponsor=request.user)
+        
+        # Get amount from request body
+        try:
+            data = json.loads(request.body)
+            amount = float(data.get('amount', child.monthly_sponsorship_amount))
+        except:
+            amount = float(child.monthly_sponsorship_amount)
+        
+        # Get next installment number
+        last_installment = PaymentInstallment.objects.filter(
+            child=child, sponsor=request.user
+        ).order_by('-installment_number').first()
+        installment_number = (last_installment.installment_number + 1) if last_installment else 1
+        
+        # Create payment installment record
+        installment = PaymentInstallment.objects.create(
+            child=child,
+            sponsor=request.user,
+            amount=amount,
+            installment_number=installment_number,
+            status='pending'
+        )
+        
+        # Generate unique purchase order ID
+        purchase_order_id = f"CHILD-{child.id}-{installment.id}-{uuid.uuid4().hex[:8].upper()}"
+        
+        # Use sandbox credentials
+        khalti_secret_key = "05bf95cc57244045b8df5fad06748dab"
+        
+        # Get return URL
+        base_url = request.build_absolute_uri('/').rstrip('/')
+        return_url = f"{base_url}/api/applications/child-payment/{installment.id}/verify/"
+        website_url = base_url
+        
+        # Prepare Khalti payment payload
+        khalti_payload = {
+            "return_url": return_url,
+            "website_url": website_url,
+            "amount": int(amount * 100),  # Convert to paisa
+            "purchase_order_id": purchase_order_id,
+            "purchase_order_name": f"Child Sponsorship - {child.full_name} - Installment #{installment_number}",
+            "customer_info": {
+                "name": request.user.get_full_name() or request.user.username,
+                "email": request.user.email,
+                "phone": "9800000001"
+            }
+        }
+        
+        # Make request to Khalti SANDBOX API
+        khalti_url = "https://dev.khalti.com/api/v2/epayment/initiate/"
+        headers = {
+            'Authorization': f'key {khalti_secret_key}',
+            'Content-Type': 'application/json',
+        }
+        
+        response = requests.post(khalti_url, json=khalti_payload, headers=headers, timeout=30)
+        
+        if response.status_code == 200:
+            khalti_response = response.json()
+            
+            # Update installment with Khalti response
+            installment.khalti_payment_token = khalti_response.get('pidx')
+            installment.save()
+            
+            return JsonResponse({
+                'success': True,
+                'installment_id': installment.id,
+                'purchase_order_id': purchase_order_id,
+                'pidx': khalti_response.get('pidx'),
+                'payment_url': khalti_response.get('payment_url'),
+                'expires_at': khalti_response.get('expires_at'),
+                'expires_in': khalti_response.get('expires_in')
+            })
+        else:
+            error_data = response.json() if response.content else {'error': 'Unknown error'}
+            return JsonResponse({
+                'error': 'Failed to initiate payment with Khalti',
+                'details': error_data
+            }, status=400)
+            
+    except Child.DoesNotExist:
+        return JsonResponse({'error': 'Child not found or not sponsored by you'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def simple_initiate_payment_details(request, child_id):
+    import requests
+    import uuid
+    import json
+    
+    try:
+        # Check if user has approved assignment for this child (allows access even after cancellation)
+        assignment = ChildAssignment.objects.filter(
+            child_id=child_id, 
+            sponsor=request.user, 
+            status='approved'
+        ).first()
+
+        if not assignment:
+            return JsonResponse({'error': 'Child not found or not sponsored by you'}, status=404)
+
+        child = assignment.child
+        
+        # Get amount from request body
+        try:
+            data = json.loads(request.body)
+            amount = float(data.get('amount', child.monthly_sponsorship_amount))
+        except:
+            amount = float(child.monthly_sponsorship_amount)
+        
+        # Get next installment number
+        last_installment = PaymentInstallment.objects.filter(
+            child=child, sponsor=request.user
+        ).order_by('-installment_number').first()
+        installment_number = (last_installment.installment_number + 1) if last_installment else 1
+        
+        # Create payment installment record
+        installment = PaymentInstallment.objects.create(
+            child=child,
+            sponsor=request.user,
+            amount=amount,
+            installment_number=installment_number,
+            status='pending'
+        )
+        
+        # Generate unique purchase order ID
+        purchase_order_id = f"CHILD-{child.id}-{installment.id}-{uuid.uuid4().hex[:8].upper()}"
+        
+        # Use sandbox credentials
+        khalti_secret_key = "05bf95cc57244045b8df5fad06748dab"
+        
+        # Get return URL
+        base_url = request.build_absolute_uri('/').rstrip('/')
+        return_url = f"{base_url}/api/applications/child-payment/{installment.id}/verify/"
+        website_url = base_url
+        
+        # Prepare Khalti payment payload
+        khalti_payload = {
+            "return_url": return_url,
+            "website_url": website_url,
+            "amount": int(amount * 100),  # Convert to paisa
+            "purchase_order_id": purchase_order_id,
+            "purchase_order_name": f"Child Sponsorship - {child.full_name} - Installment #{installment_number}",
+            "customer_info": {
+                "name": request.user.get_full_name() or request.user.username,
+                "email": request.user.email,
+                "phone": "9800000001"
+            }
+        }
+        
+        # Make request to Khalti SANDBOX API
+        khalti_url = "https://dev.khalti.com/api/v2/epayment/initiate/"
+        headers = {
+            'Authorization': f'key {khalti_secret_key}',
+            'Content-Type': 'application/json',
+        }
+        
+        response = requests.post(khalti_url, json=khalti_payload, headers=headers, timeout=30)
+        
+        if response.status_code == 200:
+            khalti_response = response.json()
+            
+            # Update installment with Khalti response
+            installment.khalti_payment_token = khalti_response.get('pidx')
+            installment.save()
+            
+            return JsonResponse({
+                'success': True,
+                'installment_id': installment.id,
+                'purchase_order_id': purchase_order_id,
+                'pidx': khalti_response.get('pidx'),
+                'payment_url': khalti_response.get('payment_url'),
+                'expires_at': khalti_response.get('expires_at'),
+                'expires_in': khalti_response.get('expires_in')
+            })
+        else:
+            error_data = response.json() if response.content else {'error': 'Unknown error'}
+            return JsonResponse({
+                'error': 'Failed to initiate payment with Khalti',
+                'details': error_data
+            }, status=400)
+            
+    except Exception as e:
+        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)

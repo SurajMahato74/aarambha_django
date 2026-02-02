@@ -510,6 +510,77 @@
   {% include "website/includes/login_modal.html" %}
   {% include "website/includes/navbar_login_modal.html" %}
   {% include "website/includes/donation_modal.html" %}
+  
+  <!-- Donation Success Modal for Anonymous Users -->
+  {% if donation_success %}
+  <div id="donationSuccessModal" class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content" style="background-color: white;">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-check-circle mr-2"></i>
+            Donation Successful!
+          </h5>
+          <button type="button" class="close text-white" onclick="closeDonationSuccessModal()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" style="background-color: white; color: #333;">
+          <div class="text-center mb-4">
+            <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+              <i class="fas fa-heart text-white" style="font-size: 2rem;"></i>
+            </div>
+            <h4 class="mt-3 text-success">Thank You, {{ donation_success.donor_name }}!</h4>
+            <p class="text-muted">Your generous donation has been successfully processed.</p>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card border-success" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                  <h6 class="card-title text-success">Donation Details</h6>
+                  <p class="mb-1" style="color: #333;"><strong>Amount:</strong> Rs. {{ donation_success.amount }}</p>
+                  <p class="mb-1" style="color: #333;"><strong>Program:</strong> {{ donation_success.program_name }}</p>
+                  <p class="mb-1" style="color: #333;"><strong>Date:</strong> {{ donation_success.completed_at }}</p>
+                  <p class="mb-0" style="color: #333;"><strong>Receipt ID:</strong> <code>{{ donation_success.purchase_order_id }}</code></p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-info" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                  <h6 class="card-title text-info">What's Next?</h6>
+                  <ul class="list-unstyled mb-0" style="color: #333;">
+                    <li><i class="fas fa-envelope text-primary mr-2"></i>Receipt sent to your email</li>
+                    <li><i class="fas fa-download text-success mr-2"></i>Download receipt below</li>
+                    <li><i class="fas fa-heart text-danger mr-2"></i>Your impact starts now!</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle mr-2"></i>
+            <strong>Important:</strong> This receipt serves as your official donation record for tax purposes. Please keep it for your records.
+          </div>
+        </div>
+        <div class="modal-footer" style="background-color: white;">
+          <a href="{% url 'donation_receipt' donation_success.id %}" class="btn btn-success" target="_blank">
+            <i class="fas fa-receipt mr-2"></i>View Full Receipt
+          </a>
+          <a href="{% url 'donation_receipt' donation_success.id %}?download=pdf" class="btn btn-primary" target="_blank">
+            <i class="fas fa-download mr-2"></i>Download PDF
+          </a>
+          <button type="button" class="btn btn-secondary" onclick="closeDonationSuccessModal()">
+            <i class="fas fa-times mr-2"></i>Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  
   {% include "website/includes/footer.html" %}
 
  
@@ -556,6 +627,24 @@
     function handleDonateClick(url) {
       openDonationModal();
     }
+    
+    // Handle donation success modal
+    {% if donation_success %}
+    $(document).ready(function() {
+      // Auto-dismiss modal after 30 seconds
+      setTimeout(function() {
+        closeDonationSuccessModal();
+      }, 30000);
+    });
+    
+    function closeDonationSuccessModal() {
+      const modal = document.getElementById('donationSuccessModal');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.remove();
+      }
+    }
+    {% endif %}
   </script>
 </body>
 

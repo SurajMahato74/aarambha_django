@@ -187,10 +187,11 @@
                                 <div class="bg-gray-50 rounded-lg p-6 border hover:shadow-md transition-shadow">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <h4 class="font-semibold text-gray-800 mb-2">Payment #${payment.id}</h4>
+                                            <h4 class="font-semibold text-gray-800 mb-2">${payment.description}</h4>
                                             <div class="space-y-1">
-                                                <p class="text-gray-700"><strong>Amount:</strong> $${payment.amount}</p>
+                                                <p class="text-gray-700"><strong>Amount:</strong> Rs. ${payment.amount}</p>
                                                 <p class="text-gray-700"><strong>Method:</strong> ${payment.payment_method}</p>
+                                                <p class="text-gray-700"><strong>Transaction ID:</strong> ${payment.transaction_id || 'N/A'}</p>
                                                 <p class="text-gray-700"><strong>Date:</strong> ${new Date(payment.paid_at).toLocaleDateString()}</p>
                                             </div>
                                         </div>

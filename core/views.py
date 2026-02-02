@@ -22,6 +22,9 @@ def website_home(request):
     # Get events for the index page from IndexEvent model
     events = IndexEvent.get_active_events()[:6]  # Show latest 6 events
     
+    # Check for donation success (for anonymous users)
+    donation_success = request.session.pop('donation_success', None)
+    
     context = {
         'hero_section': hero_section,
         'support_cards': support_cards,
@@ -32,7 +35,8 @@ def website_home(request):
         'contact_info': contact_info,
         'awards': awards,
         'our_work_items': our_work_items,
-        'events': events
+        'events': events,
+        'donation_success': donation_success  # Pass donation success data to template
     }
     return render(request, 'website/index.html', context)
 
@@ -64,11 +68,11 @@ class OurWorkAPI(APIView):
 
 
 class DonationCreateAPI(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Allow anonymous donations
     
     def post(self, request):
         try:
-            # Create donation record
+            # Create donation record - no authentication required
             donation = Donation.objects.create(
                 title=request.data.get('title', 'Mr.'),
                 full_name=request.data.get('full_name'),
@@ -125,7 +129,7 @@ class DonationCreateAPI(APIView):
 
 
 class MyDonationsAPI(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Allow anonymous users to check their donations
     
     def get(self, request):
         try:
@@ -162,7 +166,7 @@ class MyDonationsAPI(APIView):
 
 
 class DonationDetailAPI(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Allow anonymous users to check donation details
     
     def get(self, request, donation_id):
         try:
@@ -172,6 +176,10 @@ class DonationDetailAPI(APIView):
             if request.user.is_authenticated:
                 if donation.email != request.user.email:
                     return Response({'error': 'Access denied'}, status=403)
+            else:
+                # For anonymous users, they can access any donation detail
+                # In production, you might want to add additional security checks
+                pass
             
             return Response({
                 'id': donation.id,
@@ -421,7 +429,69 @@ def admin_dashboard(request):
     # Recent activity (last 30 days)
     thirty_days_ago = timezone.now() - timedelta(days=30)
     recent_applications = Application.objects.filter(applied_at__gte=thirty_days_ago).order_by('-applied_at')[:10]
-    recent_payments = Payment.objects.filter(paid_at__gte=thirty_days_ago).order_by('-paid_at')[:5]
+    
+    # Get recent payments from multiple sources
+    recent_payments = []
+    
+    # 1. Membership payments
+    try:
+        membership_payments = Application.objects.filter(
+            payment_completed=True,
+            payment_date__gte=thirty_days_ago
+        ).select_related('user')[:3]
+        
+        for payment in membership_payments:
+            recent_payments.append({
+                'amount': float(payment.payment_amount),
+                'user_name': payment.full_name,
+                'payment_date': payment.payment_date,
+                'type': 'Membership',
+                'source': 'Application'
+            })
+    except:
+        pass
+    
+    # 2. Child sponsorship payments
+    try:
+        from applications.models import PaymentInstallment
+        sponsorship_payments = PaymentInstallment.objects.filter(
+            status='completed',
+            payment_date__gte=thirty_days_ago
+        ).select_related('sponsor', 'child')[:3]
+        
+        for payment in sponsorship_payments:
+            recent_payments.append({
+                'amount': float(payment.amount),
+                'user_name': payment.sponsor.get_full_name() or payment.sponsor.email,
+                'payment_date': payment.payment_date,
+                'type': 'Sponsorship',
+                'source': 'Child Support'
+            })
+    except:
+        pass
+    
+    # 3. General donations
+    try:
+        general_donations = Donation.objects.filter(
+            payment_status='completed',
+            completed_at__gte=thirty_days_ago
+        )[:2]
+        
+        for donation in general_donations:
+            recent_payments.append({
+                'amount': float(donation.amount),
+                'user_name': donation.full_name,
+                'payment_date': donation.completed_at,
+                'type': 'Donation',
+                'source': 'Website'
+            })
+    except:
+        pass
+    
+    # Sort by date and limit to 5
+    recent_payments.sort(key=lambda x: x['payment_date'], reverse=True)
+    recent_payments = recent_payments[:5]
+    
     recent_events = Event.objects.filter(created_at__gte=thirty_days_ago).order_by('-created_at')[:5]
     
     # Recent notices for admin
@@ -1125,6 +1195,9 @@ def report_school_dropout(request):
     return render(request, 'website/report_school_dropout.html', context)
 
 
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+@ensure_csrf_cookie
 def admin_school_dropout_reports(request):
     """Display admin page for school dropout reports"""
     from .districts import NEPAL_DISTRICTS
@@ -1133,11 +1206,23 @@ def admin_school_dropout_reports(request):
     }
     return render(request, 'admin/school_dropout_reports.html', context)
 
+def admin_school_dropout_reports_new(request):
+    """New admin page for managing school dropout reports with proper authentication"""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect('login')
+    from .districts import NEPAL_DISTRICTS
+    context = {
+        'districts': NEPAL_DISTRICTS,
+    }
+    return render(request, 'admin/school_dropout_reports_new.html', context)
+
 
 def donation_callback(request):
     """
     Handle Khalti payment callback after donation.
     This view is called when user returns from Khalti payment gateway.
+    For anonymous users: redirect to home with success notice
+    For logged-in users: redirect to profile
     """
     from django.http import HttpResponse
     import logging
@@ -1148,6 +1233,7 @@ def donation_callback(request):
     from django.conf import settings
     from django.utils import timezone
     from decimal import Decimal
+    from django.contrib import messages
 
     logger = logging.getLogger(__name__)
     logger.info("KHALTI CALLBACK HIT - Donation Payment")
@@ -1237,20 +1323,85 @@ Phone: +977 (984)346-7402'''
                 donation.save()
                 logger.info(f"Donation {donation.id} updated with status: {donation.payment_status}")
                 
-                # Redirect based on status
-                return redirect('/guest/profile/?tab=donations')
+                # Different redirect logic for anonymous vs authenticated users
+                if request.user.is_authenticated:
+                    # For logged-in users: redirect to profile
+                    if donation.payment_status == 'completed':
+                        messages.success(request, f'Thank you! Your donation of Rs. {donation.amount} was successful.')
+                    return redirect('/guest/profile/?tab=donations')
+                else:
+                    # For anonymous users: redirect to home with success notice and donation details in session
+                    if donation.payment_status == 'completed':
+                        # Store donation details in session for display on home page
+                        request.session['donation_success'] = {
+                            'id': donation.id,
+                            'amount': str(donation.amount),
+                            'transaction_id': donation.transaction_id,
+                            'purchase_order_id': donation.purchase_order_id,
+                            'donor_name': donation.full_name,
+                            'donor_email': donation.email,
+                            'completed_at': donation.completed_at.strftime("%B %d, %Y at %I:%M %p"),
+                            'program_name': donation.program_name or 'General Donation'
+                        }
+                        messages.success(request, f'Thank you {donation.full_name}! Your donation of Rs. {donation.amount} was successful.')
+                    return redirect('/')
             else:
                 logger.error(f"Khalti lookup failed: {response.text}")
-                return redirect('/guest/profile/?tab=donations')
+                # Redirect based on user type
+                if request.user.is_authenticated:
+                    return redirect('/guest/profile/?tab=donations')
+                else:
+                    messages.error(request, 'Payment verification failed. Please contact support if amount was deducted.')
+                    return redirect('/')
                 
         except Donation.DoesNotExist:
             logger.error(f"Donation not found for pidx: {pidx}")
-            return redirect('/guest/profile/?tab=donations')
+            # Redirect based on user type
+            if request.user.is_authenticated:
+                return redirect('/guest/profile/?tab=donations')
+            else:
+                messages.error(request, 'Donation record not found. Please contact support.')
+                return redirect('/')
         except Exception as e:
             logger.error(f"Callback processing error: {e}")
-            return redirect('/guest/profile/?tab=donations')
+            # Redirect based on user type
+            if request.user.is_authenticated:
+                return redirect('/guest/profile/?tab=donations')
+            else:
+                messages.error(request, 'An error occurred processing your donation. Please contact support.')
+                return redirect('/')
     
     return HttpResponse("OK", status=200)
+
+def donation_receipt(request, donation_id):
+    """
+    Display donation receipt for anonymous users.
+    This allows anonymous users to view/download their donation receipt.
+    """
+    try:
+        donation = get_object_or_404(Donation, id=donation_id, payment_status='completed')
+        
+        # For security, we'll allow access to anyone with the donation ID
+        # In production, you might want to add additional security measures
+        
+        context = {
+            'donation': donation,
+            'contact_info': ContactInfo.get_active(),
+            'awards': Award.get_active_awards(),
+        }
+        
+        # Check if user wants to download as PDF
+        if request.GET.get('download') == 'pdf':
+            # For now, just render the template
+            # You can implement PDF generation later using libraries like reportlab or weasyprint
+            return render(request, 'website/donation_receipt_pdf.html', context)
+        
+        return render(request, 'website/donation_receipt.html', context)
+        
+    except Exception as e:
+        from django.http import Http404
+        raise Http404("Donation receipt not found")
+
 
 def debug_auth(request):
     """Debug page for authentication troubleshooting"""

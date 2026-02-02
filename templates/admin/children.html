@@ -435,12 +435,18 @@ async function loadChildren() {
                         ${child.current_sponsor || 'None'}
                     </td>
                     <td class="px-4 py-4 text-sm font-medium">
-                        <button onclick="editChild(${child.id})" class="text-indigo-400 hover:text-indigo-300 mr-3">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteChild(${child.id})" class="text-red-400 hover:text-red-300">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="editChild(${child.id})" class="text-indigo-400 hover:text-indigo-300" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${child.status === 'pending_assignment' ? 
+                                `<button onclick="makeChildAvailable(${child.id})" class="text-green-400 hover:text-green-300" title="Make Available">
+                                    <i class="fas fa-check-circle"></i>
+                                </button>` : ''}
+                            <button onclick="deleteChild(${child.id})" class="text-red-400 hover:text-red-300" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -657,6 +663,33 @@ async function loadChildForEdit(childId) {
     } catch (error) {
         console.error('Error loading child:', error);
         alert('Error loading child data');
+    }
+}
+
+async function makeChildAvailable(childId) {
+    if (confirm('Are you sure you want to remove all assignments and make this child available for sponsorship?')) {
+        try {
+            const response = await fetch(`/api/applications/children/${childId}/make-available/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert(result.message || 'Child is now available for sponsorship!');
+                loadChildren();
+            } else {
+                alert('Error: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error making child available:', error);
+            alert('Error making child available');
+        }
     }
 }
 

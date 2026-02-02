@@ -21,6 +21,7 @@
             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
         </div>
         <form id="blogForm" class="space-y-4" enctype="multipart/form-data">
+            {% csrf_token %}
             <input type="hidden" id="blogId">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -229,6 +230,11 @@ document.getElementById('blogForm').addEventListener('submit', async (e) => {
     
     try {
         const formData = new FormData();
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        formData.append('csrfmiddlewaretoken', csrfToken);
+        
         formData.append('title', document.getElementById('title').value);
         formData.append('slug', document.getElementById('slug').value);
         formData.append('excerpt', document.getElementById('excerpt').value);
@@ -249,6 +255,9 @@ document.getElementById('blogForm').addEventListener('submit', async (e) => {
         
         const response = await fetch('/api/blog/create/', {
             method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
             body: formData
         });
         
