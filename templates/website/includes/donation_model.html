@@ -262,35 +262,17 @@
                 
                 <!-- Amount Selection for Anonymous (Hidden initially) -->
                 <div id="amountSelection" style="display: none;">
-                    <div class="secure-header">🔒 Secure Donation</div>
-                    <div class="amount-grid">
-                        <button class="amt-btn" onclick="setAmount('1,000')">1,000</button>
-                        <button class="amt-btn" onclick="setAmount('2,000')">2,000</button>
-                        <button class="amt-btn" onclick="setAmount('5,000')">5,000</button>
-                        <button class="amt-btn" onclick="setAmount('10,000')">10,000</button>
-                        <button class="amt-btn" onclick="setAmount('20,000')">20,000</button>
-                        <button class="amt-btn" onclick="setAmount('')">Other</button>
-                    </div>
                     <div class="custom-amount">
                         <span style="font-size:18px; margin-right:5px;">Rs</span>
-                        <input type="text" id="donationInput" value="1,000">
+                        <input type="number" id="donationInput" value="1000" min="10" placeholder="Enter amount">
                         <span style="color:#888; font-size:12px;">NPR ⌵</span>
                     </div>
                     <button class="donate-submit" onclick="nextStep(3)">Proceed to Payment</button>
                 </div>
             {% else %}
-            <div class="secure-header">🔒 Secure Donation</div>
-            <div class="amount-grid">
-                <button class="amt-btn" onclick="setAmount('1,000')">1,000</button>
-                <button class="amt-btn" onclick="setAmount('2,000')">2,000</button>
-                <button class="amt-btn" onclick="setAmount('5,000')">5,000</button>
-                <button class="amt-btn" onclick="setAmount('10,000')">10,000</button>
-                <button class="amt-btn" onclick="setAmount('20,000')">20,000</button>
-                <button class="amt-btn" onclick="setAmount('')">Other</button>
-            </div>
             <div class="custom-amount">
                 <span style="font-size:18px; margin-right:5px;">Rs</span>
-                <input type="text" id="donationInput" value="1,000">
+                <input type="number" id="donationInput" value="1000" min="10" placeholder="Enter amount">
                 <span style="color:#888; font-size:12px;">NPR ⌵</span>
             </div>
             <button class="donate-submit" onclick="nextStep(2)">Next</button>
@@ -352,8 +334,13 @@
 
 <script>
     function setAmount(val) {
-        document.getElementById('donationInput').value = val;
-        if (val === '') document.getElementById('donationInput').focus();
+        const input = document.getElementById('donationInput');
+        if (input) {
+            input.value = val;
+            if (val === '') {
+                input.focus();
+            }
+        }
     }
 
     function nextStep(step) {
