@@ -28,6 +28,7 @@ urlpatterns = [
     path('admin/payment-history/', views.admin_payment_history, name='admin_payment_history'),
     path('get-involved/', views.get_involved, name='get_involved'),
     path('login/', views.login_view, name='login'),
+    path('test-static/', lambda request: render(request, 'test_static.html'), name='test_static'),
     path('logout/', views.logout_view, name='logout'),
     path('guest/welcome/', views.guest_welcome, name='guest_welcome'),
     path('guest/dashboard/', views.guest_dashboard, name='guest_dashboard'),

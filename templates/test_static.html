@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Static Files Test</title>
+</head>
+<body>
+    <h1>Static Files Test Page</h1>
+    
+    <h2>Testing Static Files:</h2>
+    <ul>
+        <li>Logo: <img src="{% static 'website/images/logo.png' %}" style="width:100px;" onerror="this.style.border='2px solid red'; this.alt='FAILED TO LOAD'"></li>
+        <li>Mission BG: <img src="{% static 'website/images/mission.png' %}" style="width:100px;" onerror="this.style.border='2px solid red'; this.alt='FAILED TO LOAD'"></li>
+        <li>Favicon: <img src="{% static 'website/images/favicon.png' %}" style="width:50px;" onerror="this.style.border='2px solid red'; this.alt='FAILED TO LOAD'"></li>
+    </ul>
+    
+    <h2>Testing JS:</h2>
+    <p id="js-test">JavaScript NOT loaded</p>
+    <script src="{% static 'js/config.js' %}"></script>
+    <script>
+        document.getElementById('js-test').textContent = 'JavaScript loaded successfully!';
+        document.getElementById('js-test').style.color = 'green';
+        console.log('config.js loaded:', typeof API_BASE_URL !== 'undefined');
+    </script>
+    
+    <h2>Static URL Info:</h2>
+    <p>STATIC_URL: {{ STATIC_URL }}</p>
+    <p>Logo path: {% static 'website/images/logo.png' %}</p>
+    <p>Config.js path: {% static 'js/config.js' %}</p>
+</body>
+</html>

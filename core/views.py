@@ -383,7 +383,20 @@ def get_involved(request):
     return render(request, 'website/get_involved.html')
 
 def login_view(request):
-    return render(request, 'auth/login.html')
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Login page accessed - Method: {request.method}, Path: {request.path}")
+    logger.info(f"User Agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')}")
+    logger.info(f"Host: {request.META.get('HTTP_HOST', 'Unknown')}")
+    
+    try:
+        response = render(request, 'auth/login.html')
+        logger.info("Login template rendered successfully")
+        return response
+    except Exception as e:
+        logger.error(f"Error rendering login template: {str(e)}")
+        from django.http import HttpResponse
+        return HttpResponse(f"Error loading login page: {str(e)}", status=500)
 
 def logout_view(request):
     if request.method == 'POST':
