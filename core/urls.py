@@ -5,6 +5,11 @@ from . import test_views
 from django.shortcuts import render
 
 urlpatterns = [
+    # Auth routes FIRST (before home)
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    
+    # Home and other routes
     path('', views.website_home, name='home'),
     path('api/our-work/', views.OurWorkAPI.as_view(), name='our_work_api'),
     path('api/donations/create/', views.DonationCreateAPI.as_view(), name='donation_create_api'),
@@ -27,9 +32,7 @@ urlpatterns = [
     path('admin/donations/', views.admin_donations, name='admin_donations'),
     path('admin/payment-history/', views.admin_payment_history, name='admin_payment_history'),
     path('get-involved/', views.get_involved, name='get_involved'),
-    path('login/', views.login_view, name='login'),
     path('test-static/', lambda request: render(request, 'test_static.html'), name='test_static'),
-    path('logout/', views.logout_view, name='logout'),
     path('guest/welcome/', views.guest_welcome, name='guest_welcome'),
     path('guest/dashboard/', views.guest_dashboard, name='guest_dashboard'),
     path('guest/profile/', views.guest_profile, name='guest_profile'),
