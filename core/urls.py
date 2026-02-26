@@ -2,7 +2,7 @@ from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
 from . import test_views
-
+from django.shortcuts import render
 
 urlpatterns = [
     path('', views.website_home, name='home'),
