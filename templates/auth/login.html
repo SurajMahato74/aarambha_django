@@ -1,366 +1,146 @@
-{% load static %}
 <!DOCTYPE html>
-<html class="dark" lang="en">
-
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Sign in to continue</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet" />
-      
-  <link rel="icon" type="image.png" href="{% static 'website/images/favicon.png' %}" />
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#2d3b5b",
-                        "orange":"#d6692a",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#101622",
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "sans-serif"]
-                    },
-                },
-            },
-        }
-    </script>
-    <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-
-        body {
-            min-height: max(884px, 100dvh);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – Simple Test</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+  
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f8fafc;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.12);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 380px;
+    }
+    .input-group {
+      position: relative;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    .input-group input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+    }
+  </style>
 </head>
+<body>
 
-<body class=" font-display" style="background-image: url('{% static 'website/images/mission.png' %}'); background-size: cover; background-position: center; background-attachment: fixed;">
-    <!-- Background Overlay -->
-    <div class="fixed inset-0 bg-black bg-opacity-50 z-0"></div>
-    
-    <!-- Global Loader -->
-    <div id="global-loader" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+  <div class="card">
+
+    <div class="text-center mb-8">
+      <h1 class="text-2xl font-semibold text-gray-800">Sign In</h1>
+      <p class="text-gray-500 mt-1 text-sm">Testing login interface</p>
     </div>
 
-    <div class="relative flex h-auto min-h-screen w-full flex-col items-center justify-center p-4 z-10">
-        <div class="flex w-full max-w-sm flex-col items-center bg-[#F3F3F3]   rounded-2xl shadow-2xl p-8">
+    <form id="loginForm" class="space-y-5">
 
-            <!-- Title + Back Button -->
-            <div id="titleContainer" class=" w-full mb-6 flex justify-center items-center flex-col">
-                <div id="backIcon" class="absolute left-0 flex items-center cursor-pointer hidden"
-                    onclick="goBackToMainLogin()">
-                    <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-2xl">arrow_back</span>
-                </div>
-                <img src="{% static 'website/images/logo.png' %}" style="width: 160px;">
-                <div class="text-gray-700 mt-2  font-bold text-sm">Login</div>
-            </div>
+      <!-- Username -->
+      <div class="input-group">
+        <span class="icon material-symbols-outlined">person</span>
+        <input 
+          type="text" 
+          id="username" 
+          placeholder="Username" 
+          required
+          autocomplete="username"
+        />
+      </div>
 
-            <!-- Username/Password Form -->
-            <form id="loginForm" class="w-full space-y-3">
-                <div class="flex w-full flex-col">
-                    <label class="mb-2 text-sm font-medium text-gray-700 ">Username</label>
-                    <div class="relative flex items-center">
-                        <span
-                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 ">person</span>
-                        <input id="username"
-                            class="form-input h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 "
-                            placeholder="Enter your username" type="text" required />
-                    </div>
-                </div>
+      <!-- Password -->
+      <div class="input-group">
+        <span class="icon material-symbols-outlined">lock</span>
+        <input 
+          type="password" 
+          id="password" 
+          placeholder="Password" 
+          required
+          autocomplete="current-password"
+        />
+        <button 
+          type="button" 
+          onclick="togglePassword()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        >
+          <span id="eyeIcon" class="material-symbols-outlined">visibility</span>
+        </button>
+      </div>
 
-                <div class="flex w-full flex-col">
-                    <label class="mb-2 text-sm font-medium text-gray-700">Password</label>
-                    <div class="relative flex items-center">
-                        <span
-                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 ">lock</span>
-                        <input id="password"
-                            class="form-input h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 "
-                            placeholder="Enter your password" type="password" required />
-                        <button type="button" onclick="togglePassword()"
-                            class="absolute right-3 top-2 text-gray-400 ">
-                            <span class="material-symbols-outlined" id="toggleIcon">visibility</span>
-                        </button>
-                    </div>
-                </div>
+      <!-- Submit -->
+      <button 
+        type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition mt-2"
+      >
+        Log In
+      </button>
 
-                <div id="message" class="text-sm text-center "></div>
+      <div id="message" class="text-center text-sm min-h-[1.25rem] text-red-600"></div>
 
-                <button type="submit"
-                    class="w-full h-10 rounded-lg bg-primary font-bold text-white font-bold hover:bg-orange transition">
-                    Login
-                </button>
-            </form>
+    </form>
 
-            <!-- Email + OTP Form (hidden by default) -->
-            <form id="emailLoginForm" class="w-full space-y-4 hidden">
-                <div id="emailStep">
-                    <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
-                    <div class="relative flex items-center">
-                        <span
-                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 ">mail</span>
-                        <input id="emailInput"
-                            class="form-input h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 "
-                            placeholder="Enter your email" type="email" required />
-                    </div>
-                    <button type="button" onclick="sendOTP(this)"
-                        class="mt-4 w-full h-10 rounded-lg bg-primary text-white font-bold hover:bg-primary/90">
-                        Send OTP
-                    </button>
-                </div>
+  </div>
 
-                <div id="otpStep" class="hidden">
-                    <label class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Enter OTP</label>
-                    <div class="relative flex items-center">
-                        <span
-                            class="material-symbols-outlined pointer-events-none absolute left-3 text-gray-400 ">pin</span>
-                        <input id="otpInput"
-                            class="form-input h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/50 "
-                            placeholder="6-digit OTP" type="text" maxlength="6" required />
-                    </div>
-                    <button type="button" onclick="verifyOTP(this)"
-                        class="mt-4 w-full h-10 rounded-lg bg-primary text-white font-bold hover:bg-primary/90">
-                        Verify OTP
-                    </button>
-                    <button type="button" onclick="showEmailStep()"
-                        class="mt-2 text-sm text-primary hover:underline">Change Email</button>
-                </div>
+  <!-- Material Symbols (icons) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
-                <div id="emailMessage" class="text-sm text-center h-5"></div>
-            </form>
+  <script>
+    function togglePassword() {
+      const pass = document.getElementById('password');
+      const icon = document.getElementById('eyeIcon');
+      
+      if (pass.type === 'password') {
+        pass.type = 'text';
+        icon.textContent = 'visibility_off';
+      } else {
+        pass.type = 'password';
+        icon.textContent = 'visibility';
+      }
+    }
 
+    // Just prevent submit & show fake message (for testing UI)
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const msg = document.getElementById('message');
+      const user = document.getElementById('username').value.trim();
+      
+      if (!user || !document.getElementById('password').value) {
+        msg.textContent = 'Please fill both fields';
+        return;
+      }
+      
+      msg.className = 'text-center text-sm text-green-600';
+      msg.textContent = 'Logging in... (this is just a test)';
+      
+      setTimeout(() => {
+        msg.textContent = 'Welcome, ' + user + '! (fake success)';
+      }, 1200);
+    });
+  </script>
 
-
-            <!-- Optional: Email login trigger (if you still needed) -->
-            <div class="mt-4 text-center">
-                <button type="button" onclick="showEmailLogin()" class="text-sm text-primary hover:underline">
-                    Or login with Email OTP →
-                </button>
-            </div>
-
-          
-        </div>
-    </div>
-    <footer>
-        <div class="fixed z-3 flex h-16 w-full items-center justify-center w-full  bottom-1 z-10">
-            <div class="text-center text-sm text-gray-300">
-                &copy; <span id="currentYear"></span> aarambha foundration. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <script src="{% static 'js/config.js' %}"></script>
-    <script>
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-        // Show/Hide forms
-        function showEmailLogin() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('emailLoginForm').classList.remove('hidden');
-            document.getElementById('backIcon').classList.remove('hidden');
-        }
-
-        function goBackToMainLogin() {
-            document.getElementById('emailLoginForm').classList.add('hidden');
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('backIcon').classList.add('hidden');
-            showEmailStep();
-        }
-
-        function showEmailStep() {
-            document.getElementById('emailStep').classList.remove('hidden');
-            document.getElementById('otpStep').classList.add('hidden');
-        }
-
-        // Toggle password visibility
-        function togglePassword() {
-            const field = document.getElementById('password');
-            const icon = document.getElementById('toggleIcon');
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.textContent = 'visibility_off';
-            } else {
-                field.type = 'password';
-                icon.textContent = 'visibility';
-            }
-        }
-
-        // GUEST LOGIN – This is the magic button you wanted
-        async function loginAsGuest() {
-            const btn = event.target;
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = 'Entering as Guest...';
-
-            try {
-                // Option 1: If you have a real guest account in backend
-                const response = await fetchAPI(api.login, {
-                    method: 'POST',
-                    body: JSON.stringify({ username: "guest", password: "guest123" }) // change if needed
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setToken(data.access, data.refresh);
-                    setUser(data.user);
-                    window.location.href = '/guest/welcome/';
-                    return;
-                }
-            } catch (e) { }
-
-            // Option 2: Fallback – just redirect (works even without backend guest user)
-            setTimeout(() => {
-                window.location.href = '/guest/welcome/';
-            }, 800);
-        }
-
-        // OTP Functions (unchanged)
-        async function sendOTP(btn) {
-            const email = document.getElementById('emailInput').value;
-            const messageDiv = document.getElementById('emailMessage');
-
-            if (!email) {
-                messageDiv.className = 'text-sm text-center text-red-500';
-                messageDiv.textContent = 'Please enter your email address';
-                return;
-            }
-
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = 'Sending...';
-            messageDiv.textContent = '';
-
-            try {
-                const response = await fetch('/api/users/send-otp/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    messageDiv.className = 'text-sm text-center text-green-500';
-                    messageDiv.textContent = data.message || 'OTP sent successfully';
-
-                    document.getElementById('emailStep').classList.add('hidden');
-                    document.getElementById('otpStep').classList.remove('hidden');
-                } else {
-                    messageDiv.className = 'text-sm text-center text-red-500';
-                    messageDiv.textContent = data.error || 'Failed to send OTP';
-                }
-            } catch (error) {
-                console.error(error);
-                messageDiv.className = 'text-sm text-center text-red-500';
-                messageDiv.textContent = 'Network error. Please try again.';
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }
-
-        async function verifyOTP(btn) {
-            const email = document.getElementById('emailInput').value;
-            const otp = document.getElementById('otpInput').value;
-            const messageDiv = document.getElementById('emailMessage');
-
-            if (!otp || otp.length < 6) {
-                messageDiv.className = 'text-sm text-center text-red-500';
-                messageDiv.textContent = 'Please enter a valid 6-digit OTP';
-                return;
-            }
-
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = 'Verifying...';
-            messageDiv.textContent = '';
-
-            try {
-                const response = await fetch('/api/users/verify-otp/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    setToken(data.access, data.refresh);
-                    setUser(data.user);
-
-                    messageDiv.className = 'text-sm text-center text-green-500';
-                    messageDiv.textContent = 'Login successful! Redirecting...';
-
-                    setTimeout(() => {
-                        if (data.user.user_type === 'guest') {
-                            window.location.href = '/guest/welcome/';
-                        } else if (data.user.is_superuser || data.user.user_type === 'superadmin') {
-                            window.location.href = '/admin/dashboard/';
-                        } else {
-                            window.location.href = `/dashboard/${data.user.user_type}/`;
-                        }
-                    }, 1000);
-                } else {
-                    messageDiv.className = 'text-sm text-center text-red-500';
-                    messageDiv.textContent = data.error || 'Invalid OTP';
-                }
-            } catch (error) {
-                console.error(error);
-                messageDiv.className = 'text-sm text-center text-red-500';
-                messageDiv.textContent = 'Network error. Please try again.';
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }
-
-        // Username/Password login
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            // Clear any existing tokens before login
-            clearToken();
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const messageDiv = document.getElementById('message');
-
-            try {
-                const response = await fetchAPI(api.login, {
-                    method: 'POST',
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    setToken(data.access, data.refresh);
-                    setUser(data.user);
-
-                    if (data.user.user_type === 'guest') {
-                        window.location.href = '/guest/welcome/';
-                    } else if (data.user.is_superuser || data.user.user_type === 'superadmin') {
-                        window.location.href = '/admin/dashboard/';
-                    } else {
-                        window.location.href = `/dashboard/${data.user.user_type}/`;
-                    }
-                } else {
-                    messageDiv.className = 'text-sm text-center text-red-500';
-                    messageDiv.textContent = data.non_field_errors?.[0] || 'Login failed';
-                }
-            } catch (error) {
-                messageDiv.className = 'text-sm text-center text-red-500';
-                messageDiv.textContent = 'Network error. Please try again.';
-            }
-        });
-    </script>
 </body>
-
 </html>
