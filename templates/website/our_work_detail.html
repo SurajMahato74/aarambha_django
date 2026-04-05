@@ -36,32 +36,32 @@
         border-radius: 10px;
       }
     }
-    /* Rich text content - respect Jodit inline styles exactly */
+    /* Override style.css global img{width:100%} and .rich-text img{margin:1rem auto} */
     .rich-text img {
-      max-width: 100%;
+      width: auto !important;
+      height: auto !important;
+      max-width: 100% !important;
+      display: inline !important;
+      margin: 0 !important;
     }
-    .rich-text img[style] {
-      width: revert;
-      height: revert;
-      max-width: 100%;
-    }
-    /* Jodit float alignment support */
     .rich-text img[style*="float: left"],
     .rich-text img[style*="float:left"] {
-      margin: 0 16px 16px 0;
+      float: left !important;
+      margin: 0 16px 12px 0 !important;
     }
     .rich-text img[style*="float: right"],
     .rich-text img[style*="float:right"] {
-      margin: 0 0 16px 16px;
+      float: right !important;
+      margin: 0 0 12px 16px !important;
     }
-    .rich-text img[style*="display: block"],
-    .rich-text img[style*="margin: auto"] {
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
+    .rich-text img[style*="display: block"] {
+      display: block !important;
+      float: none !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
     }
-    .rich-text p { margin-bottom: 1rem; }
-    .rich-text::after { content: ''; display: table; clear: both; }
+    .rich-text p { margin-bottom: 1rem; overflow: hidden; }
+    .rich-text { overflow: hidden; }
   </style>
 </head>
 
@@ -151,6 +151,36 @@
   <script src="{% static 'website/js/script.js' %}"></script>
   <script src="{% static 'website/js/min.js' %}"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.rich-text img').forEach(img => {
+        // Apply saved width/height attributes as !important inline styles
+        const w = img.getAttribute('width');
+        const h = img.getAttribute('height');
+        img.removeAttribute('width');
+        img.removeAttribute('height');
+        if (w) img.style.setProperty('width', w + 'px', 'important');
+        if (h) img.style.setProperty('height', h + 'px', 'important');
+        const float = img.style.getPropertyValue('float').replace('!important','').trim();
+        if (float) img.style.setProperty('float', float, 'important');
+
+        // If image is floated and alone inside a <p>, pull it out so
+        // surrounding <p> text can wrap around it
+        const parent = img.parentElement;
+        if (parent && parent.tagName === 'P' && float && float !== 'none') {
+          const container = parent.parentElement;
+          if (container) {
+            // Move img before its parent <p>
+            container.insertBefore(img, parent);
+            // Remove empty <p> left behind
+            if (parent.innerHTML.trim() === '' || parent.innerHTML.trim() === '<br>') {
+              parent.remove();
+            }
+          }
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>
