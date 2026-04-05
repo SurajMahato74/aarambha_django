@@ -25,18 +25,43 @@
   <link rel="icon" type="image.png' %}" href="{% static 'website/images/favicon.png' %}" />
   <title>{{ work.title }} - Aarambha Foundation</title>
   <style>
-     .header-top img {
+    .header-top img {
       width: 100%;
       height: 450px;
-      object-fit: cover;    }
-    @media (max-width: 768px) {
-       .header-top img {
-      width: 100%;
-      height: 250px;
       object-fit: cover;
-      border-radius: 10px;
     }
-  }
+    @media (max-width: 768px) {
+      .header-top img {
+        height: 250px;
+        border-radius: 10px;
+      }
+    }
+    /* Rich text content - respect Jodit inline styles exactly */
+    .rich-text img {
+      max-width: 100%;
+    }
+    .rich-text img[style] {
+      width: revert;
+      height: revert;
+      max-width: 100%;
+    }
+    /* Jodit float alignment support */
+    .rich-text img[style*="float: left"],
+    .rich-text img[style*="float:left"] {
+      margin: 0 16px 16px 0;
+    }
+    .rich-text img[style*="float: right"],
+    .rich-text img[style*="float:right"] {
+      margin: 0 0 16px 16px;
+    }
+    .rich-text img[style*="display: block"],
+    .rich-text img[style*="margin: auto"] {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .rich-text p { margin-bottom: 1rem; }
+    .rich-text::after { content: ''; display: table; clear: both; }
   </style>
 </head>
 
@@ -79,7 +104,7 @@
                 <div class="work-content text-left py-4 px-2 px-md-5">
                   <div class="work-description mb-4">
                     <div class="rich-text" style="line-height: 1.8; color: #555;">
-                      {{ work.description|linebreaks|safe }}
+                      {{ work.description|safe }}
                     </div>
                   </div>
                   {% if work.external_link %}

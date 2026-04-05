@@ -1023,6 +1023,20 @@ def school_dropout_report_detail_admin(request, pk):
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+import os
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def editor_image_upload(request):
+    """Upload image from rich text editor (Jodit), returns URL"""
+    image = request.FILES.get('file') or request.FILES.get('files[0]') or (list(request.FILES.values())[0] if request.FILES else None)
+    if not image:
+        return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+    from django.core.files.storage import default_storage
+    path = default_storage.save(f'editor_uploads/{image.name}', image)
+    url = request.build_absolute_uri(f'/media/{path}')
+    return Response({'location': url})
 
 @csrf_exempt
 @api_view(['PATCH'])

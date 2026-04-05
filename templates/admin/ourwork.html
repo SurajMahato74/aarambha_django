@@ -6,10 +6,13 @@
 
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jodit@3.24.6/build/jodit.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jodit@3.24.6/build/jodit.min.js"></script>
 <style>
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 .preview-image { max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 8px; }
+.jodit-container { min-height: 350px !important; }
+.jodit-workplace { min-height: 280px !important; }
 </style>
 
 <!-- Add/Edit Our Work Modal -->
@@ -36,8 +39,7 @@
             </div>
             <div>
                 <label class="block text-sm text-slate-300 mb-1">Description *</label>
-                <textarea id="description" name="description" rows="6" required
-                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white"></textarea>
+                <textarea id="description" name="description"></textarea>
                 <p class="text-xs text-slate-400 mt-1">Rich text content with formatting and images</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,8 +111,86 @@
     </div>
 </div>
 
-<script src="{% static 'js/config.js' %}"></script>
 <script>
+let editor = null;
+document.addEventListener('DOMContentLoaded', () => {
+    editor = Jodit.make('#description', {
+        height: 450,
+        minHeight: 350,
+        theme: 'dark',
+        enableDragAndDropFileToEditor: true,
+        uploader: {
+            url: '/api/hero/editor/image-upload/',
+            format: 'json',
+            prepareData(formData) {
+                const file = formData.get('files[0]');
+                if (file) formData.append('file', file);
+                return formData;
+            },
+            isSuccess(resp) { return !!resp.location; },
+            getMsg(resp) { return resp.error || 'Upload failed'; },
+            process(resp) { return { files: [resp.location], baseurl: '' }; },
+            defaultHandlerSuccess(data) {
+                data.files.forEach(url => editor.selection.insertImage(url));
+            },
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+        },
+        buttons: 'bold,italic,underline,strikethrough,|,ul,ol,|,outdent,indent,|,font,fontsize,brush,|,image,video,link,|,align,undo,redo,|,hr,eraser,fullsize',
+        toolbarAdaptive: false,
+        imageDefaultWidth: 0,
+        image: { openOnDblClick: true, editSrc: true, useImageEditor: true },
+        allowResizeX: true,
+        allowResizeY: true,
+        draggableTags: ['img', 'jodit-media'],
+        popup: {
+            img: [
+                {
+                    name: 'Wrap Left',
+                    tooltip: 'Float Left - text wraps right',
+                    icon: 'left',
+                    exec(editor, current) {
+                        current.style.float = 'left';
+                        current.style.margin = '0 16px 16px 0';
+                        current.style.display = 'inline';
+                    }
+                },
+                {
+                    name: 'Center',
+                    tooltip: 'Center - no wrap',
+                    icon: 'center',
+                    exec(editor, current) {
+                        current.style.float = 'none';
+                        current.style.display = 'block';
+                        current.style.margin = '16px auto';
+                    }
+                },
+                {
+                    name: 'Wrap Right',
+                    tooltip: 'Float Right - text wraps left',
+                    icon: 'right',
+                    exec(editor, current) {
+                        current.style.float = 'right';
+                        current.style.margin = '0 0 16px 16px';
+                        current.style.display = 'inline';
+                    }
+                },
+                {
+                    name: 'Inline',
+                    tooltip: 'Inline with text',
+                    icon: 'valign-middle',
+                    exec(editor, current) {
+                        current.style.float = 'none';
+                        current.style.display = 'inline';
+                        current.style.margin = '0 4px';
+                        current.style.verticalAlign = 'middle';
+                    }
+                },
+                '|',
+                'pencil', 'valign', 'left', 'file', 'bin'
+            ]
+        }
+    });
+});
 let ourWorkItems = [];
 
 async function loadOurWorkItems() {
@@ -170,6 +250,7 @@ function openAddModal() {
     document.getElementById('ourWorkForm').reset();
     document.getElementById('ourWorkId').value = '';
     document.getElementById('currentImagePreview').innerHTML = '';
+    if (editor) editor.value = '';
     document.getElementById('ourWorkModal').classList.remove('hidden');
 }
 
@@ -182,7 +263,7 @@ function openEditModal(workId) {
     document.getElementById('ourWorkId').value = work.id;
     document.getElementById('navlink').value = work.navlink;
     document.getElementById('title').value = work.title;
-    document.getElementById('description').value = work.description;
+    if (editor) editor.value = work.description || '';
     document.getElementById('external_link').value = work.external_link || '';
     document.getElementById('order').value = work.order;
     document.getElementById('is_active').checked = work.is_active;
@@ -318,7 +399,7 @@ document.getElementById('ourWorkForm').addEventListener('submit', async (e) => {
         // Add text fields
         formData.append('navlink', document.getElementById('navlink').value);
         formData.append('title', document.getElementById('title').value);
-        formData.append('description', document.getElementById('description').value);
+        formData.append('description', editor ? editor.value : '');
         formData.append('external_link', document.getElementById('external_link').value);
         formData.append('order', document.getElementById('order').value);
         formData.append('is_active', document.getElementById('is_active').checked);

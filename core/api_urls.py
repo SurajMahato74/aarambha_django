@@ -98,4 +98,7 @@ urlpatterns = [
     path('donations/verify/', api_views.donation_verify_payment, name='donation_verify_payment'),
     path('donations/my/', api_views.my_donations_list, name='my_donations_list'),
     path('donations/admin/', api_views.donation_list_admin, name='donation_list_admin'),
+
+    # Editor image upload
+    path('editor/image-upload/', api_views.editor_image_upload, name='editor_image_upload'),
 ]
