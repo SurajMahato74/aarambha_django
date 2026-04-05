@@ -36,14 +36,16 @@
         border-radius: 10px;
       }
     }
-    /* Override style.css global img{width:100%} and .rich-text img{margin:1rem auto} */
+    /* ── Rich text reset ── */
     .rich-text img {
       width: auto !important;
       height: auto !important;
       max-width: 100% !important;
       display: inline !important;
       margin: 0 !important;
+      vertical-align: middle;
     }
+    /* Float wrap */
     .rich-text img[style*="float: left"],
     .rich-text img[style*="float:left"] {
       float: left !important;
@@ -54,14 +56,43 @@
       float: right !important;
       margin: 0 0 12px 16px !important;
     }
+    /* Block / center */
     .rich-text img[style*="display: block"] {
       display: block !important;
       float: none !important;
       margin-left: auto !important;
       margin-right: auto !important;
     }
-    .rich-text p { margin-bottom: 1rem; overflow: hidden; }
+    /* Clearfix after each paragraph */
+    .rich-text p {
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
     .rich-text { overflow: hidden; }
+    /* Preserve Jodit text alignment on paragraphs */
+    .rich-text p[style*="text-align: center"] { text-align: center !important; }
+    .rich-text p[style*="text-align: right"]  { text-align: right  !important; }
+    .rich-text p[style*="text-align: left"]   { text-align: left   !important; }
+    .rich-text p[style*="text-align: justify"]{ text-align: justify!important; }
+    /* Preserve Jodit font-size on any element */
+    .rich-text [style*="font-size"] { font-size: revert !important; }
+    /* Preserve Jodit font-family */
+    .rich-text [style*="font-family"] { font-family: revert !important; }
+    /* Preserve Jodit color */
+    .rich-text [style*="color"] { color: revert !important; }
+    /* Mobile: stack floated images full-width */
+    @media (max-width: 576px) {
+      .rich-text img[style*="float: left"],
+      .rich-text img[style*="float:left"],
+      .rich-text img[style*="float: right"],
+      .rich-text img[style*="float:right"] {
+        float: none !important;
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 0 12px 0 !important;
+      }
+    }
   </style>
 </head>
 
@@ -153,8 +184,10 @@
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      const isMobile = window.innerWidth <= 576;
+
+      // Fix all rich-text images
       document.querySelectorAll('.rich-text img').forEach(img => {
-        // Apply saved width/height attributes as !important inline styles
         const w = img.getAttribute('width');
         const h = img.getAttribute('height');
         img.removeAttribute('width');
@@ -162,22 +195,38 @@
         if (w) img.style.setProperty('width', w + 'px', 'important');
         if (h) img.style.setProperty('height', h + 'px', 'important');
         const float = img.style.getPropertyValue('float').replace('!important','').trim();
-        if (float) img.style.setProperty('float', float, 'important');
+        if (float && float !== 'none') img.style.setProperty('float', float, 'important');
 
-        // If image is floated and alone inside a <p>, pull it out so
-        // surrounding <p> text can wrap around it
+        // Pull floated image out of <p> so sibling <p> text wraps around it
         const parent = img.parentElement;
         if (parent && parent.tagName === 'P' && float && float !== 'none') {
           const container = parent.parentElement;
           if (container) {
-            // Move img before its parent <p>
-            container.insertBefore(img, parent);
-            // Remove empty <p> left behind
+            if (isMobile) {
+              // On mobile: place image AFTER its parent <p> for vertical flow
+              container.insertBefore(img, parent.nextSibling);
+            } else {
+              // On desktop: place image BEFORE its parent <p> so text wraps
+              container.insertBefore(img, parent);
+            }
             if (parent.innerHTML.trim() === '' || parent.innerHTML.trim() === '<br>') {
               parent.remove();
             }
           }
         }
+      });
+
+      // Preserve Jodit inline font-size, font-family, color, text-align on all elements
+      document.querySelectorAll('.rich-text [style]').forEach(el => {
+        const s = el.getAttribute('style');
+        const fs = s.match(/font-size\s*:\s*([^;]+)/);
+        const ff = s.match(/font-family\s*:\s*([^;]+)/);
+        const cl = s.match(/(?:^|;)\s*color\s*:\s*([^;]+)/);
+        const ta = s.match(/text-align\s*:\s*([^;]+)/);
+        if (fs) el.style.setProperty('font-size',   fs[1].trim(), 'important');
+        if (ff) el.style.setProperty('font-family', ff[1].trim(), 'important');
+        if (cl) el.style.setProperty('color',       cl[1].trim(), 'important');
+        if (ta) el.style.setProperty('text-align',  ta[1].trim(), 'important');
       });
     });
   </script>
